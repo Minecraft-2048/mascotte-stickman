@@ -20,7 +20,7 @@ L'exe n'est pas signé : Windows peut afficher « Windows a protégé votre ordi
 - **Couleur et tête** : 16 teintes ou n'importe quelle couleur. La tête est un disque plein, sauf pour l'orange, le noir et le rouge sombre où c'est un anneau ; un réglage force l'un ou l'autre.
 - **827 animations** : déplacements, danses (34 mouvements de bras × 8 de jambes), gestes, combat, acrobaties, sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
 - **Souris** : on l'attrape, on le balance, on le lance ; il se bat contre le curseur s'il s'approche, et un curseur trop rapide l'envoie valser.
-- **Fenêtres** : il saute sur le haut des fenêtres (saut simple, salto ou atterrissage de héros), voyage avec elles, retombe si elles se ferment, et peut se téléporter.
+- **Fenêtres** : il saute sur le haut des fenêtres (saut simple, salto ou atterrissage de héros), voyage avec elles, et retombe si elles se ferment.
 - **Amis** : jusqu'à six stickmen à la fois (clic droit → *Amis* → *Ajouter un stickman*), chacun de sa couleur. Ils vont se voir d'eux-mêmes, même perchés sur des fenêtres différentes : bonjour, check, tope-là, poignée de main, check complet, câlin, pierre-feuille-ciseaux, duel amical, danse à deux.
 
 ![Les animations à deux](apercus/duos.png)
@@ -35,7 +35,7 @@ L'exe n'est pas signé : Windows peut afficher « Windows a protégé votre ordi
 - **Mode farceur** (désactivé par défaut) : de temps en temps, il saute sur une fenêtre, marche jusqu'à sa croix et appuie dessus avec la main. C'est un vrai clic sur la croix : un programme qui a du travail non enregistré demande encore confirmation, mais un jeu ou une vidéo se ferment aussitôt. Il épargne la fenêtre en cours d'utilisation (réglable), prévient par une bulle, et il suffit de l'attraper à la souris pour l'en empêcher.
 - **Correcteur d'orthographe** (désactivé par défaut, clic droit → *Correcteur d'orthographe*) : quand on vient d'écrire un mot mal orthographié, il s'envole jusqu'à lui, le pointe du crayon, et le mot est remplacé par la bonne orthographe ; le curseur revient où il était. Il n'écoute pas le clavier : il demande à Windows le bout de texte qui précède le curseur (comme le fait un lecteur d'écran), ne lit jamais un champ de mot de passe, et ne garde ni n'envoie rien. L'orthographe est celle du correcteur de Windows, dans la langue de Windows. Il laisse tranquilles les mots de moins de quatre lettres et ceux qui ont une majuscule, et ne fait rien dans les programmes qui ne donnent pas accès à leur texte.
 - **Sons** : 14 bruitages calculés par le programme, sans aucun fichier audio. Volume et familles de sons réglables, et un **mode muet** dans le menu pour tout couper d'un coup.
-- **Paramètres** : une fenêtre à onglets, plus de 80 réglages et une case par animation.
+- **Paramètres** : une fenêtre à onglets, une centaine de réglages et une case par animation.
 
 ## Les textures de Minecraft
 
