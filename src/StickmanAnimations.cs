@@ -52,6 +52,8 @@ namespace MascotteStickman
         public static Anim Marche, Course, Reception, Heros, SeReleve, Dort, Salut, PoingHaut, Poing, PiedMoyen, PiedBas, Danse, Concentration, Apparition;
         public static Anim Appuie, Relache;
         public static Anim PoseBloc, PoseMarche, Admire, Elan, Lance, PoseDevant, Oreilles, Ramasse;
+        public static Anim Clique, Pointe;
+        public static Anim LeveBaton, TientBaton, Sursaut, Levitation, Creatif, AssisFeu, Appui, Tournoie, Rugit;
         public static double[] PoseElytres;
         public const double Bloc = 48;           // côté d'un bloc de Minecraft, à taille 1 : trois fois ses 16 pixels de texture
         public static double[] Groupe;
@@ -215,6 +217,24 @@ namespace MascotteStickman
             Appuie = PiedsPoses(Cles(null, "Appuie sur la croix", "0:" + S + ";320:" + vise + ";760:" + vise + ";880:" + presse));
             Relache = PiedsPoses(Cles(null, "Relâche la croix", "0:" + presse + ";450:" + presse + ";650:" + vise + ";1000:" + S));
 
+            // correcteur d'orthographe : en l'air devant le mot, il arme le bras puis le pointe du crayon
+            const string pointe = "10 4 92 0 -10 12 8 0 -8 0";
+            Clique = Cles(null, "Pointe le mot", "0:" + S + ";200:4 0 60 100 -10 12 6 0 -6 0;380:" + pointe + ";560:" + pointe, "crayon");
+            Pointe = Fixe(null, "Corrige", pointe, 3, "crayon");
+
+            // bâton de commande : il le lève, le tient pendant que la commande s'écrit ; et ce que font les commandes
+            const string leve = "-4 -10 150 10 -10 12 6 0 -6 0";
+            LeveBaton = Cles(null, "Lève son bâton", "0:" + S + ";250:-2 -4 70 60 -10 12 6 0 -6 0;500:" + leve, "commande");
+            TientBaton = Cles(null, "Tient son bâton levé", "0:" + leve + ";550:-6 -14 158 4 -14 14 8 -4 -8 -4;1100:" + leve, "commande");
+            Appui = Fixe(null, "S'appuie sur son bâton", "6 4 40 30 -10 12 10 -6 -6 -2", 3, "commande");
+            Tournoie = Ajouter(null, "Fait tournoyer son bâton", 0.5, 6, t => { double[] p = L(S); p[I.Ep1] = 360 * t; p[I.Co1] = 10; return p; });
+            Tournoie.Objet = "commande";
+            Sursaut = Cles(null, "Sursaute", "0:" + S + ";120:-20 -20 120 40 -120 -40 20 -30 -20 -30 14 0 -10;400:-14 -10 100 60 -100 -60 14 -20 -14 -20 0 0 -16;900:" + S);
+            Levitation = Cles(null, "Lévite", "0:" + S + ";600:-6 -10 60 20 -60 -20 10 -20 -10 -30 60;1500:-10 -14 80 10 -80 -10 14 -30 -6 -40 120;2600:-8 -12 70 20 -70 -20 8 -24 -12 -34 116;3200:6 5 120 40 -120 -40 20 -30 -15 -40 30;3500:" + Cr + ";3800:" + S);
+            Creatif = Cles(null, "Vole en mode créatif", "0:" + S + ";300:" + Cr + ";700:0 -10 20 10 -20 10 6 -10 -6 -14 90;1500:10 -20 60 0 -40 10 10 -20 -10 -30 120 20;2400:-10 -20 -40 10 60 0 10 -30 -10 -20 100 -20;3200:0 -10 20 10 -20 10 6 -10 -6 -14 80;3700:" + Cr + ";4000:" + S);
+            Rugit = Cles(null, "Rugit", "0:" + S + ";250:-14 -30 150 30 -150 -30 20 -20 -20 -20;700:-18 -36 158 20 -158 -20 24 -26 -24 -26;1100:10 10 60 60 -60 -60 16 -16 -16 -16;1500:" + S);
+            AssisFeu = Osc(null, "Assis devant le feu", "8 4 55 50 50 55 86 -6 82 -2", "10 6 60 44 54 50 86 -6 82 -2", 1.6, 5);
+
             Attentes();
             Deplacements();
             Danses();
@@ -227,8 +247,11 @@ namespace MascotteStickman
             Nouveautes();
             Troisieme();
             Minecraft();
+            Decors();
             Quatrieme();
             Cinquieme();
+            Sixieme();
+            Septieme();
             Sonoriser();
             ADeux();
         }
@@ -316,6 +339,205 @@ namespace MascotteStickman
             a.Special = special;
             a.Objet = objet;
             return a;
+        }
+
+        // ------------------------------------------------------------ commandes, décor, objets du jeu
+
+        static void Decors()
+        {
+            // --- le bâton de commande : réservé au premier stickman (le moteur vérifie)
+            const string K = "Commandes";
+            foreach (string[] c in new[]
+            {
+                new[] { "/tp : se téléporte", "tp" }, new[] { "/tp @a : appelle toute la bande", "tpa" }, new[] { "/setblock : pose un bloc", "setblock" },
+                new[] { "/give : une épée en diamant", "give" }, new[] { "/summon : la foudre", "foudre" }, new[] { "/summon : un feu d'artifice", "feu" },
+                new[] { "/summon : une TNT", "tnt" }, new[] { "/effect : lévitation", "levitation" }, new[] { "/effect : vitesse", "vitesse" },
+                new[] { "/weather : la pluie", "pluie" }, new[] { "/time : la nuit", "nuit" }, new[] { "/gamemode : vole en créatif", "creatif" },
+                new[] { "/particle : des cœurs", "coeurs" }, new[] { "/say : salue tout le monde", "dire" }, new[] { "/fill : fait apparaître la maison", "maison" },
+            })
+                Scene(K, c[0], "cmd:" + c[1], TientBaton.Pose, 1.1, "commande");
+            Scene(K, "S'appuie sur son bâton", "cmd:appui", Appui.Pose, 1.6, "commande");
+            Scene(K, "Fait tournoyer son bâton", "cmd:tournoie", Tournoie.Pose, 0.5, "commande");
+
+            // --- le décor : la maison, le feu de camp, le jardin
+            const string D = "Décor";
+            Scene(D, "Rentre à la maison", "maison", Concentration.Pose, 0.45, null);
+            Scene(D, "Fait la sieste à la maison", "sieste", Concentration.Pose, 0.45, null);
+            Scene(D, "Bâtit la maison de ses mains", "batir", PoseDevant.Pose, 0.6, null);
+            Scene(D, "Feu de camp", "camp", AssisFeu.Pose, 1.6, null);
+            Scene(D, "Plante des fleurs", "jardin", PoseDevant.Pose, 0.6, null);
+
+            // --- les tours spéciaux, chacun avec sa case dans l'onglet « Spécial » des paramètres
+            const string X = "Spécial";
+            Scene(X, "Devient géant", "x:geant", Rugit.Pose, 1.5, null);
+            Scene(X, "Devient minuscule", "x:mini", Sursaut.Pose, 0.9, null);
+            Scene(X, "Dessine sur l'écran", "x:dessin", Pointe.Pose, 1.6, "crayon");
+            Scene(X, "Ouvre YouTube sur la chaîne d'Alan Becker", "x:youtube", Admire.Pose, 1.75, null);
+            Scene(X, "Attrape le curseur au lasso", "x:curseur", Lance.Pose, 0.52, null);
+            Scene(X, "Secoue sa fenêtre", "x:secousse", Admire.Pose, 1.75, null);
+
+            // --- objets du jeu tenus en main (« item: » tel quel, « outil: » aligné sur l'avant-bras)
+            const string F = "Minecraft";
+            const string mange1 = "0 8 60 125 -8 12", mange2 = "0 14 70 140 -8 12";
+            Osc(F, "Mange un steak", mange1, mange2, 0.5, 6, "item:cooked_beef");
+            Osc(F, "Grignote un cookie", mange1, mange2, 0.35, 8, "item:cookie");
+            Osc(F, "Mange du pain", mange1, mange2, 0.55, 5, "item:bread");
+            Osc(F, "Croque une carotte dorée", mange1, mange2, 0.45, 6, "item:golden_carrot");
+            Osc(F, "Boit un seau de lait", "-6 -18 70 135 -8 12", "-10 -28 78 142 -8 12", 0.9, 3, "item:milk_bucket");
+            Osc(F, "Regarde sa boussole", "6 18 60 105 -8 12", "6 22 62 110 -8 12", 1.2, 3, "item:compass_16");
+            Osc(F, "Regarde l'heure", "6 18 60 105 -8 12", "4 14 64 100 -8 12", 1.0, 3, "item:clock_00");
+            Osc(F, "Observe à la longue-vue", "4 -10 100 120 -8 12", "6 -6 102 124 -8 12", 1.4, 3, "item:spyglass");
+            Osc(F, "Lit une carte", "8 20 55 95 50 100", "8 24 57 98 52 97", 1.3, 3, "item:filled_map");
+            Osc(F, "Lit un livre enchanté", "8 20 55 95 50 100", "8 24 57 98 52 97", 1.5, 3, "item:enchanted_book");
+            Osc(F, "Brandit un totem", "-4 -12 160 10 -8 12", "-6 -16 166 4 -8 12", 0.6, 5, "item:totem_of_undying");
+            Osc(F, "Admire un diamant", "0 -8 110 60 -8 12", "0 -12 118 66 -8 12", 0.8, 4, "item:diamond");
+            Osc(F, "Compte ses émeraudes", "6 16 60 110 50 120", "6 18 62 114 54 112", 0.5, 6, "item:emerald");
+            Osc(F, "Sonne la cloche", "0 -4 100 40 -8 12", "0 -4 100 80 -8 12", 0.4, 6, "item:bell").Son = "note";
+            Osc(F, "Souffle dans une corne", "-4 -10 105 150 -8 12", "-6 -14 107 152 -8 12", 1.0, 3, "item:goat_horn").Son = "note";
+            Cles(F, "Lance une boule de neige", "0:" + S + ";180:-10 -5 -150 -20 30 20 10 -8 -10 -4;330:14 5 100 5 -20 30 18 -14 -14 -4;520:" + S, "item:snowball");
+            Bruit(Osc(F, "Coupe du bois à la hache", "-6 -5 150 40 -10 12 12 -8 -10 -4", "14 6 45 5 -10 12 16 -12 -12 -4", 0.6, 7, "outil:diamond_axe"), "coup", 0.45);
+            Bruit(Osc(F, "Creuse à la pelle", "20 14 70 30 40 60 20 -24 -14 -10", "34 22 40 20 20 50 28 -36 -14 -16", 0.7, 6, "outil:diamond_shovel"), "coup", 0.45);
+            Osc(F, "Bêche son jardin", "16 10 110 20 60 60 16 -16 -14 -8", "30 18 50 10 30 50 24 -28 -14 -12", 0.8, 6, "outil:diamond_hoe");
+            Bruit(Cles(F, "Lance le trident", "0:" + G + ";220:-12 -6 -160 -10 60 100 14 -15 -14 -10;380:18 4 100 0 50 115 24 -22 -22 -6 0 0 8;620:" + G, "outil:trident"), "swish", 0.5);
+            Anim lanterne = Pas("Avance à la lanterne", 16, 26, 12, 10, 2, 0, 40, 1.3);
+            Func<double, double[]> marche = lanterne.Pose;
+            lanterne.Pose = t => { double[] p = marche(t); p[I.Ep1] = 70; p[I.Co1] = 20; return p; };
+            lanterne.Famille = F; lanterne.Objet = "item:lantern";
+        }
+
+        // ------------------------------------------------------------ septième fournée
+
+        static void Septieme()
+        {
+            // --- déplacements
+            Pas("Marche de mannequin", 30, 36, 10, 10, -6, 0, 75, 0.85);
+            Pas("Démarche de cow-boy", 20, 30, 6, 40, -8, 0, 50, 1.1);
+            Pas("Pas de géant, lents", 50, 40, 30, 10, 4, 0, 90, 1.4);
+            Pas("Trotte en sifflotant", 26, 46, 30, 20, -4, 3, 95, 0.7);
+            Pas("Marche sur des œufs", 10, 30, 8, 40, 6, 0, 28, 1.0);
+            Pas("Fonce tête baissée", 48, 96, 20, 100, 34, 5, 280, 0.38);
+            Pas("Marche au pas cadencé", 36, 6, 40, 0, -2, 0, 85, 0.7);
+            Pas("Flâne les mains dans le dos", 18, 28, 0, 0, -6, 0, 38, 1.3);
+
+            // --- gestes
+            Osc("Gestes", "Soulève un chapeau invisible", "0 6 150 130 -8 12", "4 14 120 110 -8 12", 0.9, 3);
+            Osc("Gestes", "Mime une vitre", "0 0 100 30 -100 -30", "0 0 80 50 -80 -50", 0.7, 5);
+            Osc("Gestes", "Tape des mains au-dessus de la tête", "0 -8 165 30 -165 -30", "0 -8 172 4 -172 -4", 0.35, 10);
+            Osc("Gestes", "Se frotte le ventre", "-4 0 30 110 -8 12", "-4 0 40 100 -8 12", 0.5, 6);
+            Osc("Gestes", "Tend l'oreille", "10 -14 130 150 -8 12", "14 -18 132 152 -8 12", 1.2, 3);
+            Osc("Gestes", "Envoie un bisou des deux mains", "0 0 100 150 -100 -150", "0 -8 110 40 -110 -40", 0.8, 4, "coeur");
+            Osc("Gestes", "Salue comme une reine", "0 0 120 110 -8 12", "0 0 126 100 -8 12", 0.5, 6);
+            Osc("Gestes", "Mouline d'un seul bras", "0 0 0 10 -8 12", "0 0 180 10 -8 12", 0.5, 6);
+            Osc("Gestes", "Fait le signe de la paix", "0 -4 140 30 -8 12", "0 -6 146 36 -8 12", 0.7, 4);
+            Osc("Gestes", "Fait craquer ses doigts", "6 6 70 60 62 68", "6 8 62 76 54 84", 0.6, 4);
+            Osc("Gestes", "Lance une pièce", "0 -10 95 70 -8 12", "0 -16 120 30 -8 12", 0.7, 4);
+            Osc("Gestes", "Porte un toast", "-2 -6 110 30 -8 12", "-4 -10 130 20 -8 12", 0.9, 3);
+
+            // --- combat
+            Cles("Combat", "Coup de pied retourné", "0:" + G + ";200:-10 0 60 100 50 110 20 -30 -10 -10 0 60;380:-20 -10 80 60 60 100 -100 -5 10 -20 6 170;560:-10 0 70 90 55 105 -40 -30 12 -16 0 300;760:" + G + " 0 360");
+            Cles("Combat", "Direct en reculant", "0:" + G + ";160:14 0 92 0 50 115 20 -20 -24 -8 0 0 -6;320:" + G + " 0 0 -12;520:" + G);
+            Cles("Combat", "Coup de marteau des deux poings", "0:" + G + ";220:-12 -10 170 20 165 25 12 -10 -12 -8 6;400:30 14 50 10 46 14 30 -44 -14 -20;620:30 14 50 10 46 14 30 -44 -14 -20;850:" + G);
+            Osc("Combat", "Garde haute, pas chassés", "6 0 90 120 80 125 20 -24 -18 -14 0 0 8", "6 0 90 120 80 125 14 -16 -24 -22 0 0 -8", 0.5, 8);
+            Cles("Combat", "Esquive en pivotant", "0:" + G + ";180:-30 -14 60 90 50 100 30 -40 -20 -10 0 0 -10;380:20 10 60 90 50 100 10 -10 -30 -40 0 0 6;560:" + G);
+            Cles("Combat", "Prise et projection", "0:" + G + ";250:30 10 80 20 70 30 30 -40 -14 -14;500:-20 -10 150 60 140 70 20 -30 -10 -10;700:50 20 30 20 20 30 50 -80 -10 -20;1000:" + G);
+            Osc("Combat", "Rafale de directs", "14 0 92 0 55 115 20 -20 -20 -8 0 0 4", "14 0 55 115 92 0 20 -20 -20 -8 0 0 4", 0.16, 18);
+
+            // --- acrobaties
+            Cles("Acrobaties", "Roue sur un bras", "0:" + S + ";250:60 0 150 0 -40 20 60 -10 -30 0 0 60;500:0 0 180 0 -60 10 50 0 -50 0 0 180;750:-40 0 150 0 -40 20 30 0 -60 -10 0 300;1000:" + S + " 0 360");
+            Cles("Acrobaties", "Grand écart sauté", "0:" + S + ";200:" + Cr + ";450:0 -10 150 0 -150 0 88 0 -88 0 58;650:0 -10 150 0 -150 0 80 0 -80 0 44;850:" + Cr + ";1050:" + S);
+            Cles("Acrobaties", "Saut de chat", "0:" + S + ";180:" + Cr + ";360:-4 -8 60 20 -60 -20 80 -100 -10 -20 34;520:-4 -8 -60 -20 60 20 -10 -20 80 -100 40;700:" + Cr + ";880:" + S);
+            Osc("Acrobaties", "Pompes en équilibre", "0 0 180 0 176 0 4 0 -4 0 0 180", "0 0 150 60 146 64 4 0 -4 0 0 180", 1.2, 4);
+            Cles("Acrobaties", "Salto vrillé", "0:" + S + ";180:" + Cr + ";380:" + Boule + " 62 150;560:0 0 170 0 -170 0 4 0 -4 0 70 280;740:" + Cr + " 8 360;940:" + S + " 0 360");
+            Cles("Acrobaties", "Chandelle", "0:" + S + ";400:" + Dos + ";800:0 0 -60 -30 -64 -30 10 0 6 0 0 -170;1600:0 0 -60 -30 -64 -30 6 0 10 0 0 -176;2000:" + Dos + ";2500:" + Cr + ";2800:" + S);
+
+            // --- sport
+            Osc("Sport", "Dribble du pied", "6 8 20 30 -30 20 40 -50 -10 -10", "6 8 -30 20 20 30 -10 -10 40 -50", 0.4, 10, "ballonpied");
+            Cles("Sport", "Lancer de poids", "0:" + S + ";350:-20 -10 70 150 -60 -20 20 -40 -20 -10;600:24 4 130 10 -30 20 30 -20 -30 -10 0 0 8;900:" + S);
+            Cles("Sport", "Saut en longueur sur place", "0:" + S + ";300:30 10 -60 -10 -70 -10 60 -100 50 -92;520:-10 -10 150 10 140 15 60 -20 50 -16 40;720:20 10 80 10 70 15 90 -60 80 -56 20;900:" + Cr + ";1150:" + S);
+            Osc("Sport", "Crawl à sec", "60 30 170 0 20 0 14 0 -6 0", "60 30 20 0 170 0 -6 0 14 0", 0.7, 8);
+            Osc("Sport", "Brasse à sec", "50 24 160 0 156 0 10 -10 -10 -10", "50 24 60 100 56 104 40 -70 30 -64", 1.0, 6);
+            Osc("Sport", "Grimpe à un mur invisible", "0 -16 170 20 60 90 80 -100 0 -5 10", "0 -16 60 90 170 20 0 -5 80 -100 10", 0.7, 8);
+            Cles("Sport", "Penalty", "0:" + S + ";250:-14 0 60 20 -80 -20 -50 -60 10 -10;420:10 0 -40 -10 90 10 80 -5 -10 -12;640:6 0 -20 0 60 10 40 -20 -8 -8;900:" + S, "ballontir");
+            Osc("Sport", "Moulinets de hanches", "8 0 20 100 -20 -100 14 -6 -2 0 0 0 6", "-8 0 20 100 -20 -100 2 0 -14 -6 0 0 -6", 0.9, 6);
+
+            // --- quotidien
+            Osc("Quotidien", "Cherche ses clés dans ses poches", "6 14 10 60 -10 12 6 0 -6 0", "6 16 -10 12 14 64 6 0 -6 0", 0.7, 5, "question");
+            Osc("Quotidien", "Tape un texto", "6 22 55 115 50 120 6 0 -6 0", "6 24 57 112 52 117 6 0 -6 0", 0.18, 16, "telephone");
+            Osc("Quotidien", "Peint un mur au rouleau", "0 -8 160 10 -10 12 8 0 -8 0", "0 0 100 10 -10 12 8 -6 -8 -4", 0.9, 5);
+            Osc("Quotidien", "Visse une ampoule", "-4 -24 170 30 -10 12 6 0 -6 0", "-4 -24 170 60 -10 12 6 0 -6 0", 0.35, 8);
+            Osc("Quotidien", "Essuie une vitre", "0 -4 130 30 -10 12 8 0 -8 0", "0 -4 100 60 -10 12 8 0 -8 0", 0.4, 8);
+            Osc("Quotidien", "Noue sa cravate", "4 20 50 130 46 134 6 0 -6 0", "4 22 54 126 42 138 6 0 -6 0", 0.5, 6);
+            Osc("Quotidien", "Porte un plateau", "-4 0 80 90 -10 12 8 -4 -8 -2", "-4 2 82 88 -10 12 10 -8 -6 0", 1.0, 4);
+            Cles("Quotidien", "Ramasse quelque chose par terre", "0:" + S + ";350:70 30 30 0 -20 20 30 -30 -10 -10;650:70 30 24 0 -20 20 30 -30 -10 -10;1000:0 10 60 110 -10 12 6 0 -6 0;1500:" + S);
+
+            // --- émotions
+            Osc("Émotions", "Bombe le torse", "-12 -14 -30 -100 -35 -105 8 0 -8 0", "-16 -18 -36 -96 -41 -101 8 0 -8 0", 1.2, 3);
+            Osc("Émotions", "Sautille d'excitation", "0 -6 60 100 -60 -100 8 -12 -8 -12 10", "0 -8 70 110 -70 -110 6 0 -6 0", 0.26, 12);
+            Cles("Émotions", "S'incline, vaincu", "0:" + S + ";500:30 30 10 10 -10 10 40 -70 30 -64;1500:34 36 10 10 -10 10 44 -76 34 -70;2000:" + S);
+            Osc("Émotions", "Panique, court sur place", "10 -10 150 30 -150 -30 60 -80 -10 -40 4", "10 -10 150 30 -150 -30 -10 -40 60 -80 4", 0.18, 16, "exclam");
+            Cles("Émotions", "Saute de surprise et retombe assis", "0:" + S + ";140:-10 -20 140 20 -140 -20 20 -30 -20 -30 30;420:-10 0 30 20 -30 20 86 -10 80 -6;1300:-12 0 34 16 -34 16 86 -10 80 -6;1700:" + Cr + ";2000:" + S, "exclam");
+            Osc("Émotions", "Jubile en silence", "0 -10 60 130 -60 -130 8 -6 -8 -6", "0 -14 70 140 -70 -140 10 -12 -10 -12", 0.3, 8);
+        }
+
+        // ------------------------------------------------------------ sixième fournée
+
+        static void Sixieme()
+        {
+            // --- gestes
+            Osc("Gestes", "Pouces en l'air des deux mains", "0 -6 95 20 -95 -20", "0 -8 102 28 -102 -28", 0.5, 5);
+            Osc("Gestes", "Fait le signe du cœur avec les doigts", "0 4 110 130 -110 -130", "0 6 114 134 -114 -134", 0.8, 4, "coeur");
+            Osc("Gestes", "Se cache les yeux", "0 10 125 140 -125 -140", "0 12 127 142 -127 -142", 1.2, 3);
+            Osc("Gestes", "Joue du tambour", "8 6 60 60 55 110", "8 8 55 110 60 60", 0.3, 10);
+            Osc("Gestes", "Lance des confettis", "0 -8 160 20 -160 -20", "0 -4 100 60 -100 -60", 0.5, 5, "note");
+            Osc("Gestes", "Fait l'avion", "0 0 90 0 -90 0", "8 0 104 0 -76 0", 1.0, 4);
+            Osc("Gestes", "Compte jusqu'à trois", "0 0 110 100 -8 12", "0 -2 120 60 -8 12", 0.6, 3);
+            Osc("Gestes", "Fait un cadre avec ses mains", "4 -4 100 110 95 115", "4 -6 108 104 103 109", 1.2, 3);
+            Osc("Gestes", "Moulinet du poignet", "0 0 80 70 -8 12", "0 0 84 110 -8 12", 0.22, 12);
+            Osc("Gestes", "Lève les bras au ciel", "-4 -14 172 4 -172 -4", "-6 -18 176 -4 -176 4", 0.9, 3);
+            Osc("Gestes", "Désigne quelqu'un du doigt", "6 0 92 0 -8 12", "8 2 96 4 -8 12", 0.5, 4);
+            Osc("Gestes", "Balaye de la main", "0 0 110 20 -8 12", "0 0 60 40 -8 12", 0.5, 4);
+
+            // --- combat
+            Cles("Combat", "Enchaînement gauche-droite-uppercut", "0:" + G + ";140:16 0 90 0 50 115 22 -20 -20 -6 0 0 6;280:" + G + ";420:14 0 55 110 88 0 22 -20 -20 -6 0 0 6;560:" + G
+                + ";720:20 6 30 100 55 110 30 -40 -18 -20;860:-8 -12 170 10 55 110 16 -10 -16 -6 10;1100:" + G);
+            Cles("Combat", "Roulade d'esquive", "0:" + G + ";200:" + Cr + ";420:" + Boule + " 0 120;640:" + Boule + " 0 240;860:" + Cr + " 0 360;1050:" + G + " 0 360");
+            Osc("Combat", "Moulinets de poings", "10 0 70 80 60 100 16 -18 -18 -10", "10 0 60 100 70 80 16 -18 -18 -10", 0.18, 16);
+            Cles("Combat", "Charge de l'épaule", "0:" + G + ";200:30 10 20 100 30 90 40 -50 -20 -10;380:36 12 10 110 20 100 30 -20 -40 -5 0 0 18;600:20 6 30 90 40 80 20 -20 -20 -10 0 0 10;850:" + G);
+            Cles("Combat", "Salut du combattant", "0:" + S + ";300:0 0 60 110 60 110 6 0 -6 0;700:25 20 60 110 60 110 6 0 -6 0;1200:25 20 60 110 60 110 6 0 -6 0;1600:" + S);
+            Osc("Combat", "Shadow-boxing en sautillant", "10 0 92 0 55 115 16 -18 -18 -10 5", "10 0 60 110 88 0 -18 -10 16 -18", 0.28, 14);
+
+            // --- acrobaties
+            Cles("Acrobaties", "Flip arrière groupé", "0:" + S + ";200:" + Cr + ";400:" + Boule + " 60 -120;600:" + Boule + " 70 -240;800:" + Cr + " 10 -360;1000:" + S + " 0 -360");
+            Cles("Acrobaties", "Saut de l'ange", "0:" + S + ";200:" + Cr + ";450:-10 -20 100 0 -100 0 -10 0 -20 0 56 20;700:-6 -14 100 0 -100 0 -6 0 -14 0 40 10;900:" + Cr + ";1100:" + S);
+            Cles("Acrobaties", "Saut groupé-tendu", "0:" + S + ";180:" + Cr + ";380:" + Boule + " 50;560:0 -6 170 0 -170 0 4 0 -4 0 46;760:" + Cr + ";950:" + S);
+            Fixe("Acrobaties", "Planche faciale", "0 -20 70 0 74 0 0 0 -4 0 30 88", 3);
+            Cles("Acrobaties", "Saut de main", "0:" + S + ";200:30 10 150 0 160 0 30 -30 -20 0;450:0 0 180 0 176 0 20 0 -30 0 0 180;700:-20 0 150 0 160 0 40 -40 10 -20 0 290;900:" + Cr + " 0 360;1100:" + S + " 0 360");
+
+            // --- sport
+            Osc("Sport", "Saute à la corde invisible", "0 0 30 60 -30 -60 6 -10 -6 -10 12", "0 0 34 66 -34 -66 6 0 -6 0", 0.32, 12);
+            Osc("Sport", "Fait du vélo sur le dos", "0 10 25 5 28 -5 110 -100 60 -20 0 -75", "0 10 25 5 28 -5 60 -20 110 -100 0 -75", 0.5, 8);
+            Osc("Sport", "Moulin à vent, mains aux pieds", "70 20 160 0 20 0 30 0 -30 0", "70 20 20 0 160 0 30 0 -30 0", 0.9, 6);
+            Osc("Sport", "Étire ses quadriceps", "0 0 -30 -20 60 20 6 0 -20 -130", "2 0 -32 -22 62 22 6 0 -24 -134", 1.4, 3);
+            Cles("Sport", "Départ de sprint", "0:" + S + ";400:60 30 30 0 20 0 80 -110 30 -80;1100:60 30 30 0 20 0 80 -110 30 -80;1300:40 10 -40 90 80 80 90 -60 -30 -20 0 0 10;1600:" + S);
+            Osc("Sport", "Lancers francs", "0 -6 150 60 140 70 12 -20 -10 -20", "-4 -12 170 10 165 15 6 0 -6 0 8", 1.1, 4, "ballontir");
+
+            // --- quotidien
+            Osc("Quotidien", "Se brosse les dents", "0 4 95 150 -8 12 6 0 -6 0", "0 6 99 146 -8 12 6 0 -6 0", 0.2, 14);
+            Osc("Quotidien", "Passe l'aspirateur", "16 10 60 20 50 30 20 -16 -16 -10", "10 8 80 10 70 20 14 -10 -20 -14", 0.9, 5);
+            Osc("Quotidien", "Repasse une chemise", "20 12 70 10 30 60 10 -8 -10 -6", "20 12 50 30 30 60 10 -8 -10 -6", 0.7, 6);
+            Osc("Quotidien", "Fait la vaisselle", "14 14 55 60 50 65 8 -4 -8 -4", "14 16 60 54 46 71 8 -4 -8 -4", 0.4, 8);
+            Osc("Quotidien", "Attend le bus", "-2 0 10 12 -10 12 6 0 -6 0", "-2 14 60 110 -10 12 8 -4 -4 0", 2.4, 2);
+            Osc("Quotidien", "Fait des pompes de canard", "30 10 -30 -100 -35 -105 80 -120 70 -112", "34 12 -20 -110 -25 -115 84 -124 74 -116", 0.4, 8);
+            Cles("Quotidien", "S'étire au réveil", "0:" + S + ";500:-10 -20 170 10 -170 -10 6 0 -6 0 4;1300:-14 -26 176 -6 -176 6 6 0 -6 0 6;1900:6 10 30 40 -30 40 6 0 -6 0;2300:" + S);
+
+            // --- émotions
+            Cles("Émotions", "Explose de rire, plié en deux", "0:" + S + ";250:40 30 40 100 45 105 20 -30 -10 -20;450:46 34 44 104 49 109 24 -36 -12 -24;650:40 30 40 100 45 105 20 -30 -10 -20;850:46 34 44 104 49 109 24 -36 -12 -24;1200:-10 -20 30 60 -30 60 6 0 -6 0;1600:" + S);
+            Osc("Émotions", "Boude, bras croisés", "-6 16 40 120 45 115 6 0 -6 0", "-8 20 42 122 47 117 6 0 -6 0", 1.6, 3);
+            Cles("Émotions", "Sursaute de peur", "0:" + S + ";120:-20 -20 120 40 -120 -40 20 -30 -20 -30 14;400:-14 -10 100 60 -100 -60 14 -20 -14 -20;900:" + S, "exclam");
+            Osc("Émotions", "Rêvasse, la tête dans les nuages", "-4 -24 -30 -100 -35 -105 8 0 -8 0", "-6 -30 -32 -102 -37 -107 8 -4 -4 0", 2.6, 3, "note");
+            Cles("Émotions", "Danse de la joie", "0:" + S + ";200:-6 -10 150 20 40 100 30 -50 -10 0 10;400:6 -10 40 100 150 20 -10 0 30 -50 10;600:-6 -10 150 20 40 100 30 -50 -10 0 10;800:6 -10 40 100 150 20 -10 0 30 -50 10;1000:" + S);
+            Osc("Émotions", "Hésite, se balance d'un pied sur l'autre", "-4 6 20 100 -10 12 10 -10 -4 0", "4 6 20 100 -10 12 4 0 -10 -10", 0.9, 5, "question");
+            Cles("Émotions", "Fond en larmes", "0:" + S + ";400:20 30 130 135 -130 -135 10 -8 -10 -8;700:24 34 134 139 -134 -139 12 -12 -12 -12;1000:20 30 130 135 -130 -135 10 -8 -10 -8;1300:24 34 134 139 -134 -139 12 -12 -12 -12;1800:" + S);
         }
 
         // ------------------------------------------------------------ cinquième fournée
@@ -880,7 +1102,8 @@ namespace MascotteStickman
             var nomsBras = new[] { "Poings en l'air", "Disco", "Vague", "Mains en l'air", "Moulinets", "Déhanché", "Tape des mains", "Boxe",
                 "Twist des bras", "Robot", "Guitare", "Lasso", "Égyptien", "Poulet", "Dab", "Rouleau",
                 "Floss", "YMCA", "Essuie-glaces", "Pom-pom",
-                "Macarena", "Hélicoptère", "Cadres", "Brasse", "Fièvre du samedi soir", "Tape des cuisses", "Maracas", "Bras qui se balancent" };
+                "Macarena", "Hélicoptère", "Cadres", "Brasse", "Fièvre du samedi soir", "Tape des cuisses", "Maracas", "Bras qui se balancent",
+                "Manivelle", "Papillon", "Clap haut-bas", "Roulé d'épaules", "Pointe gauche-droite", "Vague à deux bras" };
             // les quatre temps de la macarena : bras tendus, mains aux épaules, mains sur la tête, mains aux hanches
             var macarena = new[] { new double[] { 90, 0, 86, 0 }, new double[] { 70, 150, 66, 150 }, new double[] { 150, 110, 146, 110 }, new double[] { 30, 100, -30, -100 } };
             // les quatre lettres de YMCA : (épaule1, coude1, épaule2, coude2)
@@ -927,6 +1150,12 @@ namespace MascotteStickman
                 (f, s, c, p) => { p[I.Ep1] = 40 + 60 * Math.Max(0, s); p[I.Co1] = 70 - 40 * Math.Max(0, s); p[I.Ep2] = 40 + 60 * Math.Max(0, -s); p[I.Co2] = 70 - 40 * Math.Max(0, -s); },
                 (f, s, c, p) => { p[I.Ep1] = 80; p[I.Co1] = 100 + 30 * Math.Sin(4 * f); p[I.Ep2] = 70; p[I.Co2] = 100 - 30 * Math.Sin(4 * f); },
                 (f, s, c, p) => { p[I.Ep1] = 150 + 25 * s; p[I.Co1] = -20 * s; p[I.Ep2] = 150 - 25 * s; p[I.Co2] = 20 * s; p[I.Tete] += 8 * s; },
+                (f, s, c, p) => { p[I.Ep1] = 80 + 25 * c; p[I.Co1] = 60 + 30 * s; p[I.Ep2] = 80 - 25 * c; p[I.Co2] = 60 - 30 * s; },
+                (f, s, c, p) => { p[I.Ep1] = f * 57.2958; p[I.Co1] = 20; p[I.Ep2] = f * 57.2958 + 8; p[I.Co2] = 20; p[I.Torse] += 6 * s; },
+                (f, s, c, p) => { p[I.Ep1] = 95 + 75 * s; p[I.Co1] = 15; p[I.Ep2] = 99 + 75 * s; p[I.Co2] = 15; },
+                (f, s, c, p) => { p[I.Ep1] = 10 + 22 * s; p[I.Co1] = 30 + 22 * c; p[I.Ep2] = -10 + 22 * c; p[I.Co2] = 30 + 22 * s; p[I.Torse] += 8 * s; p[I.Tete] -= 8 * s; },
+                (f, s, c, p) => { p[I.Ep1] = 90 + 62 * Math.Max(0, s); p[I.Co1] = 0; p[I.Ep2] = -90 - 62 * Math.Max(0, -s); p[I.Co2] = 0; p[I.Tete] += 10 * s; },
+                (f, s, c, p) => { p[I.Ep1] = 100 + 40 * s; p[I.Co1] = 30 * Math.Sin(f - 1.2); p[I.Ep2] = 100 + 40 * Math.Sin(f - 0.6); p[I.Co2] = 30 * Math.Sin(f - 1.8); },
             };
             var nomsJambes = new[] { "rebond", "pas chassés", "coups de pied", "twist", "course sur place", "sauts", "squats", "talons" };
             var tempos = new[] { 0.7, 0.9, 0.8, 0.8, 0.6, 0.7, 1.1, 0.8 };

@@ -1,83 +1,94 @@
 # Mascotte Stickman
 
-![Quelques-unes de ses animations](apercus/animations.png)
+![A few of his animations](apercus/animations.png)
 
-Un bonhomme-bâton qui vit sur le bureau de Windows : il se promène, saute sur le haut des fenêtres, danse, se bat contre le curseur, bâtit des tours de blocs, s'envole en élytres… et on peut l'attraper à la souris pour le lancer. Il n'a aucune image : tout est dessiné par le programme à partir d'un squelette, ce qui permet de choisir sa couleur et de lui donner des centaines d'animations.
+A stick figure that lives on your Windows desktop. He walks around, jumps onto the top of your windows, dances, fights the mouse cursor, builds block towers, glides with elytra… and you can grab him with the mouse and throw him. There are no image files: everything is drawn by code from a skeleton, which is why you can pick his colour and why he has hundreds of animations.
 
-*A stick figure that lives on your Windows desktop: 632 animations, drawn entirely by code from a skeleton. He walks around, jumps onto your windows, dances to your music, fights the cursor, builds block towers, glides with elytra, and you can grab and throw him. Up to six of them at once, and they greet each other. Single exe, no install.*
+*[Version française](README.fr.md)*
 
-> **Projet de fan, non officiel.** L'idée vient des animations où un stick figure s'échappe de son logiciel de dessin et sème la pagaille sur le bureau, celles d'Alan Becker en tête. Ce projet n'est ni créé ni approuvé par lui. Minecraft est une marque de Mojang ; ce projet n'y est pas affilié et ne contient aucun fichier du jeu.
+**On a phone or tablet:** https://minecraft-2048.github.io/mascotte-stickman/ — gravity follows the way you hold the device.
 
-## Installer
+> **Unofficial fan project.** The idea comes from the animations where a stick figure escapes from its drawing program and wreaks havoc on the desktop, Alan Becker's first of all. This project is not made or endorsed by him. Minecraft is a trademark of Mojang; this project is not affiliated with it and contains no game files.
 
-Télécharger `MascotteStickman.exe` dans les [Releases](../../releases) et le lancer. Windows 10 ou 11, rien d'autre à installer.
+## Install
 
-L'exe n'est pas signé : Windows peut afficher « Windows a protégé votre ordinateur ». Cliquer sur *Informations complémentaires* puis *Exécuter quand même*.
+Download `MascotteStickman.exe` from the [Releases](../../releases) and run it. Windows 10 or 11, nothing else to install.
 
-## Ce qu'il fait
+The exe is not signed, so Windows may show "Windows protected your PC". Click *More info*, then *Run anyway*.
 
-- **Clic droit** : couleur, animations rangées par famille, amis, paramètres, mode muet, lancement au démarrage de Windows, quitter.
-- **Couleur et tête** : 16 teintes ou n'importe quelle couleur. La tête est un disque plein, sauf pour l'orange, le noir et le rouge sombre où c'est un anneau ; un réglage force l'un ou l'autre.
-- **632 animations** : déplacements, danses (28 mouvements de bras × 8 de jambes), gestes, combat, acrobaties, sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
-- **Souris** : on l'attrape, on le balance, on le lance ; il se bat contre le curseur s'il s'approche, et un curseur trop rapide l'envoie valser.
-- **Fenêtres** : il saute sur le haut des fenêtres (saut simple, salto ou atterrissage de héros), voyage avec elles, retombe si elles se ferment, et peut se téléporter.
-- **Amis** : jusqu'à six stickmen à la fois (clic droit → *Amis* → *Ajouter un stickman*), chacun de sa couleur. Ils vont se voir d'eux-mêmes, même perchés sur des fenêtres différentes : bonjour, check, tope-là, poignée de main, check complet, câlin, pierre-feuille-ciseaux, duel amical, danse à deux.
+The app is in English unless Windows is in French; you can force either language in *Settings → System*.
 
-![Les animations à deux](apercus/duos.png)
+## What he does
 
-- **Musique** : quand le PC joue de la musique, il lui prend de temps en temps l'envie de danser, et sa danse suit le tempo. Il lit seulement le niveau du son qui sort du PC (comme l'indicateur de volume de Windows) : rien n'est enregistré.
-- **Minecraft** : des scènes entières. Il monte une tour ou un escalier de blocs sous ses pieds puis saute dans le vide, s'envole en élytres, amortit une chute immense avec un seau d'eau, lance une perle de l'Ender et s'y téléporte, allume une TNT qui souffle toute la bande, tire un feu d'artifice, traverse un portail du Nether ; et aussi : pioche, établi, lit, wagonnet, bateau, trampoline de slime…
-- **Mode farceur** (désactivé par défaut) : de temps en temps, il saute sur une fenêtre, marche jusqu'à sa croix et appuie dessus avec la main. C'est un vrai clic sur la croix : un programme qui a du travail non enregistré demande encore confirmation, mais un jeu ou une vidéo se ferment aussitôt. Il épargne la fenêtre en cours d'utilisation (réglable), prévient par une bulle, et il suffit de l'attraper à la souris pour l'en empêcher.
-- **Sons** : 14 bruitages calculés par le programme, sans aucun fichier audio. Volume et familles de sons réglables, et un **mode muet** dans le menu pour tout couper d'un coup.
-- **Paramètres** : une fenêtre à onglets, plus de 80 réglages et une case par animation.
+- **Right-click** him for the menu: colour, animations sorted by family, friends, settings, mute, start with Windows, quit.
+- **Colour and head**: 16 colours or any colour you like. The head is a solid disc, except for orange, black and dark red where it is a ring; a setting forces one or the other.
+- **827 animations**: moving around, dances (34 arm moves × 8 leg moves), gestures, fighting, acrobatics, sport, everyday life, emotions, and a few that only make sense on the edge of a window (sitting with his legs dangling, fishing). About forty props drawn by the program: sword, hammer, guitar, umbrella, broom…
+- **Mouse**: grab him, swing him, throw him. He fights the cursor when it comes close, and a fast cursor knocks him over.
+- **Windows**: he jumps onto the top of your windows (plain jump, somersault or hero landing), travels with them, and falls when they close.
+- **Friends**: up to six stickmen at once (right-click → *Friends* → *Add a stickman*), each with his own colour. They go and see each other on their own, even from one window to another: hello, fist bump, high five, handshake, hug, rock paper scissors, friendly duel, dancing together…
 
-## Les textures de Minecraft
+![The two-player animations](apercus/duos.png)
 
-Les blocs et les objets des scènes Minecraft s'affichent avec les vraies textures du jeu, au pixel près, **si Minecraft (Java) est installé sur le PC** : le programme les lit directement dans le jeu (le `.jar` de la version la plus récente, dans `.minecraft\versions`). Rien n'est copié dans l'exe ni dans ce dépôt.
+- **Music**: when the PC plays music, he sometimes feels like dancing, and his dance follows the tempo. He only reads the output level (like the Windows volume meter); nothing is recorded.
+- **Minecraft scenes**: he stacks a block tower or a staircase under his feet and jumps off, glides with elytra, saves a huge fall with a water bucket, throws an Ender pearl and teleports to it, lights TNT that blows the whole gang away, launches a firework, walks through a Nether portal; plus pickaxe, crafting table, bed, minecart, boat, slime trampoline…
+- **Command staff**: the first stickman carries a staff topped with a command block. He raises it, the command types itself in the air like in the game console (`/setblock ~1 ~ ~ hay_block`, `/tp @s 512 0`…), then it takes effect: place a block, teleport, call the whole gang, summon lightning or rain, levitate, run at full speed, make the house appear… Fifteen commands.
+- **Teleporting**: no "magic" teleporting. It takes a staff command, an Ender pearl or a Nether portal.
+- **House and scenery**: a small block house appears near their home when they build it or go inside (the window lights up when someone is in), then goes away after a while — or stays, if you tick the setting. They also light a campfire to warm up, and plant flowers.
+- **Special tricks** (*Special* tab, one checkbox each): he suddenly turns giant and scares the others away, shrinks and scurries around, draws on the screen. Three more are off by default because they touch your PC: opening Alan Becker's YouTube channel, lassoing the mouse cursor, shaking the window he stands on.
+- **Spell checker** (off by default, right-click → *Spell checker*): when you have just typed a misspelled word, he flies to it, points at it with a pencil, and the word is replaced; the caret goes back where it was. He does not listen to the keyboard: he asks Windows for the bit of text before the caret (as a screen reader does), never reads a password field, and keeps or sends nothing. Spelling comes from the Windows spell checker, in the Windows language.
+- **Prank mode** (off by default): now and then he jumps onto a window, walks to its X and presses it. It is a real click on the X: a program with unsaved work still asks for confirmation, but a game or a video closes at once. He spares the window you are using (configurable), warns you with a speech bubble, and grabbing him with the mouse stops him.
+- **Sounds**: 14 sound effects computed by the program, no audio files. Volume and sound families are adjustable, and there is a **mute** switch in the menu.
+- **Settings**: a tabbed window with about 100 settings and one checkbox per animation.
 
-Sans Minecraft, ou si la case *Vraies textures de Minecraft* est décochée (Paramètres → Apparence), les blocs sont dessinés par le programme et les objets remplacés par des formes simples.
+## Minecraft textures
 
-## Version mobile (téléphone, tablette)
+Blocks and items in the Minecraft scenes are drawn with the real game textures, pixel for pixel, **if Minecraft (Java Edition) is installed on the PC**: the program reads them straight from the game (the `.jar` of the most recent version, in `.minecraft\versions`). Nothing is copied into the exe or into this repository.
 
-**À ouvrir sur son téléphone ou sa tablette : https://minecraft-2048.github.io/mascotte-stickman/**
+Without Minecraft, or if you untick *Real Minecraft textures* (Settings → Appearance), blocks are drawn by the program and items become simple shapes.
 
-C'est une version web (le dossier `docs/`) : une page où le stickman vit dans l'écran. On peut l'ajouter à l'écran d'accueil pour l'avoir en plein écran, comme une appli.
+## Phone and tablet version
 
-- **La gravité suit l'appareil** : il se tient sur le bord de l'écran qui est en bas. Penche ou retourne l'appareil, il glisse, décroche et retombe du nouveau côté. Une bonne secousse l'envoie valser. (Sur iPhone et iPad, toucher *Inclinaison* pour autoriser le capteur.)
-- **Au doigt** : on l'attrape et on le lance, on le touche pour une animation au hasard, on touche ailleurs pour qu'il y aille.
-- **Boutons** : couleur, un stickman de plus ou de moins (jusqu'à six), et sur ordinateur un bouton pour tourner la gravité d'un quart de tour.
-- Elle reprend les animations de la version Windows (exportées par `MascotteStickman.exe --web docs`), sans les scènes Minecraft, les accessoires, les sons ni les animations à deux.
+**https://minecraft-2048.github.io/mascotte-stickman/**
 
-Pour l'essayer sur son PC : `python -m http.server --directory docs`, puis ouvrir `http://localhost:8000`.
+It is a web page (the `docs/` folder) where the stickman lives inside the screen. Add it to your home screen to run it full screen, like an app.
 
-## Le piloter depuis la ligne de commande
+- **Gravity follows the device**: he stands on whichever edge of the screen is down. Tilt or flip the device and he slides, loses his footing and falls to the new side. A good shake sends him flying. (On iPhone and iPad, tap *Tilt* first to allow the sensor.)
+- **Touch**: grab him and throw him, tap him for a random animation, tap elsewhere to send him there.
+- **Buttons**: colour, one more or one fewer stickman (up to six), and on a computer a button that turns gravity a quarter turn.
+- It reuses the animations of the Windows version (exported by `MascotteStickman.exe --web docs`), without the Minecraft scenes, the props, the sounds or the two-player animations.
+
+To try it on your own PC: `python -m http.server --directory docs`, then open `http://localhost:8000`.
+
+## Command line
 
 ```
 MascotteStickman.exe --jouer "Salto avant"
 MascotteStickman.exe --jouer "Tour de blocs"
 MascotteStickman.exe --jouer "@amis 3"
 MascotteStickman.exe --jouer "@duo Check"
-MascotteStickman.exe --planches dossier
+MascotteStickman.exe --planches folder
 ```
 
-`--jouer` s'adresse au stickman déjà lancé : un nom d'animation, ou une commande (`@amis N`, `@duo nom`, `@musique`, `@fenetre`, `@reglages`, `@couleur RRVVBB`). `--planches` écrit des planches de contrôle : chaque animation en huit images (`--planches dossier duos` pour les animations à deux).
+`--jouer` talks to the stickman that is already running: an animation name (the internal names are French in both languages), or a command (`@amis N`, `@duo name`, `@musique`, `@fenetre`, `@reglages`, `@couleur RRGGBB`). `--planches` writes contact sheets: every animation in eight frames (`--planches folder duos` for the two-player ones). `--noms file` lists every name with its English translation.
 
-Ses réglages sont dans `%LOCALAPPDATA%\MascotteStickman`.
+His settings live in `%LOCALAPPDATA%\MascotteStickman`.
 
-## Compiler
+## Build
 
 ```
 powershell -ExecutionPolicy Bypass -File construire.ps1
 ```
 
-Le script utilise le compilateur C# livré avec Windows (.NET Framework 4) : rien à installer.
+The script uses the C# compiler that ships with Windows (.NET Framework 4): nothing to install. The code and its comments are written in French.
 
-- `src/Stickman.cs` : le moteur (squelette, dessin, physique du lancer, fenêtres, amis, scènes, sons, paramètres).
-- `src/StickmanAnimations.cs` : la bibliothèque d'animations. Une pose s'écrit en treize nombres (torse, tête, épaules, coudes, hanches, genoux, hauteur, rotation, décalage) ; les marches et les danses sont fabriquées par des générateurs.
-- `src/StickmanOreille.cs` : l'écoute du niveau sonore et le calcul du tempo.
+- `src/Stickman.cs`: the engine (skeleton, drawing, throw physics, windows, friends, scenes, sounds, settings).
+- `src/StickmanAnimations.cs`: the animation library. A pose is thirteen numbers (torso, head, shoulders, elbows, hips, knees, height, rotation, offset); walks and dances come from generators.
+- `src/StickmanOreille.cs`: listens to the output level and works out the tempo.
+- `src/StickmanCorrecteur.cs`: the spell checker (reads the text next to the caret, Windows spell checker, word replacement).
+- `src/StickmanLangue.cs`: the French → English dictionary for everything the app displays.
 
-Il a d'abord vécu dans le dépôt [Mascotte Claude](https://github.com/Minecraft-2048/mascotte-claude), avec les autres mascottes.
+He first lived in the [Mascotte Claude](https://github.com/Minecraft-2048/mascotte-claude) repository, with the other mascots.
 
 ## Licence
 
-MIT, voir [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).

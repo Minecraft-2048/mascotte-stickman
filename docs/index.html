@@ -49,6 +49,17 @@ const PALETTE = [['#ff8a1a', 1], ['#e53935', 0], ['#1e88e5', 0], ['#43a047', 0],
 const POIDS = { 'Déplacements': 50, 'Danses': 30, 'Gestes': 50, 'Combat': 30, 'Acrobaties': 50, 'Sport': 50, 'Quotidien': 50, 'Émotions': 50 };
 const GLYPHES = { note: '♪', zzz: 'z Z', coeur: '♥', exclam: '!', question: '?' };
 
+// La page est en français pour un navigateur français, en anglais pour tous les autres.
+const FR = (navigator.language || 'en').toLowerCase().startsWith('fr');
+if (!FR) {
+  document.documentElement.lang = 'en';
+  document.getElementById('aide').textContent = 'Tilt the device: gravity follows. Grab him and throw him, tap him for an animation, tap elsewhere to send him there.';
+  document.getElementById('capteurs').textContent = 'Tilt';
+  document.getElementById('couleur').textContent = 'Colour';
+  const titres = { tourner: 'Turn gravity a quarter turn', couleur: 'Change his colour', moins: 'One stickman fewer', plus: 'One more stickman' };
+  for (const id in titres) document.getElementById(id).title = titres[id];
+}
+
 const rad = d => d * Math.PI / 180;
 const bas = d => [Math.sin(rad(d)), Math.cos(rad(d))], haut = d => [Math.sin(rad(d)), -Math.cos(rad(d))];
 const borne = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -422,7 +433,7 @@ function fin(e) {
     if (d.qui.etat !== 'anim') return;
     const noms = Object.keys(parFamille).filter(f => f !== 'Déplacements'), liste = parFamille[noms[hasard(noms.length)]];
     const a = liste[hasard(liste.length)];
-    d.qui.demander(a); d.qui.dire(a.n, 2.2);
+    d.qui.demander(a); d.qui.dire(FR ? a.n : a.e || a.n, 2.2);
     return;
   }
   // touché ailleurs : le plus proche de ceux qui sont posés y va, en marchant ou en courant
@@ -494,7 +505,7 @@ fetch('animations.json').then(r => r.json()).then(donnees => {
   bande.push(dernier = new Bonhomme(0));
   requestAnimationFrame(image);
   setTimeout(() => { document.getElementById('aide').style.opacity = 0; }, 7000);
-}).catch(() => { document.getElementById('aide').textContent = 'Impossible de charger les animations (animations.json).'; });
+}).catch(() => { document.getElementById('aide').textContent = FR ? 'Impossible de charger les animations (animations.json).' : 'Could not load the animations (animations.json).'; });
 </script>
 </body>
 </html>

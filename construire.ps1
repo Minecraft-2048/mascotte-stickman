@@ -8,6 +8,7 @@ $net = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319"
 & "$net\csc.exe" /nologo /nowarn:618 /target:winexe /optimize+ /codepage:65001 /out:MascotteStickman.exe /win32icon:assets\stickman.ico `
     /r:"$net\WPF\PresentationFramework.dll" /r:"$net\WPF\PresentationCore.dll" /r:"$net\WPF\WindowsBase.dll" /r:System.Xaml.dll `
     /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll `
-    src\Stickman.cs src\StickmanAnimations.cs src\StickmanOreille.cs
+    /r:"$net\WPF\UIAutomationClient.dll" /r:"$net\WPF\UIAutomationTypes.dll" `
+    src\Stickman.cs src\StickmanAnimations.cs src\StickmanOreille.cs src\StickmanCorrecteur.cs src\StickmanLangue.cs
 if ($LASTEXITCODE -ne 0) { throw "La compilation de MascotteStickman a echoue." }
 Write-Host "OK : MascotteStickman.exe"

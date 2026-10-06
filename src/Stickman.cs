@@ -41,6 +41,7 @@ namespace MascotteStickman
             }
             Biblio.Construire();
             R.Familles();
+            if (args.Contains("--anglais")) Langue.Force = true;
             // MascotteStickman.exe --planches dossier [filtre] : planches de contrôle des animations, en PNG
             if (args.Length >= 2 && args[0] == "--planches")
             {
@@ -50,6 +51,8 @@ namespace MascotteStickman
             if (args.Length >= 2 && args[0] == "--sons") { Sons.Exporter(args[1]); return 0; }
             // MascotteStickman.exe --web dossier : les animations en poses échantillonnées, pour la version web (docs/)
             if (args.Length >= 2 && args[0] == "--web") { Planches.ExporterWeb(args[1]); return 0; }
+            // MascotteStickman.exe --noms fichier : tous les noms affichés (familles, animations, duos), pour vérifier les traductions
+            if (args.Length >= 2 && args[0] == "--noms") { Planches.EcrireNoms(args[1]); return 0; }
 
             bool premiere;
             using (new Mutex(true, "MascotteStickman-Instance", out premiere))
@@ -139,7 +142,10 @@ namespace MascotteStickman
             N(C, "fenetresChance", "Envie de sauter sur une fenêtre (%)", 15, 0, 100);
             N(C, "enchaine", "Gestes pendant la marche (%)", 25, 0, 100);
             N(C, "sommeil", "S'endort après (minutes sans toucher au PC, 0 = jamais)", 10, 0, 120);
-            N(C, "teleporte", "Envie de se téléporter (%)", 6, 0, 100);
+            N(C, "teleporte", "Envie de se téléporter : commande, perle de l'Ender ou portail (%)", 6, 0, 100);
+            B(C, "baton", "Le premier stickman a le bâton de commande", true);
+            B(C, "maisonToujours", "Leur maison reste toujours visible", false);
+            B(C, "correcteur", "CORRECTEUR : il corrige mes fautes d'orthographe (lit le texte près du curseur, jamais les mots de passe)", false);
             B(C, "ferme", "MODE FARCEUR : il ferme des fenêtres en appuyant sur leur croix", false);
             N(C, "fermeDelai", "Mode farceur : minutes entre deux fermetures", 5, 0.5, 120);
             B(C, "fermeActive", "Mode farceur : peut aussi fermer la fenêtre que j'utilise", false);
@@ -149,6 +155,16 @@ namespace MascotteStickman
 
             // plusieurs stickmen : le premier garde la couleur de l'onglet Apparence, les suivants ont la leur
             // (par défaut la bande de la série : rouge, bleu, vert, jaune)
+            // les animations spéciales : chacune se coupe ici. Celles qui touchent au PC (navigateur, souris,
+            // fenêtres) sont décochées au départ ; on peut toujours les demander à la main dans le menu.
+            const string Sp = "Spécial";
+            B(Sp, "special.geant", "Géant : il grandit d'un coup et fait fuir les autres", true);
+            B(Sp, "special.mini", "Minuscule : il rétrécit et file partout", true);
+            B(Sp, "special.dessin", "Il dessine sur l'écran", true);
+            B(Sp, "special.youtube", "Il ouvre YouTube sur la chaîne d'Alan Becker (ouvre le navigateur)", false);
+            B(Sp, "special.curseur", "Il attrape le curseur au lasso (la souris bouge vraiment)", false);
+            B(Sp, "special.secousse", "Il secoue la fenêtre où il est perché (la fenêtre bouge vraiment)", false);
+
             const string Am = "Amis";
             Ch(Am, "nombre", "Nombre de stickmen", 0, "1", "2", "3", "4", "5", "6");
             B(Am, "rencontres", "Ils vont se voir : bonjour, checks, câlins, duels amicaux…", true);
@@ -187,6 +203,7 @@ namespace MascotteStickman
             B(P, "murs", "Rebondit sur les bords de l'écran", true);
 
             B(Y, "premierplan", "Toujours au premier plan", true);
+            Ch(Y, "langue", "Langue / Language", 0, "comme Windows / same as Windows", "français", "English");
             N("", "droite", "", 1120, -100000, 100000);
         }
 
@@ -335,8 +352,33 @@ namespace MascotteStickman
             if (avantBras.Length > 0.01) avantBras.Normalize();
             Point tete = e(o.Tete);
             double f = 2 * Math.PI * phase;
+            // objets du jeu tenus en main : « item:nom » (tel quel) ou « outil:nom » (manche aligné sur l'avant-bras)
+            if (objet.StartsWith("item:"))
+            {
+                if (!Icone(dc, Textures.Lire("item/" + objet.Substring(5)), o.M1 + new Vector(3, -4), 24, 0, e, s)) dc.DrawEllipse(clair, null, e(o.M1), 5 * s, 5 * s);
+                return;
+            }
+            if (objet.StartsWith("outil:"))
+            {
+                if (!Outil(dc, "item/" + objet.Substring(6), o, avantBras, 44, e, s)) dc.DrawLine(gris, e(o.M1), e(o.M1 + avantBras * 34));
+                return;
+            }
             switch (objet)
             {
+                case "commande":
+                    {
+                        // le bâton de commande : un manche de bois dans la main, un bloc de commande au bout
+                        Point bout = o.M1 + avantBras * 34, centre = e(bout + avantBras * 9);
+                        double c = 20 * s;
+                        dc.DrawLine(Plume(Color.FromRgb(0x8B, 0x5A, 0x2B), Math.Max(2.5, epaisseur * 0.7)), e(o.M1 - avantBras * 16), e(bout));
+                        if (phase > 0.3 && phase < 0.95)                 // l'onde qui part du bloc quand la commande s'exécute
+                        {
+                            double k = (phase - 0.3) / 0.65;
+                            dc.DrawEllipse(null, Plume(Color.FromArgb((byte)(210 * (1 - k)), 255, 190, 90), 2 * s), centre, c * (0.7 + 1.4 * k), c * (0.7 + 1.4 * k));
+                        }
+                        Blocs.Dessiner(dc, new Rect(centre.X - c / 2, centre.Y - c / 2, c, c), Blocs.Commande, couleur, 0);
+                        break;
+                    }
                 case "epee": case "club": case "raquette":
                     {
                         double longueur = objet == "epee" ? 48 : objet == "club" ? 52 : 30;
@@ -867,11 +909,13 @@ namespace MascotteStickman
     static class Blocs
     {
         public const int Herbe = 0, Pierre = 1, Planches = 2, Laine = 3, Diamant = 4, Terre = 5, Roche = 6, Tronc = 7, Briques = 8, Or = 9,
-            Obsidienne = 10, Foin = 11, Pasteque = 12, Bibliotheque = 13, Tnt = 14, Slime = 15, Etabli = 16, Eau = 17, Feuilles = 18, Portail = 19;
+            Obsidienne = 10, Foin = 11, Pasteque = 12, Bibliotheque = 13, Tnt = 14, Slime = 15, Etabli = 16, Eau = 17, Feuilles = 18, Portail = 19,
+            Commande = 20, Verre = 21, PorteBas = 22, PorteHaut = 23, Sapin = 24, PierreTaillee = 25;
         // pour chaque bloc : sa texture dans le jeu, et le dessin de secours qui lui ressemble le plus
         static readonly string[] noms = { "grass_block_side", "cobblestone", "oak_planks", "white_wool", "diamond_ore", "dirt", "stone", "oak_log", "bricks", "gold_block",
-            "obsidian", "hay_block_side", "melon_side", "bookshelf", "tnt_side", "slime_block", "crafting_table_front", "water_still", "oak_leaves", "nether_portal" };
-        static readonly int[] secours = { 0, 1, 2, 3, 4, 5, 1, 2, 6, 7, 8, 7, 9, 2, 10, 9, 2, 11, 9, 12 };
+            "obsidian", "hay_block_side", "melon_side", "bookshelf", "tnt_side", "slime_block", "crafting_table_front", "water_still", "oak_leaves", "nether_portal",
+            "command_block_front", "glass", "oak_door_bottom", "oak_door_top", "spruce_planks", "stone_bricks" };
+        static readonly int[] secours = { 0, 1, 2, 3, 4, 5, 1, 2, 6, 7, 8, 7, 9, 2, 10, 9, 2, 11, 9, 12, 13, 14, 2, 2, 2, 1 };
         public static readonly int[] PourBatir = { Herbe, Pierre, Planches, Laine, Diamant, Terre, Roche, Tronc, Briques, Or, Obsidienne, Foin, Pasteque, Bibliotheque };
 
         static readonly Dictionary<Color, Brush> pinceaux = new Dictionary<Color, Brush>();
@@ -881,6 +925,9 @@ namespace MascotteStickman
         static readonly Color[] bois = { Rvb(0xB8945F), Rvb(0xA9864F), Rvb(0xC4A06A) };
 
         static Color Rvb(int v) { return Color.FromRgb((byte)(v >> 16), (byte)(v >> 8), (byte)v); }
+
+        // son nom dans le jeu, pour l'écrire dans une commande (la texture « hay_block_side » est celle du bloc « hay_block »)
+        public static string Nom(int bloc) { return noms[bloc].Replace("_side", "").Replace("_front", ""); }
 
         public static Brush Pinceau(Color c)
         {
@@ -911,6 +958,8 @@ namespace MascotteStickman
                 case 10: return j >= 3 && j <= 4 ? Rvb(0xF0F0F0) : Nuance(Rvb(0xD83020), h);
                 case 11: return Nuance(Color.FromArgb(190, 0x3F, 0x76, 0xE4), h);
                 case 12: return Nuance(Color.FromArgb(200, 0x8A, 0x30, 0xD8), h);
+                case 13: return (i == 0 || i == 7 || j == 0 || j == 7) ? Rvb(0x8A5A3C) : (i >= 3 && i <= 4 && j >= 3 && j <= 4) ? Rvb(0x3A2A20) : Nuance(Rvb(0xD08A50), h);
+                case 14: return (i == 0 || i == 7 || j == 0 || j == 7) ? Color.FromArgb(230, 0xD8, 0xEC, 0xF4) : Color.FromArgb(70, 0xC8, 0xE6, 0xF2);
                 default: return pierre[h % pierre.Length];
             }
         }
@@ -987,6 +1036,23 @@ namespace MascotteStickman
     // Planches de contrôle : chaque animation en huit images, pour vérifier les poses d'un coup d'œil.
     static class Planches
     {
+        public static void EcrireNoms(string fichier)
+        {
+            var noms = new List<string>();
+            foreach (string f in Biblio.Familles) noms.Add("F|" + f + "|" + Langue.EnAnglais(f));
+            foreach (Anim a in Biblio.Toutes) noms.Add("A|" + a.Nom + "|" + Langue.EnAnglais(a.Nom));
+            foreach (Duo d in Biblio.Duos)
+                foreach (string t in new[] { d.Nom, d.DitA, d.DitB, d.FinA, d.FinB })
+                    if (t != null) noms.Add("D|" + t + "|" + Langue.EnAnglais(t));
+            foreach (Param p in R.Tous)
+            {
+                noms.Add("R|" + p.Nom + "|" + Langue.EnAnglais(p.Nom));
+                if (p.Cat != "") noms.Add("C|" + p.Cat + "|" + Langue.EnAnglais(p.Cat));
+                if (p.Choix != null) foreach (string c in p.Choix) noms.Add("X|" + c + "|" + Langue.EnAnglais(c));
+            }
+            File.WriteAllLines(fichier, noms, new UTF8Encoding(false));
+        }
+
         // --web dossier : animations.json pour la version web. Chaque animation y devient une suite de poses
         // (13 entiers, dans l'ordre de I) prises à intervalles réguliers ; la page les relie entre elles.
         // Restent ici : les scènes entières, les animations de rebord de fenêtre et la famille Minecraft.
@@ -1001,7 +1067,7 @@ namespace MascotteStickman
                 int n = Math.Max(12, Math.Min(90, (int)Math.Round(a.Duree * 30)));
                 var poses = new List<string>();
                 for (int i = 0; i <= n; i++) poses.Add(pose(a.Pose(i / (double)n)));
-                return "{\"n\":" + texte(a.Nom) + ",\"f\":" + texte(a.Famille) + ",\"d\":" + a.Duree.ToString("0.###", inv) + ",\"t\":" + a.Tours
+                return "{\"n\":" + texte(a.Nom) + ",\"e\":" + texte(Langue.EnAnglais(a.Nom)) + ",\"f\":" + texte(a.Famille) + ",\"d\":" + a.Duree.ToString("0.###", inv) + ",\"t\":" + a.Tours
                     + (a.Haut ? ",\"h\":1" : "") + (a.Deplace ? ",\"m\":1,\"v\":" + a.Vitesse.ToString("0.#", inv) : "")
                     + (a.Objet != null ? ",\"o\":" + texte(a.Objet) : "") + ",\"p\":[" + string.Join(",", poses) + "]}";
             };
@@ -1026,7 +1092,7 @@ namespace MascotteStickman
                 for (int i = 0; i < liste.Count; i++)
                 {
                     Duo d = liste[i];
-                    dc.DrawText(Dessin.Texte(d.Nom, 12, Brushes.White), new Point(6, i * ch + 48));
+                    dc.DrawText(Dessin.Texte(Langue.T(d.Nom), 12, Brushes.White), new Point(6, i * ch + 48));
                     dc.DrawLine(new Pen(Brushes.DimGray, 1), new Point(marge, (i + 1) * ch - 6), new Point(marge + images * cl, (i + 1) * ch - 6));
                     for (int k = 0; k < images; k++)
                     {
@@ -1061,8 +1127,8 @@ namespace MascotteStickman
                     for (int i = 0; i < parPage && page * parPage + i < liste.Count; i++)
                     {
                         Anim a = liste[page * parPage + i];
-                        dc.DrawText(Dessin.Texte(a.Famille, 10, Brushes.Gray), new Point(6, i * ch + 34));
-                        dc.DrawText(Dessin.Texte(a.Nom, 12, Brushes.White), new Point(6, i * ch + 48));
+                        dc.DrawText(Dessin.Texte(Langue.T(a.Famille), 10, Brushes.Gray), new Point(6, i * ch + 34));
+                        dc.DrawText(Dessin.Texte(Langue.T(a.Nom), 12, Brushes.White), new Point(6, i * ch + 48));
                         dc.DrawLine(new Pen(Brushes.DimGray, 1), new Point(marge, (i + 1) * ch - 6), new Point(marge + images * cl, (i + 1) * ch - 6));
                         for (int k = 0; k < images; k++)
                         {
@@ -1150,6 +1216,8 @@ namespace MascotteStickman
         Point curseur; Vector vCurseur; bool appui, curseurLu; Point appuiCurseur;
         double balance, vBalance;
         string bulle; double finBulle;
+        string commande; double debutCommande, finCommande;      // la commande que son bâton écrit en l'air
+        double turbo = 1;                             // /effect speed : il marche plusieurs fois plus vite
         bool sonFait;                                 // le bruitage de l'animation en cours a déjà été joué
         int styleSaut; double tVol, dureeVol;         // saut vers une fenêtre : 0 simple, 1 en salto, 2 atterrissage de héros
         double voile = 1, voileVise = 1;              // fondu de la téléportation
@@ -1178,7 +1246,7 @@ namespace MascotteStickman
             place = numero;
             Tous.Add(this);
             temps = chrono.Elapsed.TotalSeconds;
-            Title = "Mascotte Stickman";
+            Title = numero == 0 ? "Mascotte Stickman" : "Mascotte Stickman (ami " + numero + ")";
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
             Background = Brushes.Transparent;
@@ -1207,6 +1275,9 @@ namespace MascotteStickman
                 Dire("Salut !", 3);
                 if (place != 0) return;
                 AjusterNombre();
+                Correcteur.Trouvee = f => Dispatcher.BeginInvoke(new Action(() => FauteTrouvee(f)));
+                Correcteur.Appliquee = (f, reussi) => Dispatcher.BeginInvoke(new Action(() => FauteCorrigee(f, reussi)));
+                Correcteur.Regler(R.O("correcteur"));
                 oreille = new Oreille(
                     (active, duree) => Dispatcher.BeginInvoke(new Action(() => MusiqueChange(active, duree))),
                     fort => Dispatcher.BeginInvoke(new Action(() => DemiTemps(fort)))) { Active = R.O("musique") };
@@ -1214,6 +1285,8 @@ namespace MascotteStickman
             Closed += (o, e) =>
             {
                 minuteur.Stop();                                 // sinon il continuerait à vivre, invisible, et à aller voir les autres
+                Sortir();
+                if (place == 0 && maisonDecor != null) maisonDecor.Close();
                 if (decor != null) decor.Close();
                 if (volant != null) volant.Close();
                 Rompre();
@@ -1235,11 +1308,13 @@ namespace MascotteStickman
         {
             foreach (Bonhomme b in Tous) b.AppliquerUn();
             if (oreille != null) oreille.Active = R.O("musique");
+            Correcteur.Regler(R.O("correcteur"));
         }
 
         void AppliquerUn()
         {
-            s = R.D("taille");
+            s = R.D("taille") * echelleFx;
+            if (toile.ContextMenu != null && langueMenu != Langue.Anglais) ConstruireMenu();      // la langue a changé : le menu aussi
             largeur = 340 * s; hauteur = 360 * s; solY = hauteur - 64 * s;      // sous le sol : la place des jambes qui pendent d'une fenêtre
             Width = largeur; Height = hauteur;
             Topmost = R.O("premierplan");
@@ -1267,6 +1342,7 @@ namespace MascotteStickman
             {
                 if (temps > prochaineCommande) { prochaineCommande = temps + 0.4; LireCommande(); }
                 if (Tous.Count != (int)R.D("nombre") + 1) AjusterNombre();
+                TenirMaison();
             }
 
             switch (etat)
@@ -1277,6 +1353,13 @@ namespace MascotteStickman
                 case Etat.Plane: Planer(dt); break;
             }
             Scene(dt);
+            if (echelleVisee != 1 && temps > finEchelle) echelleVisee = 1;      // géant ou minuscule : jamais pour toujours
+            if (echelleFx != echelleVisee)
+            {
+                double pas = dt * 3.2 * Math.Max(0.4, echelleFx);
+                echelleFx = Math.Abs(echelleVisee - echelleFx) <= pas ? echelleVisee : echelleFx + Math.Sign(echelleVisee - echelleFx) * pas;
+                AppliquerUn();
+            }
             voile += Math.Max(-dt * 5, Math.Min(dt * 5, voileVise - voile));
             toile.Opacity = R.D("opacite") / 100 * voile;
             Placer();
@@ -1362,6 +1445,8 @@ namespace MascotteStickman
             if (etat != Etat.Anime) return;
             Rompre();
             if (scene == "portail" || scene == "eau" || scene == "perle") RangerScene();
+            Renoncer();
+            Sortir();
             if (a.Special != null) { Speciale(a); return; }
             if (a.SurFenetre && support == IntPtr.Zero)          // jambes dans le vide : il lui faut un rebord
             {
@@ -1376,6 +1461,7 @@ namespace MascotteStickman
         {
             Jouer(Biblio.Repos[hasard.Next(Biblio.Repos.Count)], double.MaxValue);
             enRepos = true;
+            turbo = 1;
             prochaineAction = temps + R.D("activite") * (0.5 + hasard.NextDouble());
         }
 
@@ -1447,7 +1533,7 @@ namespace MascotteStickman
             tCourante += dureeForcee > 0 ? dt / dureeForcee : dt * R.D("vitesse") / 100 / courante.Duree;
             if (courante.Deplace && versCible)
             {
-                double pas = Math.Abs(courante.Vitesse) * R.D("marche") / 100 * s * dt;
+                double pas = Math.Abs(courante.Vitesse) * R.D("marche") / 100 * s * dt * turbo;
                 if (Math.Abs(cible - ancre.X) <= pas) { Glisser(cible - ancre.X); Suite(); return; }
                 Glisser(cible > ancre.X ? pas : -pas);
             }
@@ -1538,10 +1624,14 @@ namespace MascotteStickman
             if (Tous.Count > 1 && R.O("rencontres") && hasard.NextDouble() * 100 < R.D("rencontresChance") && Rencontrer(null)) return;
             if (musique && R.O("musique") && hasard.NextDouble() * 100 < R.D("musiqueChance") && DanserSurLaMusique()) return;
             if (R.O("fenetres") && hasard.NextDouble() * 100 < R.D("fenetresChance") && SauterSurFenetre()) return;
-            if (hasard.NextDouble() * 100 < R.D("teleporte") && Teleporter()) return;
+            if (hasard.NextDouble() * 100 < R.D("teleporte") && SeTeleporter()) return;
 
             // les animations « jambes dans le vide » ne sont proposées que perché sur une fenêtre
-            Func<Anim, bool> permise = a => !R.Coupees.Contains(a.Nom) && (!a.SurFenetre || support != IntPtr.Zero);
+            // les animations « jambes dans le vide » demandent un rebord ; les commandes, le bâton
+            Func<Anim, bool> permise = a => !R.Coupees.Contains(a.Nom) && (!a.SurFenetre || support != IntPtr.Zero)
+                && (a.Special == null || !a.Special.StartsWith("cmd:") || ABaton)
+                && (a.Special == null || !a.Special.StartsWith("x:") || R.O("special." + a.Special.Substring(2)))
+                && (a.Special != "x:youtube" || temps > prochainYoutube);      // le navigateur : pas plus d'une fois par heure
             var possibles = new List<Anim>();
             double total = 0;
             var poids = new Dictionary<string, double>();
@@ -1578,7 +1668,7 @@ namespace MascotteStickman
         public void Dire(string texte, double secondes)
         {
             if (!R.O("bulles")) return;
-            bulle = texte;
+            bulle = Langue.T(texte);
             finBulle = temps + secondes;
         }
 
@@ -1624,6 +1714,7 @@ namespace MascotteStickman
         {
             Rompre();
             if (scene != "tour" && scene != "chute" && scene != "tnt") RangerScene();      // la tour s'écroule d'elle-même, la TNT explose quand même
+            Renoncer();
             etat = Etat.Porte;
             support = IntPtr.Zero;
             geste = null; dort = false;
@@ -1814,7 +1905,20 @@ namespace MascotteStickman
             Dessin.Tracer(dc, o, e, s, contour, trait, TeteCreuse(couleur) ? null : trait.Brush);
             if (objet != null) Dessin.Objet(dc, objet, o, e, s, phaseObjet, couleur, epaisseur);
 
-            if (bulle != null && temps < finBulle)
+            if (commande != null && temps < finCommande)
+            {
+                // la commande s'écrit en l'air, lettre après lettre, comme dans la console du jeu
+                int lettres = (int)Math.Min(commande.Length, (temps - debutCommande) * 38);
+                string vu = commande.Substring(0, lettres) + (lettres < commande.Length || (int)(temps * 3) % 2 == 0 ? "_" : "");
+                var texte = new FormattedText(vu, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, new Typeface("Consolas"), 12.5, Brushes.White);
+                texte.MaxTextWidth = Math.Max(60, largeur - 24);
+                Point tete = e(o.Tete);
+                double l = Math.Max(texte.Width, 30) + 14, h = texte.Height + 8;
+                double bx = Math.Max(2, Math.Min(largeur - l - 2, tete.X - l / 2)), by = Math.Max(2, tete.Y - (o.Rayon + 40) * s - h);
+                dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(205, 0, 0, 0)), null, new Rect(bx, by, l, h));
+                dc.DrawText(texte, new Point(bx + 7, by + 4));
+            }
+            else if (bulle != null && temps < finBulle)
             {
                 FormattedText texte = Dessin.Texte(bulle, 12.5, new SolidColorBrush(Color.FromRgb(0x30, 0x30, 0x30)));
                 texte.MaxTextWidth = Math.Max(60, largeur - 30);
@@ -1831,7 +1935,8 @@ namespace MascotteStickman
         void ConstruireMenu()
         {
             var menu = new ContextMenu();
-            var reglages = new MenuItem { Header = "Paramètres…  (" + Biblio.Toutes.Count + " animations)" };
+            langueMenu = Langue.Anglais;
+            var reglages = new MenuItem { Header = Langue.T("Paramètres…") + "  (" + Biblio.Toutes.Count + " animations)" };
             reglages.Click += (o, e) => OuvrirReglages();
             menu.Items.Add(reglages);
 
@@ -1897,7 +2002,7 @@ namespace MascotteStickman
             fenetre.Click += (o, e) => { if (etat == Etat.Anime && !SauterSurFenetre()) Dire("Aucune fenêtre où sauter", 2.5); };
             menu.Items.Add(fenetre);
             var teleport = new MenuItem { Header = "Se téléporter" };
-            teleport.Click += (o, e) => Teleporter();
+            teleport.Click += (o, e) => SeTeleporter();
             menu.Items.Add(teleport);
             var farceur = new MenuItem { Header = "Mode farceur : il ferme des fenêtres", IsCheckable = true };
             farceur.Click += (o, e) =>
@@ -1915,6 +2020,15 @@ namespace MascotteStickman
             };
             menu.Opened += (o, e) => { farceur.IsChecked = R.O("ferme"); muet.IsChecked = !R.O("sons"); };
             menu.Items.Add(muet);
+            var correcteur = new MenuItem { Header = "Correcteur d'orthographe", IsCheckable = true };
+            correcteur.Click += (o, e) =>
+            {
+                R.Mettre("correcteur", correcteur.IsChecked ? 1 : 0);
+                Appliquer();
+                Dire(correcteur.IsChecked ? "Je surveille tes fautes (je ne garde rien de ce que tu écris)" : "D'accord, j'arrête de relire", 4);
+            };
+            menu.Opened += (o, e) => correcteur.IsChecked = R.O("correcteur");
+            menu.Items.Add(correcteur);
             var coin = new MenuItem { Header = "Revenir dans le coin" };
             coin.Click += (o, e) =>
             {
@@ -1934,7 +2048,30 @@ namespace MascotteStickman
             var quitter = new MenuItem { Header = "Quitter" };
             quitter.Click += (o, e) => Tous.First(b => b.place == 0).Close();      // fermer le premier ferme toute la bande
             menu.Items.Add(quitter);
+            if (Langue.Anglais) Traduire(menu);
             toile.ContextMenu = menu;
+        }
+
+        bool langueMenu;                              // la langue dans laquelle le menu a été construit
+
+        // Le menu est écrit en français : en anglais, on repasse sur chaque ligne (et ses sous-menus).
+        static void Traduire(ItemsControl menu)
+        {
+            foreach (object ligne in menu.Items)
+            {
+                var element = ligne as MenuItem;
+                if (element == null) continue;
+                var texte = element.Header as string;
+                if (texte != null) element.Header = Langue.T(texte);
+                var pile = element.Header as StackPanel;         // les couleurs : une pastille et un nom
+                if (pile != null)
+                    foreach (object enfant in pile.Children)
+                    {
+                        var nom = enfant as TextBlock;
+                        if (nom != null) nom.Text = Langue.T(nom.Text);
+                    }
+                Traduire(element);
+            }
         }
 
         public void OuvrirReglages()
@@ -2041,34 +2178,14 @@ namespace MascotteStickman
             return fenetre != IntPtr.Zero;
         }
 
-        // Disparaît en fondu et réapparaît ailleurs : sur une fenêtre, ou plus loin sur le sol.
-        bool Teleporter()
+        // On ne se téléporte pas par magie : il faut une commande (le bâton), une perle de l'Ender ou un portail.
+        bool SeTeleporter()
         {
             if (etat != Etat.Anime) return false;
             Rompre();
-            Point but;
-            IntPtr fenetre;
-            if (!ChercherBord(out but, out fenetre) || hasard.Next(3) == 0)
-            {
-                double gauche = SystemParameters.VirtualScreenLeft + 80 * s, droite = SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 80 * s;
-                but = new Point(gauche + hasard.NextDouble() * (droite - gauche), SystemParameters.WorkArea.Bottom);
-                fenetre = IntPtr.Zero;
-            }
-            Point ou = but;
-            IntPtr sur = fenetre;
-            Sons.Jouer("pop", "sonsPouvoirs");
-            voileVise = 0;
-            Jouer(Biblio.Concentration, 1, () =>
-            {
-                ancre = ou;
-                support = sur;
-                Bord bord;
-                if (support != IntPtr.Zero && LireBord(support, out bord)) supportX = ancre.X - bord.Gauche;
-                else { support = IntPtr.Zero; ancre.Y = SystemParameters.WorkArea.Bottom; }
-                voileVise = 1;
-                Sons.Jouer("pop", "sonsPouvoirs");
-                Jouer(Biblio.Apparition, 1);
-            });
+            if (ABaton && hasard.Next(3) > 0) Commande("tp");
+            else if (hasard.Next(2) == 0) PerleDeLEnder();
+            else Portail();
             return true;
         }
 
@@ -2301,6 +2418,7 @@ namespace MascotteStickman
 
         void RangerScene()
         {
+            if (scene == "secousse" && IsWindow(secouee)) SetWindowPos(secouee, IntPtr.Zero, placeSecouee.X, placeSecouee.Y, 0, 0, 0x0015);      // la fenêtre retrouve sa place
             scene = null; boum = false; mlg = false; eauPosee = false;
             if (decor != null) decor.Cacher();
             if (volant != null) volant.Cacher();
@@ -2318,6 +2436,20 @@ namespace MascotteStickman
                 case "tnt": Tnt(); break;
                 case "fusee": FeuDArtifice(); break;
                 case "portail": Portail(); break;
+                case "maison": Rentrer(false); break;
+                case "sieste": Rentrer(true); break;
+                case "batir": BatirMaison(); break;
+                case "camp": FeuDeCamp(); break;
+                case "jardin": Jardin(); break;
+                case "x:geant": Grandir(); break;
+                case "x:mini": Retrecir(); break;
+                case "x:dessin": DessinerSurLEcran(); break;
+                case "x:youtube": OuvrirYoutube(); break;
+                case "x:curseur": LassoCurseur(); break;
+                case "x:secousse": SecouerFenetre(); break;
+                default:
+                    if (a.Special.StartsWith("cmd:")) Commande(a.Special.Substring(4));
+                    break;
             }
         }
 
@@ -2362,6 +2494,31 @@ namespace MascotteStickman
                         }
                         break;
                     }
+                case "curseur":
+                    {
+                        // le lasso : le curseur glisse jusqu'à sa main, y reste accroché un moment, puis repart d'où il venait
+                        Dessin.Os o = Dessin.Calculer(pose, false);
+                        PresentationSource source = PresentationSource.FromVisual(this);
+                        Matrix m = source != null ? source.CompositionTarget.TransformToDevice : Matrix.Identity;
+                        Point main = m.Transform(new Point(ancre.X + face * o.M1.X * s, ancre.Y + o.M1.Y * s));
+                        double k = tScene < 0.8 ? tScene / 0.8 : tScene < 2.6 ? 1 : Math.Max(0, 1 - (tScene - 2.6) / 0.6);
+                        k = k * k * (3 - 2 * k);
+                        double saut = tScene > 2.6 ? -90 * Math.Sin(Math.PI * (tScene - 2.6) / 0.6) : 0;      // il le relance en cloche
+                        SetCursorPos((int)(baseScene.X + (main.X - baseScene.X) * k), (int)(baseScene.Y + (main.Y - baseScene.Y) * k + saut));
+                        if (tScene > 3.2 || etat != Etat.Anime) { SetCursorPos((int)baseScene.X, (int)baseScene.Y); RangerScene(); }
+                        break;
+                    }
+                case "secousse":
+                    {
+                        double force = 9 * Math.Max(0, 1 - tScene / 1.8);
+                        if (IsWindow(secouee)) SetWindowPos(secouee, IntPtr.Zero, placeSecouee.X + (int)(force * Math.Sin(tScene * 46)), placeSecouee.Y + (int)(force * 0.5 * Math.Cos(tScene * 61)), 0, 0, 0x0015);
+                        if (tScene > 1.8 || etat != Etat.Anime) RangerScene();
+                        break;
+                    }
+                case "decor":                                    // un décor qui reste un moment (bloc posé, feu, fleurs, nuage, éclair)
+                    if (tScene > dureeScene) RangerScene();
+                    else if (animeDecor) decor.Redessiner();
+                    break;
                 case "chute":                                    // un bloc de moins toutes les 80 ms, par le haut
                     if (tScene < 0.08) break;
                     tScene = 0;
@@ -2730,6 +2887,15 @@ namespace MascotteStickman
             pose = Adoucir(p, dt);
             if (tPlane < 1) return;
 
+            if (finVol != null)                                  // il n'atterrit pas : il reste en l'air, sur place
+            {
+                Action suite = finVol;
+                finVol = null;
+                ancre = e3;
+                etat = Etat.Anime;
+                suite();
+                return;
+            }
             ancre = e3;
             sautVoulu = true;
             sautCible = false;
@@ -2741,6 +2907,570 @@ namespace MascotteStickman
                 return;
             }
             Atterrir(cibleElytres);
+        }
+
+        // ------------------------------------------------------------ animations spéciales
+        // Des tours qu'il joue de temps en temps, chacun avec sa case dans l'onglet « Spécial ». Ceux qui
+        // touchent au PC (ouvrir le navigateur, déplacer la souris ou une fenêtre) sont décochés au départ.
+
+        double echelleFx = 1, echelleVisee = 1, finEchelle;      // géant, minuscule : sa taille du moment
+        IntPtr secouee; POINT placeSecouee;                      // la fenêtre qu'il secoue, et sa vraie place
+        static double prochainYoutube;
+
+        // Géant : il grandit d'un coup, piétine en rugissant, et les autres détalent.
+        void Grandir()
+        {
+            RangerScene();
+            double maxi = Math.Min(3.4, (ancre.Y - SystemParameters.VirtualScreenTop - 10) / (300 * R.D("taille")));
+            if (maxi < 1.5) { Repos(); return; }
+            echelleVisee = maxi; finEchelle = temps + 14;
+            Sons.Jouer("energie", "sonsPouvoirs");
+            Dire("GRAOUH !", 2.5);
+            foreach (Bonhomme b in Tous.Where(x => x != this && x.etat == Etat.Anime && x.scene == null && x.ami == null && !x.dort).ToList())
+            {
+                b.Dire("Aaah !", 2);
+                b.AllerVers(b.ancre.X + (b.ancre.X >= ancre.X ? 1 : -1) * (360 + hasard.Next(260)) * b.s, Biblio.Course, null);
+            }
+            Jouer(Biblio.Rugit, 1, () =>
+            {
+                double gauche, droite;
+                Limites(out gauche, out droite);
+                double x = ancre.X + (ancre.X - gauche > droite - ancre.X ? -1 : 1) * 260 * R.D("taille");
+                AllerVers(x, Biblio.Trouver("Marche lourde") ?? Biblio.Marche, () => Jouer(Biblio.Rugit, 1, () => { echelleVisee = 1; Dire("Ouf, c'était grand là-haut.", 2.5); Repos(); }));
+            });
+        }
+
+        // Minuscule : tout petit, il file d'un bout à l'autre avant de retrouver sa taille.
+        void Retrecir()
+        {
+            RangerScene();
+            echelleVisee = 0.38; finEchelle = temps + 12;
+            Sons.Jouer("pop", "sonsPouvoirs");
+            Dire("Couic !", 2);
+            Anim pas = Biblio.Trouver("Petits pas pressés") ?? Biblio.Course;
+            double depart = ancre.X, gauche, droite;
+            Limites(out gauche, out droite);
+            double la = depart + (depart - gauche > droite - depart ? -1 : 1) * 420 * R.D("taille");
+            Jouer(Biblio.Sursaut, 1, () => AllerVers(la, pas, () => AllerVers(depart, pas, () => { echelleVisee = 1; Repos(); })));
+        }
+
+        // Il dessine sur l'écran : un trait blanc qui se trace à côté de lui, reste un moment, puis s'efface.
+        static readonly double[][][] croquis =
+        {
+            // une étoile
+            new[] { new double[] { 0.5, 0.05, 0.62, 0.38, 0.97, 0.38, 0.69, 0.6, 0.8, 0.95, 0.5, 0.73, 0.2, 0.95, 0.31, 0.6, 0.03, 0.38, 0.38, 0.38, 0.5, 0.05 } },
+            // un bonhomme qui sourit : le tour, les yeux, la bouche
+            new[] { new double[] { 0.5, 0.06, 0.78, 0.16, 0.93, 0.42, 0.88, 0.7, 0.68, 0.9, 0.5, 0.95, 0.32, 0.9, 0.12, 0.7, 0.07, 0.42, 0.22, 0.16, 0.5, 0.06 },
+                    new double[] { 0.35, 0.33, 0.35, 0.47 }, new double[] { 0.65, 0.33, 0.65, 0.47 }, new double[] { 0.28, 0.62, 0.38, 0.74, 0.5, 0.78, 0.62, 0.74, 0.72, 0.62 } },
+            // un cœur
+            new[] { new double[] { 0.5, 0.92, 0.14, 0.52, 0.06, 0.3, 0.16, 0.12, 0.34, 0.1, 0.5, 0.28, 0.66, 0.1, 0.84, 0.12, 0.94, 0.3, 0.86, 0.52, 0.5, 0.92 } },
+            // une maison
+            new[] { new double[] { 0.15, 0.95, 0.15, 0.48, 0.5, 0.1, 0.85, 0.48, 0.85, 0.95, 0.15, 0.95 }, new double[] { 0.42, 0.95, 0.42, 0.66, 0.6, 0.66, 0.6, 0.95 } },
+            // un soleil
+            new[] { new double[] { 0.5, 0.28, 0.66, 0.34, 0.72, 0.5, 0.66, 0.66, 0.5, 0.72, 0.34, 0.66, 0.28, 0.5, 0.34, 0.34, 0.5, 0.28 },
+                    new double[] { 0.5, 0.18, 0.5, 0.04 }, new double[] { 0.74, 0.26, 0.86, 0.14 }, new double[] { 0.82, 0.5, 0.96, 0.5 }, new double[] { 0.74, 0.74, 0.86, 0.86 },
+                    new double[] { 0.5, 0.82, 0.5, 0.96 }, new double[] { 0.26, 0.74, 0.14, 0.86 }, new double[] { 0.18, 0.5, 0.04, 0.5 }, new double[] { 0.26, 0.26, 0.14, 0.14 } },
+        };
+
+        void DessinerSurLEcran()
+        {
+            RangerScene();
+            double[][] traits = croquis[hasard.Next(croquis.Length)];
+            double c = 190 * s, total = traits.Sum(t => t.Length / 2 - 1);
+            double x = ancre.X + face * (c / 2 + 46 * s);
+            Jouer(Biblio.Clique, 1, () =>
+            {
+                Planter(x - c / 2, ancre.Y - 60 * s - c, c, c, 12, true, (dc, l, h) =>
+                {
+                    double avance = Math.Min(1, tScene / 3.2) * total;      // il met 3,2 s à tout tracer
+                    byte alpha = (byte)(255 * Math.Min(1, Math.Max(0, (12 - tScene) / 1.5)));
+                    Pen plume = Dessin.Plume(Color.FromArgb(alpha, 255, 255, 255), 4.5 * s);
+                    double fait = 0;
+                    foreach (double[] t in traits)
+                        for (int i = 0; i + 3 < t.Length && fait < avance; i += 2, fait++)
+                        {
+                            double k = Math.Min(1, avance - fait);
+                            var a = new Point(t[i] * l, t[i + 1] * h);
+                            dc.DrawLine(plume, a, new Point(a.X + (t[i + 2] * l - a.X) * k, a.Y + (t[i + 3] * h - a.Y) * k));
+                        }
+                });
+                Jouer(Biblio.Pointe, 2, () => { Dire("Pas mal, non ?", 2.5); Jouer(Biblio.Admire, 1); });
+            });
+        }
+
+        // YouTube : il sort son ordinateur et ouvre la chaîne d'Alan Becker dans le navigateur.
+        void OuvrirYoutube()
+        {
+            RangerScene();
+            Dire("Allons voir la chaîne d'Alan Becker !", 3);
+            Anim clavier = Biblio.Trouver("Tape au clavier") ?? Biblio.Admire;
+            Jouer(clavier, 10, () =>
+            {
+                prochainYoutube = temps + 3600;
+                try { Process.Start("https://www.youtube.com/@alanbecker"); }
+                catch (Exception) { Dire("Pas de navigateur ?", 2.5); }
+                Sons.Jouer("tada", "sonsAnimations");
+                Jouer(Biblio.Admire, 2);
+            });
+        }
+
+        // Lasso : il attire le curseur de la souris jusqu'à sa main, joue avec, puis le renvoie d'où il venait.
+        void LassoCurseur()
+        {
+            RangerScene();
+            POINT p;
+            GetCursorPos(out p);
+            baseScene = new Point(p.X, p.Y);                     // en pixels d'écran, comme SetCursorPos
+            face = curseur.X >= ancre.X ? 1 : -1;
+            Dire("Hé, viens par là !", 2.5);
+            Jouer(Biblio.Lance, 1, () =>
+            {
+                scene = "curseur"; tScene = 0;
+                Sons.Jouer("attrape", "sonsSouris");
+                Jouer(Biblio.Tournoie, 5, () => { Dire("Tiens, je te le rends.", 2.5); Jouer(Biblio.Salut, 3); Repos(); });
+            });
+        }
+
+        // Il secoue la fenêtre sur laquelle il est perché (elle revient exactement à sa place).
+        void SecouerFenetre()
+        {
+            RangerScene();
+            if (support == IntPtr.Zero)
+            {
+                apresSaut = SecouerFenetre;
+                if (!SauterSurFenetre() || support != IntPtr.Zero) { apresSaut = null; Dire("Pas de fenêtre à secouer…", 2.5); }
+                return;
+            }
+            RECT r;
+            if (IsZoomed(support) || !GetWindowRect(support, out r)) { Repos(); return; }
+            secouee = support;
+            placeSecouee.X = r.Left; placeSecouee.Y = r.Top;
+            Dire("Ça secoue !", 2);
+            Anim trepigne = Biblio.Trouver("Trépigne d'impatience") ?? Biblio.Admire;
+            scene = "secousse"; tScene = 0;
+            Sons.Jouer("coup", "sonsPouvoirs");
+            Jouer(trepigne, 8, () => { Dire("Solide, cette fenêtre.", 2.5); Repos(); });
+        }
+
+        // ------------------------------------------------------------ le bâton de commande
+        // Le premier stickman porte un bâton surmonté d'un bloc de commande. Il le lève, la commande s'écrit
+        // en l'air, puis son effet se produit. C'est aussi la seule façon de se téléporter sans perle ni portail.
+
+        double dureeScene; bool animeDecor;           // décor de la scène « decor » : combien de temps il reste, s'il bouge
+
+        bool ABaton { get { return place == 0 && R.O("baton"); } }
+
+        void Ordonner(string texte, Action effet)
+        {
+            Jouer(Biblio.LeveBaton, 1, () =>
+            {
+                commande = texte; debutCommande = temps; finCommande = temps + 2.8 + texte.Length / 38.0;
+                Sons.Jouer("energie", "sonsPouvoirs");
+                Jouer(Biblio.TientBaton, 1, effet);
+            });
+        }
+
+        // Un décor posé pour un moment, que la scène dessine comme elle veut.
+        void Planter(double gauche, double haut, double largeur, double hauteur, double secondes, bool anime, Action<DrawingContext, double, double> peindre)
+        {
+            Fenetre(ref decor).Peindre = peindre;
+            decor.Poser(gauche, haut, largeur, hauteur, Topmost);
+            Devant();
+            scene = "decor"; tScene = 0; dureeScene = secondes; animeDecor = anime;
+        }
+
+        void Commande(string nom)
+        {
+            if (!ABaton) { Dire("Il me faut le bâton de commande !", 2.5); Repos(); return; }
+            RangerScene();
+            double cote = Biblio.Bloc * s;
+            Color couleur = CouleurDuMoment();
+            switch (nom)
+            {
+                case "tp":
+                    {
+                        Point but;
+                        IntPtr vers;
+                        Destination(300, 1300, out but, out vers);
+                        Ordonner("/tp @s " + (int)but.X + " " + (int)(SystemParameters.WorkArea.Bottom - but.Y), () =>
+                        {
+                            Sons.Jouer("pop", "sonsPouvoirs");
+                            voileVise = 0;
+                            Jouer(Biblio.Concentration, 1, () => { Arriver(but, vers); voileVise = 1; Sons.Jouer("pop", "sonsPouvoirs"); Jouer(Biblio.Apparition, 1); });
+                        });
+                        break;
+                    }
+                case "tpa":                                      // toute la bande auprès de lui
+                    Ordonner("/tp @a @s", () =>
+                    {
+                        int rang = 0;
+                        foreach (Bonhomme b in Tous.Where(x => x != this && x.etat == Etat.Anime && x.scene == null && !x.dort).ToList())
+                        {
+                            rang++;
+                            Bonhomme lui = b;
+                            var ici = new Point(ancre.X + (rang % 2 == 0 ? 1 : -1) * (50 + 40 * ((rang + 1) / 2)) * s, ancre.Y);
+                            IntPtr sur = support;
+                            lui.Rompre();
+                            lui.voileVise = 0;
+                            lui.Jouer(Biblio.Concentration, 1, () => { lui.Arriver(ici, sur); lui.voileVise = 1; lui.Dire("Hein ?!", 2); lui.Jouer(Biblio.Apparition, 1); });
+                        }
+                        Sons.Jouer("pop", "sonsPouvoirs");
+                        if (rang == 0) Dire("Personne à appeler…", 2.5);
+                        Repos();
+                    });
+                    break;
+                case "setblock":
+                    {
+                        int bloc = Blocs.PourBatir[hasard.Next(Blocs.PourBatir.Length)];
+                        Ordonner("/setblock ~1 ~ ~ " + Blocs.Nom(bloc), () =>
+                        {
+                            double x = ancre.X + face * (cote / 2 + 30 * s);
+                            Planter(x - cote / 2, ancre.Y - cote, cote, cote, 7, false, (dc, l, h) => Blocs.Dessiner(dc, new Rect(0, 0, l, h), bloc, couleur, 1));
+                            Sons.Jouer("pop", "sonsPouvoirs");
+                            Jouer(Biblio.Admire, 2);
+                        });
+                        break;
+                    }
+                case "give":
+                    Ordonner("/give @s diamond_sword", () =>
+                    {
+                        Sons.Jouer("pop", "sonsPouvoirs");
+                        Anim epee = Biblio.Trouver("Combo à l'épée en diamant");
+                        if (epee != null) Jouer(epee, 2); else Repos();
+                    });
+                    break;
+                case "foudre":
+                    Ordonner("/summon lightning_bolt ~3 ~ ~", () =>
+                    {
+                        double x = ancre.X + face * 95 * s, haut = Math.Min(560 * s, ancre.Y - SystemParameters.VirtualScreenTop);
+                        var zigzag = new double[9];
+                        for (int i = 1; i < 8; i++) zigzag[i] = (hasard.NextDouble() - 0.5) * 64 * s;
+                        Planter(x - 50 * s, ancre.Y - haut, 100 * s, haut, 0.5, true, (dc, l, h) =>
+                        {
+                            byte alpha = (byte)(255 * Math.Max(0, 1 - tScene / 0.5) * ((int)(tScene * 30) % 3 == 1 ? 0.45 : 1));      // il scintille en s'éteignant
+                            var eclair = new StreamGeometry();
+                            using (StreamGeometryContext g = eclair.Open())
+                            {
+                                g.BeginFigure(new Point(l / 2, 0), false, false);
+                                for (int i = 1; i <= 8; i++) g.LineTo(new Point(l / 2 + zigzag[i], h * i / 8), true, true);
+                            }
+                            dc.DrawGeometry(null, Dessin.Plume(Color.FromArgb((byte)(alpha * 0.5), 120, 190, 255), 12 * s), eclair);
+                            dc.DrawGeometry(null, Dessin.Plume(Color.FromArgb(alpha, 255, 255, 255), 4 * s), eclair);
+                        });
+                        Sons.Jouer("coup", "sonsPouvoirs");
+                        Dire("Whoa !", 1.5);
+                        Jouer(Biblio.Sursaut, 1);
+                    });
+                    break;
+                case "feu": Ordonner("/summon firework_rocket", FeuDArtifice); break;
+                case "tnt": Ordonner("/summon tnt ~2 ~ ~", Tnt); break;
+                case "levitation": Ordonner("/effect give @s levitation", () => Jouer(Biblio.Levitation, 1)); break;
+                case "creatif": Ordonner("/gamemode creative", () => Jouer(Biblio.Creatif, 1)); break;
+                case "vitesse":
+                    Ordonner("/effect give @s speed 5", () =>
+                    {
+                        // un aller-retour à toute allure
+                        double depart = ancre.X, gauche, droite;
+                        Limites(out gauche, out droite);
+                        double la = depart + (depart - gauche > droite - depart ? -1 : 1) * 620 * s;
+                        Anim sprint = Biblio.Trouver("Sprint à fond") ?? Biblio.Course;
+                        AllerVers(la, sprint, () => { AllerVers(depart, sprint, () => { turbo = 1; Dire("Pfiou !", 2); Repos(); }); turbo = 2.6; });
+                        turbo = 2.6;
+                    });
+                    break;
+                case "pluie":
+                    Ordonner("/weather rain", () =>
+                    {
+                        double l0 = 150 * s, h0 = 190 * s;
+                        Planter(ancre.X - l0 / 2, ancre.Y - h0 - 60 * s, l0, h0 + 60 * s, 6.5, true, (dc, l, h) =>
+                        {
+                            Brush nuage = Blocs.Pinceau(Color.FromArgb(235, 0x9A, 0xA4, 0xB4));
+                            dc.DrawEllipse(nuage, null, new Point(l * 0.32, 26 * s), 34 * s, 20 * s);
+                            dc.DrawEllipse(nuage, null, new Point(l * 0.58, 20 * s), 40 * s, 22 * s);
+                            dc.DrawEllipse(nuage, null, new Point(l * 0.78, 30 * s), 28 * s, 16 * s);
+                            Pen goutte = Dessin.Plume(Color.FromArgb(200, 0x6E, 0xB4, 0xF0), 2 * s);
+                            for (int i = 0; i < 14; i++)                 // les gouttes tombent en boucle, chacune à son rythme
+                            {
+                                double x = l * (0.12 + 0.76 * ((i * 37) % 100) / 100.0), y = 44 * s + ((tScene * (260 + i * 17) + i * 53) * s) % (h - 56 * s);
+                                dc.DrawLine(goutte, new Point(x, y), new Point(x - 2 * s, y + 9 * s));
+                            }
+                        });
+                        Anim parapluie = Biblio.Trouver("Parapluie");
+                        if (parapluie != null) Jouer(parapluie, 4); else Jouer(Biblio.Admire, 3);
+                    });
+                    break;
+                case "nuit":
+                    Ordonner("/time set night", () => { Dire("Déjà la nuit ? Bonne nuit…", 2.5); Jouer(Biblio.Dort, 3); });
+                    break;
+                case "coeurs":
+                    Ordonner("/particle heart ~ ~2 ~", () => { Anim coeur = Biblio.Trouver("Cœur avec les bras"); if (coeur != null) Jouer(coeur, 5); else Repos(); });
+                    break;
+                case "dire":
+                    Ordonner("/say Salut tout le monde !", () => { Dire("[Stickman] Salut tout le monde !", 3.5); Repos(); Jouer(Biblio.Salut, 4); });
+                    break;
+                case "maison":
+                    Ordonner("/fill ~ ~ ~ ~4 ~5 ~ oak_planks", () => { MontrerMaison(false); Jouer(Biblio.Admire, 2); });
+                    break;
+                case "appui": Jouer(Biblio.Appui, 3); break;
+                case "tournoie": Jouer(Biblio.Tournoie, 6); break;
+                default: Repos(); break;
+            }
+        }
+
+        // ------------------------------------------------------------ la maison et le décor
+        // Une petite maison de blocs, près de chez eux : elle apparaît quand ils la bâtissent ou y rentrent, et
+        // s'en va au bout d'un moment (ou reste, si le réglage le demande). Et quelques décors d'un instant.
+
+        static Decor maisonDecor;
+        static int maisonBlocs, maisonDedans;         // blocs déjà posés ; combien de stickmen à l'intérieur
+        static double maisonFin, maisonTic;
+        static Point maisonLieu;                      // le pied de la porte
+        static bool maisonDort;
+        // de haut en bas : le toit en sapin, puis les murs (T tronc, P planches, V vitre, H et B la porte)
+        static readonly string[] planMaison = { "..S..", ".SSS.", "SSSSS", "TPPPT", "TVHPT", "TPBPT" };
+
+        double CoteMaison { get { return 32 * s; } }
+
+        void MontrerMaison(bool dUnCoup)
+        {
+            double c = CoteMaison;
+            if (maisonDecor == null || !maisonDecor.IsVisible)
+            {
+                double gauche = SystemParameters.VirtualScreenLeft + 3 * c, droite = SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 3 * c;
+                Bonhomme premier = Tous.First(b => b.place == 0);
+                maisonLieu = new Point(Math.Max(gauche, Math.Min(droite, premier.maison.X - 190 * s)), SystemParameters.WorkArea.Bottom);
+                maisonBlocs = 0;
+                if (maisonDecor == null) maisonDecor = new Decor();
+                maisonDecor.Peindre = (dc, l, h) =>
+                {
+                    int pose = 0;
+                    for (int j = planMaison.Length - 1; j >= 0; j--)        // posée de bas en haut
+                        for (int i = 0; i < 5; i++)
+                        {
+                            char signe = planMaison[j][i];
+                            if (signe == '.' || pose++ >= maisonBlocs) continue;
+                            int bloc = signe == 'S' ? Blocs.Sapin : signe == 'T' ? Blocs.Tronc : signe == 'V' ? Blocs.Verre : signe == 'H' ? Blocs.PorteHaut : signe == 'B' ? Blocs.PorteBas : Blocs.Planches;
+                            var r = new Rect(i * l / 5, j * h / planMaison.Length, l / 5, h / planMaison.Length);
+                            if (signe == 'V' || signe == 'H' || signe == 'B') Blocs.Dessiner(dc, r, Blocs.Planches, Colors.White, i + j);      // le mur derrière la vitre et la porte
+                            if (signe == 'V' && maisonDedans > 0) dc.DrawRectangle(Blocs.Pinceau(Color.FromArgb(170, 255, 214, 110)), null, r);      // de la lumière : il y a quelqu'un
+                            Blocs.Dessiner(dc, r, bloc, Colors.White, i + j * 5);
+                        }
+                    if (maisonDort && maisonDedans > 0)
+                        dc.DrawText(Dessin.Texte("z Z z".Substring(0, 1 + 2 * ((int)(chrono.Elapsed.TotalSeconds * 1.5) % 3)), 15 * l / 160, Brushes.White, true), new Point(l * 0.62, h * 0.06));
+                };
+                maisonDecor.Poser(maisonLieu.X - 2.5 * c, maisonLieu.Y - planMaison.Length * c, 5 * c, planMaison.Length * c, Topmost);
+            }
+            if (dUnCoup) maisonBlocs = 99;
+            maisonFin = temps + 75;
+            maisonDecor.Redessiner();
+            Devant();
+        }
+
+        // Tenue de la maison, une fois par image (par le premier stickman) : elle se bâtit bloc après bloc, puis s'en va.
+        void TenirMaison()
+        {
+            if (maisonDecor == null || !maisonDecor.IsVisible) return;
+            if (maisonBlocs < 23 && temps > maisonTic)
+            {
+                maisonTic = temps + 0.07;
+                maisonBlocs++;
+                if (maisonBlocs % 4 == 0) Sons.Jouer("pop", "sonsPouvoirs");
+                maisonDecor.Redessiner();
+            }
+            else if (maisonDort && maisonDedans > 0 && temps > maisonTic) { maisonTic = temps + 0.6; maisonDecor.Redessiner(); }
+            if (maisonDedans == 0 && temps > maisonFin && !R.O("maisonToujours")) maisonDecor.Cacher();
+        }
+
+        // Il la bâtit de ses mains : quelques gestes pendant que les blocs se posent.
+        void BatirMaison()
+        {
+            RangerScene();
+            MontrerMaison(false);
+            AllerVers(maisonLieu.X + 3.4 * CoteMaison, Biblio.Marche, () =>
+            {
+                face = -1;
+                Jouer(Biblio.PoseDevant, 3, () => { Dire("Et voilà la maison !", 2.5); Jouer(Biblio.Admire, 1); });
+            });
+        }
+
+        // Il rentre chez lui un moment (ou y fait la sieste), puis ressort.
+        void Rentrer(bool sieste)
+        {
+            RangerScene();
+            MontrerMaison(maisonDecor != null && maisonDecor.IsVisible && maisonBlocs > 0);
+            if (support != IntPtr.Zero) { apresSaut = () => Rentrer(sieste); Bondir(new Point(maisonLieu.X + (ancre.X > maisonLieu.X ? 1 : -1) * 130 * s, SystemParameters.WorkArea.Bottom), IntPtr.Zero); return; }
+            AllerVers(maisonLieu.X, Math.Abs(maisonLieu.X - ancre.X) > 420 * s ? Biblio.Course : Biblio.Marche, () =>
+            {
+                if (maisonBlocs < 23) maisonBlocs = 99;           // pas encore finie : elle l'est maintenant
+                voileVise = 0;
+                Sons.Jouer("pop", "sonsPouvoirs");
+                Jouer(Biblio.Concentration, 1, () =>
+                {
+                    maisonDedans++;
+                    if (sieste) maisonDort = true;
+                    maisonFin = temps + 75;
+                    maisonDecor.Redessiner();
+                    chezLui = true;
+                    Jouer(Biblio.Repos[0], sieste ? 5 : 2, () =>      // dedans, on ne le voit plus
+                    {
+                        Sortir();
+                        Dire(sieste ? "Ah, ça va mieux." : "Me revoilà !", 2.5);
+                        Jouer(Biblio.Apparition, 1, () => AllerVers(maisonLieu.X + (hasard.Next(2) == 0 ? -1 : 1) * (90 + hasard.Next(120)) * s, Biblio.Marche, null));
+                    });
+                });
+            });
+        }
+
+        bool chezLui;                                 // à l'intérieur de la maison (invisible)
+
+        void Sortir()
+        {
+            if (!chezLui) return;
+            chezLui = false;
+            maisonDedans = Math.Max(0, maisonDedans - 1);
+            if (maisonDedans == 0) maisonDort = false;
+            voileVise = 1;
+            if (maisonDecor != null) maisonDecor.Redessiner();
+        }
+
+        // Feu de camp : il l'allume, s'assoit devant, se chauffe les mains.
+        void FeuDeCamp()
+        {
+            RangerScene();
+            Jouer(Biblio.PoseDevant, 1, () =>
+            {
+                double c = 56 * s, x = ancre.X + face * 62 * s;
+                Planter(x - c / 2, ancre.Y - c, c, c, 10, true, (dc, l, h) =>
+                {
+                    Blocs.Dessiner(dc, new Rect(l * 0.08, h * 0.74, l * 0.84, h * 0.2), Blocs.Tronc, Colors.White, 0);       // deux bûches
+                    Blocs.Dessiner(dc, new Rect(l * 0.26, h * 0.6, l * 0.48, h * 0.18), Blocs.Tronc, Colors.White, 1);
+                    for (int i = 0; i < 3; i++)                      // trois flammes qui dansent
+                    {
+                        double larg = l * (0.5 - i * 0.13), haut = h * (0.5 - i * 0.1) * (0.8 + 0.2 * Math.Sin(tScene * (9 + i * 4) + i)), cx = l / 2 + l * 0.05 * Math.Sin(tScene * (6 + i * 3));
+                        var flamme = new StreamGeometry();
+                        using (StreamGeometryContext g = flamme.Open())
+                        {
+                            g.BeginFigure(new Point(cx - larg / 2, h * 0.7), true, true);
+                            g.QuadraticBezierTo(new Point(cx - larg * 0.1, h * 0.7 - haut * 0.5), new Point(cx, h * 0.7 - haut), true, true);
+                            g.QuadraticBezierTo(new Point(cx + larg * 0.1, h * 0.7 - haut * 0.5), new Point(cx + larg / 2, h * 0.7), true, true);
+                        }
+                        dc.DrawGeometry(Blocs.Pinceau(i == 0 ? Color.FromRgb(0xF0, 0x6A, 0x10) : i == 1 ? Color.FromRgb(0xFF, 0xA8, 0x20) : Color.FromRgb(0xFF, 0xE6, 0x70)), null, flamme);
+                    }
+                });
+                Sons.Jouer("pop", "sonsPouvoirs");
+                Jouer(Biblio.AssisFeu, 5, () => { Dire("Il fait bon.", 2); Repos(); });
+            });
+        }
+
+        // Jardin : trois fleurs qu'il plante une à une, puis qu'il arrose.
+        void Jardin()
+        {
+            RangerScene();
+            Jouer(Biblio.PoseDevant, 1, () =>
+            {
+                double c = 34 * s, x = ancre.X + face * 70 * s;
+                var fleurs = new[] { "poppy", "dandelion", "cornflower", "oxeye_daisy" };
+                int premiere = hasard.Next(fleurs.Length);
+                var teintes = new[] { Color.FromRgb(0xE0, 0x30, 0x28), Color.FromRgb(0xF8, 0xD8, 0x30), Color.FromRgb(0x46, 0x6A, 0xEB), Color.FromRgb(0xF4, 0xF4, 0xF4) };
+                Planter(x - 1.5 * c, ancre.Y - c, 3 * c, c, 32, true, (dc, l, h) =>
+                {
+                    for (int i = 0; i < 3 && i < 1 + (int)(tScene / 0.7); i++)      // une fleur toutes les 0,7 s
+                    {
+                        int n = (premiere + i) % fleurs.Length;
+                        BitmapSource fleur = Textures.Lire("block/" + fleurs[n]);
+                        if (fleur != null) dc.DrawImage(fleur, new Rect(i * l / 3, 0, l / 3, h));
+                        else
+                        {
+                            dc.DrawLine(Dessin.Plume(Color.FromRgb(0x4E, 0x8F, 0x30), 3 * l / 100), new Point((i + 0.5) * l / 3, h), new Point((i + 0.5) * l / 3, h * 0.4));
+                            dc.DrawEllipse(Blocs.Pinceau(teintes[n]), null, new Point((i + 0.5) * l / 3, h * 0.34), h * 0.2, h * 0.2);
+                        }
+                    }
+                });
+                Sons.Jouer("pop", "sonsPouvoirs");
+                Anim arrose = Biblio.Trouver("Arrose des fleurs");
+                Jouer(Biblio.PoseDevant, 2, () => { if (arrose != null) Jouer(arrose, 4); else Repos(); });
+            });
+        }
+
+        // ------------------------------------------------------------ correcteur d'orthographe
+        // Le correcteur (StickmanCorrecteur.cs) signale un mot mal écrit : un stickman libre vole jusqu'à lui,
+        // le pointe du crayon, et le mot est remplacé. Puis il se laisse retomber.
+
+        Correcteur.Faute faute;
+        Action finVol;                                // un vol qui ne finit pas par un atterrissage
+
+        static void FauteTrouvee(Correcteur.Faute f)
+        {
+            foreach (Bonhomme b in Tous) b.faute = null;         // une nouvelle faute : la précédente est close
+            Oreille.Trace("correcteur : « " + f.Mot + " » -> « " + f.Correction + " » en " + f.Zone);
+            Bonhomme libre = R.O("correcteur") ? Tous.FirstOrDefault(b => b.etat == Etat.Anime && b.scene == null && b.ami == null && !b.dort && b.voileVise == 1) : null;
+            if (libre == null) Correcteur.Terminer(); else libre.AllerCorriger(f);
+        }
+
+        void AllerCorriger(Correcteur.Faute f)
+        {
+            // le mot à l'écran, en unités de WPF
+            PresentationSource source = PresentationSource.FromVisual(this);
+            Matrix m = source != null ? source.CompositionTarget.TransformFromDevice : Matrix.Identity;
+            var mot = new Rect(m.Transform(f.Zone.TopLeft), m.Transform(f.Zone.BottomRight));
+            // il se place à gauche du mot, le bras tendu dessus (à droite s'il n'a pas la place)
+            int cote = mot.Left - 70 * s > SystemParameters.VirtualScreenLeft ? 1 : -1;
+            var poste = new Point(cote > 0 ? mot.Left - 42 * s : mot.Right + 42 * s, Math.Min(SystemParameters.WorkArea.Bottom, mot.Top + mot.Height / 2 + 84 * s));
+            Rompre();
+            RangerScene();
+            faute = f;
+            Devant();                                            // par-dessus la fenêtre où l'on écrit
+            Dire("Oh ! Une faute.", 2);
+            face = poste.X >= ancre.X ? 1 : -1;
+            Jouer(Biblio.Elan, 1, () =>
+            {
+                double d = Math.Abs(poste.X - ancre.X);
+                double haut = Math.Max(40 * s, Math.Min(140 * s, Math.Min(ancre.Y, poste.Y) - SystemParameters.VirtualScreenTop - 170 * s));
+                double sommet = Math.Min(ancre.Y, poste.Y) - haut;
+                e0 = ancre; e3 = poste;
+                e1 = new Point(e0.X + (e3.X - e0.X) * 0.2, sommet - haut * 0.3);
+                e2 = new Point(e0.X + (e3.X - e0.X) * 0.75, sommet);
+                dureePlane = Math.Max(0.8, Math.Min(2.2, (d + haut) / (700 * s)));
+                tPlane = 0;
+                cibleElytres = IntPtr.Zero;
+                finVol = () =>
+                {
+                    face = cote;
+                    Jouer(Biblio.Clique, 1, () =>
+                    {
+                        Sons.Jouer("pop", "sonsAnimations");
+                        Correcteur.Appliquer(f);
+                        // il tient la pose le temps que la correction se fasse ; sans réponse, il laisse tomber
+                        Jouer(Biblio.Pointe, 3, () => { Renoncer(); styleSaut = 0; Lancer(new Vector(0, 0), true, 0); });
+                    });
+                };
+                etat = Etat.Plane;
+                support = IntPtr.Zero;
+                geste = null; enRepos = false;
+                Sons.Jouer("grandsaut", "sonsSauts");
+                Fondre();
+            });
+        }
+
+        static void FauteCorrigee(Correcteur.Faute f, bool reussi)
+        {
+            Bonhomme b = Tous.FirstOrDefault(x => x.faute == f);
+            Oreille.Trace("correcteur : " + (reussi ? "corrigé" : "abandonné") + (b == null ? " (plus personne)" : ""));
+            if (b == null) return;
+            b.faute = null;
+            if (b.etat != Etat.Anime) return;
+            b.Dire(reussi ? string.Format(Langue.T("« {0} », voilà !"), f.Correction) : "Trop tard…", 2.5);
+            if (reussi) Sons.Jouer("tada", "sonsAnimations");
+            b.styleSaut = 0;
+            b.Lancer(new Vector(0, 0), true, 0);                 // mission accomplie : il se laisse retomber
+        }
+
+        // Dérangé en route (attrapé, bousculé, autre animation demandée) : la faute attendra.
+        void Renoncer()
+        {
+            if (faute == null) return;
+            faute = null; finVol = null;
+            Correcteur.Terminer();
         }
 
         // ------------------------------------------------------------ musique
@@ -2884,6 +3614,9 @@ namespace MascotteStickman
         delegate bool RappelFenetre(IntPtr fenetre, IntPtr parametre);
 
         [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT point);
+        [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
+        [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr fenetre, out RECT cadre);
+        [DllImport("user32.dll")] static extern bool IsZoomed(IntPtr fenetre);
         [DllImport("user32.dll")] static extern int GetWindowLong(IntPtr fenetre, int index);
         [DllImport("user32.dll")] static extern int SetWindowLong(IntPtr fenetre, int index, int valeur);
         [DllImport("user32.dll")] static extern bool EnumWindows(RappelFenetre rappel, IntPtr parametre);
@@ -2914,7 +3647,7 @@ namespace MascotteStickman
         {
             bonhomme = proprietaire;
             int reglages = R.Tous.Count(p => p.Cat != "");
-            Title = "Stickman — " + Biblio.Toutes.Count + " animations, " + (reglages + Biblio.Toutes.Count) + " réglages";
+            Title = "Stickman — " + Biblio.Toutes.Count + " animations, " + (reglages + Biblio.Toutes.Count) + " " + Langue.T("réglages");
             Width = 640; Height = 700;
             Topmost = true;                                      // reste visible pendant qu'on règle : on voit l'effet en direct
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -2922,9 +3655,9 @@ namespace MascotteStickman
             foreach (string categorie in R.Tous.Select(p => p.Cat).Where(c => c != "").Distinct())
             {
                 var pile = new StackPanel { Margin = new Thickness(12) };
-                if (categorie == "Familles") pile.Children.Add(new TextBlock { Text = "À quelle fréquence il choisit chaque famille d'animations (0 = jamais).", Margin = new Thickness(0, 0, 0, 10), TextWrapping = TextWrapping.Wrap });
+                if (categorie == "Familles") pile.Children.Add(new TextBlock { Text = Langue.T("À quelle fréquence il choisit chaque famille d'animations (0 = jamais)."), Margin = new Thickness(0, 0, 0, 10), TextWrapping = TextWrapping.Wrap });
                 foreach (Param p in R.Tous.Where(x => x.Cat == categorie)) pile.Children.Add(Ligne(p));
-                var remise = new Button { Content = "Remettre cet onglet à zéro", HorizontalAlignment = HorizontalAlignment.Left, Padding = new Thickness(10, 4, 10, 4), Margin = new Thickness(0, 14, 0, 0) };
+                var remise = new Button { Content = Langue.T("Remettre cet onglet à zéro"), HorizontalAlignment = HorizontalAlignment.Left, Padding = new Thickness(10, 4, 10, 4), Margin = new Thickness(0, 14, 0, 0) };
                 string cat = categorie;
                 remise.Click += (o, e) =>
                 {
@@ -2934,7 +3667,7 @@ namespace MascotteStickman
                     bonhomme.OuvrirReglages();               // rouverte pour que les curseurs reprennent leurs valeurs
                 };
                 pile.Children.Add(remise);
-                onglets.Items.Add(new TabItem { Header = categorie, Content = new ScrollViewer { Content = pile, VerticalScrollBarVisibility = ScrollBarVisibility.Auto } });
+                onglets.Items.Add(new TabItem { Header = Langue.T(categorie), Content = new ScrollViewer { Content = pile, VerticalScrollBarVisibility = ScrollBarVisibility.Auto } });
             }
             onglets.Items.Add(new TabItem { Header = "Animations (" + Biblio.Toutes.Count + ")", Content = OngletAnimations() });
             Content = onglets;
@@ -2946,7 +3679,7 @@ namespace MascotteStickman
             grille.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) });
             grille.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grille.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(52) });
-            var nom = new TextBlock { Text = p.Nom, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            var nom = new TextBlock { Text = Langue.T(p.Nom), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
             grille.Children.Add(nom);
             UIElement controle;
             if (p.Type == 'b')
@@ -2957,8 +3690,8 @@ namespace MascotteStickman
             }
             else if (p.Type == 'c')
             {
-                var choix = new ComboBox { ItemsSource = p.Choix, SelectedIndex = (int)p.V };
-                choix.SelectionChanged += (o, e) => R.Mettre(p.Cle, choix.SelectedIndex);
+                var choix = new ComboBox { ItemsSource = p.Choix.Select(Langue.T).ToList(), SelectedIndex = (int)p.V };
+                choix.SelectionChanged += (o, e) => { R.Mettre(p.Cle, choix.SelectedIndex); bonhomme.Appliquer(); };
                 controle = choix;
             }
             else if (p.Type == 'k') controle = Nuancier(p);
@@ -2995,7 +3728,7 @@ namespace MascotteStickman
             foreach (Bonhomme.Nuance teinte in Bonhomme.Palette)
             {
                 int rvb = teinte.Rvb;
-                var pastille = new Button { Width = 24, Height = 24, Margin = new Thickness(2), Background = new SolidColorBrush(R.Rvb(rvb)), ToolTip = teinte.Nom + (teinte.Creuse ? " (tête creuse)" : " (tête pleine)") };
+                var pastille = new Button { Width = 24, Height = 24, Margin = new Thickness(2), Background = new SolidColorBrush(R.Rvb(rvb)), ToolTip = Langue.T(teinte.Nom + (teinte.Creuse ? " (tête creuse)" : " (tête pleine)")) };
                 pastille.Click += (o, e) => { choisir(rvb); for (int i = 0; i < 3; i++) curseurs[i].Value = (rvb >> (16 - 8 * i)) & 255; };
                 pastilles.Children.Add(pastille);
             }
@@ -3018,13 +3751,13 @@ namespace MascotteStickman
         {
             var panneau = new DockPanel { Margin = new Thickness(10) };
             var haut = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
-            recherche = new TextBox { Width = 190, VerticalContentAlignment = VerticalAlignment.Center, ToolTip = "Chercher par nom ou par famille" };
+            recherche = new TextBox { Width = 190, VerticalContentAlignment = VerticalAlignment.Center, ToolTip = Langue.T("Chercher par nom ou par famille") };
             recherche.TextChanged += (o, e) => Remplir();
-            haut.Children.Add(new TextBlock { Text = "Chercher : ", VerticalAlignment = VerticalAlignment.Center });
+            haut.Children.Add(new TextBlock { Text = Langue.T("Chercher : "), VerticalAlignment = VerticalAlignment.Center });
             haut.Children.Add(recherche);
-            haut.Children.Add(Bouton("▶ Jouer", () => { var c = liste.SelectedItem as CheckBox; if (c != null) Essayer((Anim)c.Tag); }));
-            haut.Children.Add(Bouton("Tout cocher", () => Cocher(true)));
-            haut.Children.Add(Bouton("Tout décocher", () => Cocher(false)));
+            haut.Children.Add(Bouton(Langue.T("▶ Jouer"), () => { var c = liste.SelectedItem as CheckBox; if (c != null) Essayer((Anim)c.Tag); }));
+            haut.Children.Add(Bouton(Langue.T("Tout cocher"), () => Cocher(true)));
+            haut.Children.Add(Bouton(Langue.T("Tout décocher"), () => Cocher(false)));
             DockPanel.SetDock(haut, Dock.Top);
             panneau.Children.Add(haut);
             compte = new TextBlock { Margin = new Thickness(0, 6, 0, 0), Foreground = Brushes.Gray };
@@ -3056,9 +3789,10 @@ namespace MascotteStickman
             string filtre = recherche.Text.Trim();
             foreach (Anim a in Biblio.Toutes)
             {
-                if (filtre != "" && (a.Famille + " " + a.Nom).IndexOf(filtre, StringComparison.CurrentCultureIgnoreCase) < 0) continue;
+                string affiche = Langue.T(a.Famille) + "  —  " + Langue.T(a.Nom);
+                if (filtre != "" && affiche.IndexOf(filtre, StringComparison.CurrentCultureIgnoreCase) < 0) continue;
                 Anim celle = a;
-                var coche = new CheckBox { Content = a.Famille + "  —  " + a.Nom, IsChecked = !R.Coupees.Contains(a.Nom), Tag = a, Margin = new Thickness(2) };
+                var coche = new CheckBox { Content = affiche, IsChecked = !R.Coupees.Contains(a.Nom), Tag = a, Margin = new Thickness(2) };
                 coche.Click += (o, e) =>
                 {
                     if (coche.IsChecked == true) R.Coupees.Remove(celle.Nom); else R.Coupees.Add(celle.Nom);
@@ -3084,8 +3818,8 @@ namespace MascotteStickman
 
         void Compter()
         {
-            compte.Text = liste.Items.Count + " affichées — " + (Biblio.Toutes.Count - R.Coupees.Count) + " animations actives sur " + Biblio.Toutes.Count
-                + ". Double-clic pour en essayer une ; décochée, elle n'est plus choisie au hasard.";
+            compte.Text = liste.Items.Count + " " + Langue.T("affichées") + " — " + (Biblio.Toutes.Count - R.Coupees.Count) + " " + Langue.T("animations actives sur") + " " + Biblio.Toutes.Count
+                + ". " + Langue.T("Double-clic pour en essayer une ; décochée, elle n'est plus choisie au hasard.");
         }
     }
 }
