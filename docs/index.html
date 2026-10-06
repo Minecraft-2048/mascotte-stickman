@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1d1f24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone-192.png">
+<link rel="apple-touch-icon" href="icone-192.png">
+<title>Mascotte Stickman</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1d1f24; touch-action: none; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; font-family: system-ui, "Segoe UI", Roboto, sans-serif; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #barre { position: fixed; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); display: flex; gap: 8px; z-index: 2; }
+  button { min-width: 44px; height: 44px; padding: 0 12px; border: 0; border-radius: 22px; background: rgba(255, 255, 255, .12); color: #f1f2f4;
+    font: 600 16px system-ui, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  button:active { background: rgba(255, 255, 255, .28); }
+  #capteurs { background: #ff8a1a; color: #1d1f24; }
+  #aide { position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); text-align: center; color: #c9ccd3; font-size: 14px;
+    line-height: 1.4; pointer-events: none; transition: opacity 1.2s; }
+</style>
+</head>
+<body>
+<canvas id="toile"></canvas>
+<div id="barre">
+  <button id="capteurs" hidden>Inclinaison</button>
+  <button id="tourner" title="Tourner la gravité d'un quart de tour">↻</button>
+  <button id="couleur" title="Changer sa couleur">Couleur</button>
+  <button id="moins" title="Un stickman de moins">−</button>
+  <button id="plus" title="Un stickman de plus">+</button>
+</div>
+<div id="aide">Penche l'appareil : la gravité suit. Attrape-le et lance-le, touche-le pour une animation, touche ailleurs pour qu'il y aille.</div>
+<script>
+'use strict';
+// Mascotte Stickman, version web : le même bonhomme-bâton que sur Windows, dans une page.
+// Ses animations viennent de animations.json (exportées par « MascotteStickman.exe --web docs ») :
+// chaque animation est une suite de poses de 13 nombres, que l'on relie ici entre elles.
+// La gravité est celle que mesure l'appareil : il se tient sur le bord de l'écran qui est en bas.
+
+const IX = 0, AIR = 1, ROT = 2, TORSE = 3, TETE = 4, EP1 = 5, CO1 = 6, EP2 = 7, CO2 = 8, HA1 = 9, GE1 = 10, HA2 = 11, GE2 = 12;
+const CORPS = { torse: 38, bras: 19, jambes: 22, tete: 13 };
+const NEUTRE = [0, 0, 0, 0, 0, 10, 12, -10, 12, 6, 0, -6, 0];
+const PALETTE = [['#ff8a1a', 1], ['#e53935', 0], ['#1e88e5', 0], ['#43a047', 0], ['#fdd835', 0], ['#8e24aa', 0], ['#ec407a', 0], ['#00bcd4', 0],
+  ['#f5f5f5', 0], ['#111111', 1], ['#b71c1c', 1], ['#26a69a', 0], ['#ffc107', 0], ['#c6ff00', 0], ['#3949ab', 0], ['#9e9e9e', 0]];      // couleur, tête en anneau
+const POIDS = { 'Déplacements': 50, 'Danses': 30, 'Gestes': 50, 'Combat': 30, 'Acrobaties': 50, 'Sport': 50, 'Quotidien': 50, 'Émotions': 50 };
+const GLYPHES = { note: '♪', zzz: 'z Z', coeur: '♥', exclam: '!', question: '?' };
+
+const rad = d => d * Math.PI / 180;
+const bas = d => [Math.sin(rad(d)), Math.cos(rad(d))], haut = d => [Math.sin(rad(d)), -Math.cos(rad(d))];
+const borne = (v, a, b) => Math.max(a, Math.min(b, v));
+const hasard = n => Math.floor(Math.random() * n);
+
+// ---------------------------------------------------------------- squelette
+// Positions des articulations, personnage tourné vers la droite, y vers le bas. Posé : le point le plus bas
+// touche le sol (y = 0). Suspendu : c'est la tête qui est à l'origine (tenu au bout du doigt).
+function squelette(p, suspendu) {
+  const pt = (o, v, l) => [o[0] + v[0] * l, o[1] + v[1] * l];
+  const rot = p[ROT], dos = rot + p[TORSE], o = { hanche: [0, 0] };
+  o.cou = pt(o.hanche, haut(dos), CORPS.torse);
+  o.tete = pt(o.cou, haut(dos + p[TETE]), CORPS.tete + 1);
+  let a = p[EP1] - rot; o.c1 = pt(o.cou, bas(a), CORPS.bras); o.m1 = pt(o.c1, bas(a + p[CO1]), CORPS.bras);
+  a = p[EP2] - rot; o.c2 = pt(o.cou, bas(a), CORPS.bras); o.m2 = pt(o.c2, bas(a + p[CO2]), CORPS.bras);
+  a = p[HA1] - rot; o.g1 = pt(o.hanche, bas(a), CORPS.jambes); o.p1 = pt(o.g1, bas(a + p[GE1]), CORPS.jambes);
+  a = p[HA2] - rot; o.g2 = pt(o.hanche, bas(a), CORPS.jambes); o.p2 = pt(o.g2, bas(a + p[GE2]), CORPS.jambes);
+  let dx, dy;
+  if (suspendu) { dx = -o.tete[0]; dy = -o.tete[1]; }
+  else {
+    let plusBas = Math.max(o.tete[1] + CORPS.tete, 0);
+    for (const k of ['cou', 'c1', 'm1', 'c2', 'm2', 'g1', 'p1', 'g2', 'p2']) plusBas = Math.max(plusBas, o[k][1]);
+    dx = p[IX]; dy = -plusBas - p[AIR];
+  }
+  for (const k in o) o[k] = [o[k][0] + dx, o[k][1] + dy];
+  return o;
+}
+
+function melange(a, b, k) { const p = new Array(13); for (let i = 0; i < 13; i++) p[i] = a[i] + (b[i] - a[i]) * k; return p; }
+
+// La pose d'une animation à l'instant t (0 à 1 dans son cycle).
+function poseDe(anim, t) {
+  const n = anim.p.length - 1, x = borne(t, 0, 1) * n, i = Math.min(n - 1, Math.floor(x));
+  return melange(anim.p[i], anim.p[i + 1], x - i);
+}
+
+// Un geste du haut du corps posé sur ce que font les jambes.
+function superposer(corps, geste) {
+  const p = corps.slice();
+  p[TORSE] += geste[TORSE]; p[TETE] = geste[TETE];
+  p[EP1] = geste[EP1]; p[CO1] = geste[CO1]; p[EP2] = geste[EP2]; p[CO2] = geste[CO2];
+  return p;
+}
+
+// ---------------------------------------------------------------- le monde
+const toile = document.getElementById('toile'), ctx = toile.getContext('2d');
+if (!ctx.roundRect) CanvasRenderingContext2D.prototype.roundRect = function (x, y, l, h) { this.rect(x, y, l, h); };      // vieux navigateurs : bulle à coins droits
+let L = 0, H = 0, taille = 1;              // dimensions de la page et taille du stickman
+let G = { x: 0, y: 2300 };                 // gravité, en pixels par seconde carrée, dans le repère de la page
+let capteur = false, angleFictif = 0;      // sans capteur : gravité qu'on tourne au bouton
+let biblio = null, parFamille = {}, bande = [], dernier = null, temps = 0;
+
+function redimensionner() {
+  const dpr = window.devicePixelRatio || 1;
+  L = window.innerWidth; H = window.innerHeight;
+  toile.width = Math.round(L * dpr); toile.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  taille = borne(Math.min(L, H) / 420, 0.8, 1.5);
+  if (!capteur) fixerGravite(angleFictif);
+}
+
+function fixerGravite(degres) {
+  angleFictif = degres;
+  G = { x: -Math.sin(rad(degres)) * 2300 * taille, y: Math.cos(rad(degres)) * 2300 * taille };
+}
+
+// Les quatre bords de l'écran : 0 en bas, 1 à gauche, 2 en haut, 3 à droite. Sur le bord k, son repère est
+// tourné de k quarts de tour : `sol` pointe vers le bord, `tan` est la direction dans laquelle il regarde.
+const sol = k => [-Math.sin(k * Math.PI / 2), Math.cos(k * Math.PI / 2)];
+const tan = k => [Math.cos(k * Math.PI / 2), Math.sin(k * Math.PI / 2)];
+const dehors = (k, x, y) => k === 0 ? y - H : k === 1 ? -x : k === 2 ? -y : x - L;      // > 0 : il a traversé le bord k
+
+// ---------------------------------------------------------------- un stickman
+class Bonhomme {
+  constructor(numero) {
+    this.teinte = numero % PALETTE.length;
+    const g = Math.hypot(G.x, G.y) || 1;
+    this.x = L / 2 + (numero % 2 ? -1 : 1) * 40 * Math.ceil(numero / 2) * taille - G.x / g * H * 0.3;
+    this.y = H / 2 - G.y / g * H * 0.3;
+    this.x = borne(this.x, 40, L - 40); this.y = borne(this.y, 40, H - 40);
+    this.vx = 0; this.vy = 0;
+    this.etat = 'vol'; this.bord = 0; this.face = 1; this.angle = Math.atan2(-G.x, G.y);
+    this.voulu = true; this.rebonds = 0; this.rotVol = 0; this.vrille = 0;
+    this.anim = null; this.t = 0; this.tours = 1; this.suite = null; this.cible = null;
+    this.geste = null; this.tGeste = 0; this.toursGeste = 0;
+    this.pose = NEUTRE.slice(); this.depuis = null; this.fondu = 1;
+    this.repos = false; this.prochaine = 0; this.bulle = null; this.finBulle = 0;
+    this.doigt = null; this.balance = 0; this.vBalance = 0; this.trace = [];
+  }
+
+  jouer(anim, tours, suite) {
+    if (anim.h) { this.geste = anim; this.tGeste = 0; this.toursGeste = tours; return; }      // haut du corps : par-dessus le reste
+    this.depuis = this.pose.slice(); this.fondu = 0;
+    this.anim = anim; this.t = 0; this.tours = tours; this.suite = suite || null;
+    this.cible = null; this.repos = false;
+  }
+
+  seReposer() {
+    this.jouer(biblio.repos[hasard(biblio.repos.length)], Infinity);
+    this.repos = true;
+    this.prochaine = temps + 2 + Math.random() * 4;
+  }
+
+  dire(texte, secondes) { this.bulle = texte; this.finBulle = temps + secondes; }
+
+  // Ses limites le long du bord où il se tient, et sa place sur ce bord.
+  etendue() { return this.bord % 2 === 0 ? L : H; }
+  place() { const t = tan(this.bord); return this.x * t[0] + this.y * t[1]; }
+  avancer(d) {
+    const t = tan(this.bord), a = this.place(), marge = 28 * taille;
+    const mini = this.bord === 0 || this.bord === 1 ? marge : -this.etendue() + marge, maxi = mini + this.etendue() - 2 * marge;
+    const b = borne(a + d, mini, maxi);
+    this.x += t[0] * (b - a); this.y += t[1] * (b - a);
+    return (d > 0 && b < a + d - 0.01) || (d < 0 && b > a + d + 0.01);      // vrai : il bute contre le coin
+  }
+
+  allerVers(placeVisee, anim, suite) {
+    if (Math.abs(placeVisee - this.place()) < 8) { if (suite) suite(); else this.seReposer(); return; }
+    this.jouer(anim, Infinity, suite);
+    this.cible = placeVisee;
+    this.face = (placeVisee > this.place() ? 1 : -1) * (anim.v < 0 ? -1 : 1);
+  }
+
+  // Ce qu'il décide de faire quand il n'a rien en cours.
+  choisir() {
+    let total = 0;
+    for (const f in parFamille) total += POIDS[f] || 0;
+    let tirage = Math.random() * total, famille = null;
+    for (const f in parFamille) { if (!(POIDS[f] > 0)) continue; famille = f; tirage -= POIDS[f]; if (tirage <= 0) break; }
+    const a = parFamille[famille][hasard(parFamille[famille].length)];
+    this.demander(a);
+  }
+
+  demander(a) {
+    if (this.etat !== 'anim') return;
+    if (a.h) { this.jouer(a, a.t); this.prochaine = temps + a.d * a.t + 2 + Math.random() * 3; return; }
+    if (a.m) {
+      const marge = 40 * taille, d = (80 + Math.random() * 0.6 * this.etendue()) * (hasard(2) ? 1 : -1);
+      const ici = this.place(), mini = (this.bord === 0 || this.bord === 1 ? 0 : -this.etendue()) + marge, maxi = mini + this.etendue() - 2 * marge;
+      let la = ici + d;
+      if (la < mini || la > maxi) la = ici - d;
+      this.allerVers(borne(la, mini, maxi), a);
+    } else this.jouer(a, Math.max(1, a.t));
+  }
+
+  attraper(doigt) {
+    this.etat = 'porte'; this.doigt = doigt; this.geste = null; this.balance = 0; this.vBalance = 0;
+    this.depuis = this.pose.slice(); this.fondu = 0;
+  }
+
+  lacher() {
+    // il repart du point où ses pieds se trouvaient, avec l'élan du geste
+    const o = squelette(this.pose, true);
+    let plusBas = 0;
+    for (const k in o) plusBas = Math.max(plusBas, o[k][1]);
+    const d = [-Math.sin(this.angle), Math.cos(this.angle)];
+    this.x = this.doigt.x + d[0] * plusBas * taille; this.y = this.doigt.y + d[1] * plusBas * taille;
+    let vx = this.doigt.vx, vy = this.doigt.vy;
+    const v = Math.hypot(vx, vy);
+    if (v > 4200) { vx *= 4200 / v; vy *= 4200 / v; }
+    this.lancer(vx, vy, false, (vx * Math.cos(this.angle) + vy * Math.sin(this.angle)) * 0.5);
+    this.doigt = null;
+  }
+
+  lancer(vx, vy, voulu, vrille) {
+    this.etat = 'vol'; this.vx = vx; this.vy = vy; this.voulu = voulu; this.vrille = vrille; this.rebonds = 0;
+    this.rotVol = this.pose[ROT]; this.geste = null; this.repos = false; this.cible = null;
+    this.depuis = this.pose.slice(); this.fondu = 0;
+  }
+
+  atterrir(k) {
+    const n = sol(k);
+    this.etat = 'anim'; this.bord = k;
+    if (k === 0) this.y = H; else if (k === 1) this.x = 0; else if (k === 2) this.y = 0; else this.x = L;
+    this.avancer(0);                                     // pas dans le coin : il lui faut la place de se tenir
+    if (this.voulu) this.jouer(biblio.reception, 1);
+    else { const t = tan(k); this.face = this.vx * t[0] + this.vy * t[1] < 0 ? -1 : 1; this.jouer(biblio.releve, 1); }
+    this.vx = this.vy = 0;
+  }
+
+  adoucir(p, dt) {
+    if (this.fondu >= 1) return p;
+    this.fondu += dt / 0.16;
+    if (this.fondu >= 1) return p;
+    const k = this.fondu * this.fondu * (3 - 2 * this.fondu), q = melange(this.depuis, p, k);
+    let ecart = (p[ROT] - this.depuis[ROT]) % 360;       // la rotation prend le plus court chemin
+    if (ecart > 180) ecart -= 360; else if (ecart < -180) ecart += 360;
+    q[ROT] = this.depuis[ROT] + ecart * k;
+    return q;
+  }
+
+  vivre(dt) {
+    const g = Math.hypot(G.x, G.y), gu = g > 1 ? [G.x / g, G.y / g] : [0, 1], pesanteur = g > 250 * taille;
+    const versG = Math.atan2(-G.x, G.y);
+    const tourner = (vers, vitesse) => {                 // son repère rejoint un angle par le plus court chemin
+      let e = (vers - this.angle) % (2 * Math.PI);
+      if (e > Math.PI) e -= 2 * Math.PI; else if (e < -Math.PI) e += 2 * Math.PI;
+      this.angle += e * Math.min(1, vitesse * dt);
+    };
+
+    if (this.etat === 'porte') {
+      // tenu par la tête : le corps pend dans le sens de la gravité et se balance derrière le doigt
+      if (pesanteur) tourner(versG, 8);
+      const vt = this.doigt.vx * Math.cos(this.angle) + this.doigt.vy * Math.sin(this.angle);
+      const visee = borne(-vt * 0.045, -80, 80);
+      this.vBalance += ((visee - this.balance) * 60 - this.vBalance * 7) * dt;
+      this.balance += this.vBalance * dt;
+      const flotte = 8 * Math.sin(temps * 3), secousse = Math.min(30, Math.abs(this.vBalance) * 0.08), b = this.balance, p = NEUTRE.slice();
+      p[ROT] = b; p[TETE] = -b * 0.25;
+      p[EP1] = 22 + b * 0.5 + flotte + secousse; p[CO1] = 14; p[EP2] = -18 + b * 0.5 - flotte - secousse; p[CO2] = -10;
+      p[HA1] = 12 + b * 0.55 - flotte * 0.6; p[GE1] = -18 - secousse; p[HA2] = -8 + b * 0.55 + flotte * 0.6; p[GE2] = -30 - secousse;
+      this.pose = this.adoucir(p, dt);
+      return;
+    }
+
+    if (this.etat === 'vol') {
+      this.vx += G.x * dt; this.vy += G.y * dt;
+      this.x += this.vx * dt; this.y += this.vy * dt;
+      this.rotVol += this.vrille * dt;
+      if (pesanteur) tourner(versG, 6);
+      for (let k = 0; k < 4; k++) {
+        if (dehors(k, this.x, this.y) <= 0) continue;
+        const n = sol(k), vn = this.vx * n[0] + this.vy * n[1];
+        if (k === 0) this.y = H; else if (k === 1) this.x = 0; else if (k === 2) this.y = 0; else this.x = L;
+        if (vn <= 0) continue;
+        const plancher = pesanteur && gu[0] * n[0] + gu[1] * n[1] > 0.55;      // ce bord est-il « en bas » ?
+        if (plancher && (this.voulu || vn < 520 * taille || this.rebonds >= 3)) { this.atterrir(k); return; }
+        const rebond = plancher ? 0.4 : 0.55;
+        this.vx -= (1 + rebond) * vn * n[0]; this.vy -= (1 + rebond) * vn * n[1];
+        this.vx *= 0.85; this.vy *= 0.85; this.vrille *= -0.6; this.rebonds++;
+      }
+      let p;
+      if (this.voulu) p = (this.vx * gu[0] + this.vy * gu[1] < 0 ? biblio.monte : biblio.descend).slice();
+      else {
+        const agite = Math.sin(temps * 14);
+        p = NEUTRE.slice(); p[ROT] = this.rotVol % 360;
+        p[EP1] = 120 + 40 * agite; p[CO1] = 30; p[EP2] = -130 - 40 * agite; p[CO2] = -30;
+        p[HA1] = 40 + 25 * agite; p[GE1] = -50; p[HA2] = -30 - 25 * agite; p[GE2] = -60;
+      }
+      this.pose = this.adoucir(p, dt);
+      return;
+    }
+
+    // posé sur un bord
+    const n = sol(this.bord), t = tan(this.bord);
+    tourner(this.bord * Math.PI / 2, 14);
+    if (pesanteur) {
+      const appui = gu[0] * n[0] + gu[1] * n[1], pente = gu[0] * t[0] + gu[1] * t[1];
+      if (appui < 0.45) {                                // le sol n'est plus en bas : il décroche et tombe
+        this.lancer(G.x * 0.12, G.y * 0.12, false, pente * 220);
+        return;
+      }
+      if (Math.abs(pente) > 0.3) {                       // sol en pente : il glisse du côté qui descend
+        const bute = this.avancer(pente * 260 * taille * dt);
+        if (this.repos && !bute && Math.abs(pente) > 0.45) this.face = pente > 0 ? 1 : -1;
+      }
+    }
+    const a = this.anim;
+    this.t += dt / a.d;
+    if (a.m && this.cible !== null) {
+      const pas = Math.abs(a.v) * taille * dt, reste = this.cible - this.place();
+      if (Math.abs(reste) <= pas || this.avancer(reste > 0 ? pas : -pas)) { this.cible = null; this.finir(); return; }
+    } else if (this.t >= this.tours) { this.finir(); return; }
+
+    let p = poseDe(a, this.tours === 1 && !a.m ? Math.min(1, this.t) : this.t % 1);
+    if (this.geste) {
+      this.tGeste += dt / this.geste.d;
+      if (this.tGeste >= this.toursGeste) { this.geste = null; this.depuis = this.pose.slice(); this.fondu = 0; }
+      else p = superposer(p, poseDe(this.geste, this.tGeste % 1));
+    }
+    this.pose = this.adoucir(p, dt);
+    if (this.repos && temps >= this.prochaine && !this.geste) this.choisir();
+  }
+
+  finir() {
+    const s = this.suite;
+    this.suite = null;
+    if (s) s(); else this.seReposer();
+  }
+
+  // Le point de l'écran où se trouve un point du squelette.
+  ecran(pt) {
+    const c = Math.cos(this.angle), s = Math.sin(this.angle), ox = this.etat === 'porte' ? this.doigt.x : this.x, oy = this.etat === 'porte' ? this.doigt.y : this.y;
+    return [ox + (c * this.face * pt[0] - s * pt[1]) * taille, oy + (s * this.face * pt[0] + c * pt[1]) * taille];
+  }
+
+  dessiner() {
+    const o = squelette(this.pose, this.etat === 'porte'), [couleur, creuse] = PALETTE[this.teinte];
+    const c = Math.cos(this.angle), s = Math.sin(this.angle);
+    const ox = this.etat === 'porte' ? this.doigt.x : this.x, oy = this.etat === 'porte' ? this.doigt.y : this.y;
+    ctx.save();
+    ctx.transform(c * this.face * taille, s * this.face * taille, -s * taille, c * taille, ox, oy);
+    if (this.etat === 'anim') {                          // son ombre, sur le bord où il se tient
+      ctx.fillStyle = 'rgba(0,0,0,.28)';
+      ctx.beginPath(); ctx.ellipse(o.hanche[0], -2, Math.max(8, 24 - this.pose[AIR] * 0.1), 4, 0, 0, 2 * Math.PI); ctx.fill();
+    }
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const trait = (a, b, m) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); if (m) ctx.lineTo(m[0], m[1]); ctx.stroke(); };
+    for (let passe = 0; passe < 2; passe++) {            // d'abord le contour sombre de toute la silhouette, puis la couleur
+      ctx.strokeStyle = passe ? couleur : '#0f1012'; ctx.lineWidth = passe ? 6 : 9.5;
+      trait(o.cou, o.c2, o.m2); trait(o.hanche, o.g2, o.p2); trait(o.hanche, o.cou);
+      ctx.beginPath(); ctx.arc(o.tete[0], o.tete[1], CORPS.tete, 0, 2 * Math.PI);
+      if (passe && !creuse) { ctx.fillStyle = couleur; ctx.fill(); }
+      ctx.stroke();
+      trait(o.cou, o.c1, o.m1); trait(o.hanche, o.g1, o.p1);
+    }
+    const objet = this.etat === 'anim' ? (this.geste && this.geste.o) || this.anim.o : null;
+    if (objet === 'epee' || objet === 'baton' || objet === 'club' || objet === 'raquette') {      // tenu dans la main, dans le prolongement de l'avant-bras
+      const d = [o.m1[0] - o.c1[0], o.m1[1] - o.c1[1]], l = Math.hypot(d[0], d[1]) || 1, long = objet === 'baton' ? 54 : objet === 'epee' ? 42 : 30;
+      ctx.strokeStyle = '#e8e8ee'; ctx.lineWidth = 3.5;
+      trait(o.m1, [o.m1[0] + d[0] / l * long, o.m1[1] + d[1] / l * long]);
+    }
+    ctx.restore();
+
+    // ce qui s'écrit reste dans le bon sens : petits signes au-dessus de la tête, et sa bulle
+    const tete = this.ecran(o.tete), dessus = (h) => [tete[0] + s * h * taille, tete[1] - c * h * taille];
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (GLYPHES[objet]) {
+      const ici = dessus(30 + 5 * Math.sin(temps * 4));
+      ctx.translate(ici[0], ici[1]); ctx.rotate(this.angle);
+      ctx.fillStyle = objet === 'coeur' ? '#ff5a8a' : '#f4f4f8'; ctx.font = `700 ${18 * taille}px system-ui, sans-serif`;
+      ctx.fillText(GLYPHES[objet], 16 * taille, 0);
+      ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+    }
+    if (this.bulle && temps < this.finBulle) {
+      const ici = dessus(42);
+      ctx.translate(ici[0], ici[1]); ctx.rotate(this.angle);
+      ctx.font = `${13 * taille}px system-ui, sans-serif`;
+      const l = ctx.measureText(this.bulle).width + 18 * taille, h = 24 * taille;
+      ctx.fillStyle = '#faf9f5'; ctx.beginPath(); ctx.roundRect(-l / 2, -h / 2, l, h, h / 2); ctx.fill();
+      ctx.fillStyle = '#303030'; ctx.fillText(this.bulle, 0, 1);
+    }
+    ctx.restore();
+  }
+
+  // Le doigt est-il sur lui ?
+  touche(x, y) {
+    const o = squelette(this.pose, this.etat === 'porte'), centre = this.ecran([(o.hanche[0] + o.tete[0]) / 2, (o.hanche[1] + o.tete[1]) / 2]);
+    return Math.hypot(x - centre[0], y - centre[1]) < 62 * taille;
+  }
+}
+
+// ---------------------------------------------------------------- doigts et souris
+const doigts = new Map();      // identifiant du pointeur → ce qu'il fait
+
+toile.addEventListener('pointerdown', e => {
+  toile.setPointerCapture(e.pointerId);
+  const d = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, vx: 0, vy: 0, t: performance.now(), qui: null, porte: false };
+  for (let i = bande.length - 1; i >= 0; i--) if (bande[i].touche(d.x, d.y)) { d.qui = bande[i]; break; }
+  if (d.qui) dernier = d.qui;
+  doigts.set(e.pointerId, d);
+});
+
+toile.addEventListener('pointermove', e => {
+  const d = doigts.get(e.pointerId);
+  if (!d) return;
+  const maintenant = performance.now(), dt = Math.max(1, maintenant - d.t) / 1000;
+  d.vx = d.vx * 0.6 + (e.clientX - d.x) / dt * 0.4; d.vy = d.vy * 0.6 + (e.clientY - d.y) / dt * 0.4;
+  d.x = e.clientX; d.y = e.clientY; d.t = maintenant;
+  if (d.qui && !d.porte && Math.hypot(d.x - d.x0, d.y - d.y0) > 8) { d.porte = true; d.qui.attraper(d); }
+});
+
+function fin(e) {
+  const d = doigts.get(e.pointerId);
+  if (!d) return;
+  doigts.delete(e.pointerId);
+  if (performance.now() - d.t > 90) d.vx = d.vy = 0;      // le doigt s'était arrêté : pas d'élan
+  if (d.porte) { d.qui.lacher(); return; }
+  if (d.qui) {                                           // touché sans le déplacer : une animation au hasard
+    if (d.qui.etat !== 'anim') return;
+    const noms = Object.keys(parFamille).filter(f => f !== 'Déplacements'), liste = parFamille[noms[hasard(noms.length)]];
+    const a = liste[hasard(liste.length)];
+    d.qui.demander(a); d.qui.dire(a.n, 2.2);
+    return;
+  }
+  // touché ailleurs : le plus proche de ceux qui sont posés y va, en marchant ou en courant
+  let proche = null, mieux = Infinity;
+  for (const b of bande) { const e2 = Math.hypot(b.x - d.x, b.y - d.y); if (b.etat === 'anim' && e2 < mieux) { mieux = e2; proche = b; } }
+  if (!proche) return;
+  const t = tan(proche.bord), la = d.x * t[0] + d.y * t[1];
+  proche.allerVers(la, Math.abs(la - proche.place()) > 320 * taille ? biblio.parNom[biblio.course] : biblio.parNom[biblio.marche]);
+}
+toile.addEventListener('pointerup', fin);
+toile.addEventListener('pointercancel', fin);
+
+// ---------------------------------------------------------------- inclinaison
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const boutonCapteurs = document.getElementById('capteurs'), boutonTourner = document.getElementById('tourner');
+
+function mouvement(e) {
+  const a = e.accelerationIncludingGravity;
+  if (!a || a.x === null || a.y === null) return;
+  if (!capteur) { capteur = true; boutonCapteurs.hidden = true; boutonTourner.hidden = true; }
+  // la pesanteur vraie dans le repère de l'appareil (Android donne son opposé, iOS la donne telle quelle)…
+  const tx = IOS ? a.x : -a.x, ty = IOS ? a.y : -a.y;
+  // … ramenée dans celui de la page, qui a pu tourner avec l'écran
+  const o = rad((screen.orientation && screen.orientation.angle) || window.orientation || 0), k = 235 * taille;
+  const gx = (tx * Math.cos(o) - ty * Math.sin(o)) * k, gy = -(tx * Math.sin(o) + ty * Math.cos(o)) * k;
+  G.x += (gx - G.x) * 0.25; G.y += (gy - G.y) * 0.25;
+  // une bonne secousse les envoie valser
+  const s = e.acceleration;
+  if (s && s.x !== null && Math.hypot(s.x, s.y) > 16)
+    for (const b of bande) if (b.etat === 'anim') b.lancer((Math.random() - 0.5) * 900 * taille - G.x * 0.3, (Math.random() - 0.5) * 900 * taille - G.y * 0.3, false, (Math.random() - 0.5) * 900);
+}
+
+function ecouter() { window.addEventListener('devicemotion', mouvement); }
+if (typeof DeviceMotionEvent !== 'undefined') {
+  if (typeof DeviceMotionEvent.requestPermission === 'function') {      // iPhone, iPad : il faut demander, et sur un appui
+    boutonCapteurs.hidden = false;
+    boutonCapteurs.addEventListener('click', () => DeviceMotionEvent.requestPermission().then(r => { if (r === 'granted') ecouter(); boutonCapteurs.hidden = true; }).catch(() => { }));
+  } else ecouter();
+}
+boutonTourner.addEventListener('click', () => fixerGravite((angleFictif + 90) % 360));
+window.addEventListener('keydown', e => {
+  const sens = { ArrowDown: 0, ArrowLeft: 90, ArrowUp: 180, ArrowRight: 270 }[e.key];
+  if (sens !== undefined && !capteur) fixerGravite(sens);
+});
+
+// ---------------------------------------------------------------- boutons
+document.getElementById('plus').addEventListener('click', () => { if (bande.length < 6) { dernier = new Bonhomme(bande.length); bande.push(dernier); } });
+document.getElementById('moins').addEventListener('click', () => { if (bande.length > 1) { const b = bande.pop(); if (dernier === b) dernier = bande[0]; } });
+document.getElementById('couleur').addEventListener('click', () => { const b = dernier || bande[0]; if (b) b.teinte = (b.teinte + 1) % PALETTE.length; });
+
+// ---------------------------------------------------------------- boucle
+let avant = 0;
+function image(maintenant) {
+  const dt = Math.min(0.05, (maintenant - avant) / 1000 || 0);
+  avant = maintenant; temps += dt;
+  ctx.clearRect(0, 0, L, H);
+  for (const b of bande) b.vivre(dt);
+  for (const b of bande) b.dessiner();
+  requestAnimationFrame(image);
+}
+
+window.addEventListener('resize', redimensionner);
+redimensionner();
+fetch('animations.json').then(r => r.json()).then(donnees => {
+  biblio = donnees;
+  biblio.parNom = {};
+  for (const a of biblio.anims) { (parFamille[a.f] = parFamille[a.f] || []).push(a); biblio.parNom[a.n] = a; }
+  for (const f in parFamille) if (!(f in POIDS)) delete parFamille[f];
+  bande.push(dernier = new Bonhomme(0));
+  requestAnimationFrame(image);
+  setTimeout(() => { document.getElementById('aide').style.opacity = 0; }, 7000);
+}).catch(() => { document.getElementById('aide').textContent = 'Impossible de charger les animations (animations.json).'; });
+</script>
+</body>
+</html>

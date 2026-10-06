@@ -48,6 +48,8 @@ namespace MascotteStickman
                 return 0;
             }
             if (args.Length >= 2 && args[0] == "--sons") { Sons.Exporter(args[1]); return 0; }
+            // MascotteStickman.exe --web dossier : les animations en poses échantillonnées, pour la version web (docs/)
+            if (args.Length >= 2 && args[0] == "--web") { Planches.ExporterWeb(args[1]); return 0; }
 
             bool premiere;
             using (new Mutex(true, "MascotteStickman-Instance", out premiere))
@@ -985,6 +987,31 @@ namespace MascotteStickman
     // Planches de contrôle : chaque animation en huit images, pour vérifier les poses d'un coup d'œil.
     static class Planches
     {
+        // --web dossier : animations.json pour la version web. Chaque animation y devient une suite de poses
+        // (13 entiers, dans l'ordre de I) prises à intervalles réguliers ; la page les relie entre elles.
+        // Restent ici : les scènes entières, les animations de rebord de fenêtre et la famille Minecraft.
+        public static void ExporterWeb(string dossier)
+        {
+            Directory.CreateDirectory(dossier);
+            CultureInfo inv = CultureInfo.InvariantCulture;
+            Func<string, string> texte = t => "\"" + (t ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+            Func<double[], string> pose = p => "[" + string.Join(",", p.Select(v => Math.Round(v).ToString(inv))) + "]";
+            Func<Anim, string> anim = a =>
+            {
+                int n = Math.Max(12, Math.Min(90, (int)Math.Round(a.Duree * 30)));
+                var poses = new List<string>();
+                for (int i = 0; i <= n; i++) poses.Add(pose(a.Pose(i / (double)n)));
+                return "{\"n\":" + texte(a.Nom) + ",\"f\":" + texte(a.Famille) + ",\"d\":" + a.Duree.ToString("0.###", inv) + ",\"t\":" + a.Tours
+                    + (a.Haut ? ",\"h\":1" : "") + (a.Deplace ? ",\"m\":1,\"v\":" + a.Vitesse.ToString("0.#", inv) : "")
+                    + (a.Objet != null ? ",\"o\":" + texte(a.Objet) : "") + ",\"p\":[" + string.Join(",", poses) + "]}";
+            };
+            List<Anim> liste = Biblio.Toutes.Where(a => a.Special == null && !a.SurFenetre && a.Famille != "Minecraft").ToList();
+            string json = "{\"repos\":[" + string.Join(",", Biblio.Repos.Select(anim)) + "],\n\"reception\":" + anim(Biblio.Reception) + ",\n\"releve\":" + anim(Biblio.SeReleve)
+                + ",\n\"monte\":" + pose(Biblio.SautMonte) + ",\"descend\":" + pose(Biblio.SautDescend) + ",\"marche\":" + texte(Biblio.Marche.Nom) + ",\"course\":" + texte(Biblio.Course.Nom)
+                + ",\n\"anims\":[\n" + string.Join(",\n", liste.Select(anim)) + "\n]}\n";
+            File.WriteAllText(Path.Combine(dossier, "animations.json"), json, new UTF8Encoding(false));
+        }
+
         // --planches dossier duos : les animations à deux, les deux stickmen face à face à leur distance
         static void EcrireDuos(string dossier)
         {
