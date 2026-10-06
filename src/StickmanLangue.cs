@@ -143,7 +143,7 @@ namespace MascotteStickman
             "variés", "varied", "simples", "plain", "toujours en salto", "always a somersault", "atterrissage de héros", "hero landing",
             "Danse en rythme quand le PC joue de la musique (de temps en temps)", "Dances on the beat when the PC plays music (now and then)",
             "Envie de danser quand il y a de la musique (%)", "Urge to dance when music plays (%)",
-            "Géant : il grandit d'un coup et fait fuir les autres", "Giant: he suddenly grows and scares the others away",
+            "Géant : il grandit d'un coup jusqu'en haut de l'écran et fait fuir les autres", "Giant: he suddenly grows as tall as the screen and scares the others away",
             "Minuscule : il rétrécit et file partout", "Tiny: he shrinks and scurries around",
             "Il dessine sur l'écran", "He draws on the screen",
             "Il ouvre YouTube sur la chaîne d'Alan Becker (ouvre le navigateur)", "He opens Alan Becker's YouTube channel (opens the browser)",

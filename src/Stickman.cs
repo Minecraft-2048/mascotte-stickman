@@ -158,7 +158,7 @@ namespace MascotteStickman
             // les animations spéciales : chacune se coupe ici. Celles qui touchent au PC (navigateur, souris,
             // fenêtres) sont décochées au départ ; on peut toujours les demander à la main dans le menu.
             const string Sp = "Spécial";
-            B(Sp, "special.geant", "Géant : il grandit d'un coup et fait fuir les autres", true);
+            B(Sp, "special.geant", "Géant : il grandit d'un coup jusqu'en haut de l'écran et fait fuir les autres", true);
             B(Sp, "special.mini", "Minuscule : il rétrécit et file partout", true);
             B(Sp, "special.dessin", "Il dessine sur l'écran", true);
             B(Sp, "special.youtube", "Il ouvre YouTube sur la chaîne d'Alan Becker (ouvre le navigateur)", false);
@@ -1315,11 +1315,26 @@ namespace MascotteStickman
         {
             s = R.D("taille") * echelleFx;
             if (toile.ContextMenu != null && langueMenu != Langue.Anglais) ConstruireMenu();      // la langue a changé : le menu aussi
-            largeur = 340 * s; hauteur = 360 * s; solY = hauteur - 64 * s;      // sous le sol : la place des jambes qui pendent d'une fenêtre
-            Width = largeur; Height = hauteur;
+            Dimensionner();
             Topmost = R.O("premierplan");
             minuteur.Interval = TimeSpan.FromMilliseconds(1000 / R.D("fluidite"));
-            toile.Effect = R.O("lueur") ? new DropShadowEffect { Color = CouleurDuMoment(), BlurRadius = 16 * s, ShadowDepth = 0, Opacity = 0.95 } : null;
+            toile.Effect = R.O("lueur") ? new DropShadowEffect { Color = CouleurDuMoment(), BlurRadius = Math.Min(48, 16 * s), ShadowDepth = 0, Opacity = 0.95 } : null;
+        }
+
+        bool Geant { get { return echelleFx > 1.5; } }
+
+        void Dimensionner()
+        {
+            largeur = 340 * s; hauteur = 360 * s; solY = hauteur - 64 * s;      // sous le sol : la place des jambes qui pendent d'une fenêtre
+            if (Geant)
+            {
+                // géant : sa fenêtre s'arrête aux bords de l'écran, sinon elle serait immense pour rien
+                double haut = SystemParameters.VirtualScreenTop, bas = haut + SystemParameters.VirtualScreenHeight;
+                largeur = Math.Min(largeur, 110 * s + 350);
+                solY = Math.Min(solY, ancre.Y - haut + 2);
+                hauteur = solY + Math.Min(64 * s, Math.Max(4, bas - ancre.Y + 2));
+            }
+            Width = largeur; Height = hauteur;
         }
 
         Color CouleurDuMoment()
@@ -1354,12 +1369,14 @@ namespace MascotteStickman
             }
             Scene(dt);
             if (echelleVisee != 1 && temps > finEchelle) echelleVisee = 1;      // géant ou minuscule : jamais pour toujours
+            if (Geant && etat != Etat.Anime) { echelleFx = echelleVisee = 1; AppliquerUn(); }      // attrapé ou envoyé en l'air : il reprend sa taille d'un coup
             if (echelleFx != echelleVisee)
             {
                 double pas = dt * 3.2 * Math.Max(0.4, echelleFx);
                 echelleFx = Math.Abs(echelleVisee - echelleFx) <= pas ? echelleVisee : echelleFx + Math.Sign(echelleVisee - echelleFx) * pas;
                 AppliquerUn();
             }
+            else if (Geant) Dimensionner();
             voile += Math.Max(-dt * 5, Math.Min(dt * 5, voileVise - voile));
             toile.Opacity = R.D("opacite") / 100 * voile;
             Placer();
@@ -1760,7 +1777,7 @@ namespace MascotteStickman
         // Un curseur qui le traverse à toute vitesse l'envoie valser.
         bool Bouscule()
         {
-            if (!R.O("bouscule") || appui || vCurseur.Length < 2600) return false;
+            if (!R.O("bouscule") || appui || Geant || vCurseur.Length < 2600) return false;      // un géant ne craint pas le curseur
             double dx = curseur.X - ancre.X, haut = ancre.Y - curseur.Y;
             if (Math.Abs(dx) > 34 * s || haut < 0 || haut > 125 * s) return false;
             Vector elan = vCurseur * 0.4 * (R.D("force") / 100) + new Vector(0, -320);
@@ -1869,7 +1886,7 @@ namespace MascotteStickman
             // zone sensible, presque invisible : les traits seuls seraient trop fins à viser
             Point[] points = Dessin.Points(o).Select(e).ToArray();
             double x0 = points.Min(p => p.X) - 14 * s, x1 = points.Max(p => p.X) + 14 * s, y0 = points.Min(p => p.Y) - (o.Rayon + 12) * s, y1 = points.Max(p => p.Y) + 12 * s;
-            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(1, 0, 0, 0)), null, new Rect(x0, y0, x1 - x0, y1 - y0), 20, 20);
+            if (!Geant) dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(1, 0, 0, 0)), null, new Rect(x0, y0, x1 - x0, y1 - y0), 20, 20);      // géant, ses traits suffisent : il ne doit pas voler les clics de tout l'écran
 
             if (R.O("ombre") && etat == Etat.Anime)
             {
@@ -1920,13 +1937,14 @@ namespace MascotteStickman
             }
             else if (bulle != null && temps < finBulle)
             {
-                FormattedText texte = Dessin.Texte(bulle, 12.5, new SolidColorBrush(Color.FromRgb(0x30, 0x30, 0x30)));
+                double gros = Math.Max(1, Math.Min(3, echelleFx * 0.3));      // un géant parle en grosses lettres
+                FormattedText texte = Dessin.Texte(bulle, 12.5 * gros, new SolidColorBrush(Color.FromRgb(0x30, 0x30, 0x30)));
                 texte.MaxTextWidth = Math.Max(60, largeur - 30);
                 Point tete = e(o.Tete);
-                double l = texte.Width + 18, h = texte.Height + 9;
+                double l = texte.Width + 18 * gros, h = texte.Height + 9 * gros;
                 double bx = Math.Max(4, Math.Min(largeur - l - 4, tete.X - l / 2)), by = Math.Max(4, tete.Y - (o.Rayon + 14) * s - h);
-                dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(0xFA, 0xF9, 0xF5)), new Pen(new SolidColorBrush(Color.FromRgb(0xD8, 0xD4, 0xC8)), 1), new Rect(bx, by, l, h), 9, 9);
-                dc.DrawText(texte, new Point(bx + 9, by + 4));
+                dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(0xFA, 0xF9, 0xF5)), new Pen(new SolidColorBrush(Color.FromRgb(0xD8, 0xD4, 0xC8)), gros), new Rect(bx, by, l, h), 9 * gros, 9 * gros);
+                dc.DrawText(texte, new Point(bx + 9 * gros, by + 4 * gros));
             }
         }
 
@@ -2426,6 +2444,7 @@ namespace MascotteStickman
 
         void Speciale(Anim a)
         {
+            if (Geant) { echelleFx = echelleVisee = 1; AppliquerUn(); }      // les scènes sont bâties à sa taille normale
             switch (a.Special)
             {
                 case "tour": Batir(false); break;
@@ -2917,27 +2936,28 @@ namespace MascotteStickman
         IntPtr secouee; POINT placeSecouee;                      // la fenêtre qu'il secoue, et sa vraie place
         static double prochainYoutube;
 
-        // Géant : il grandit d'un coup, piétine en rugissant, et les autres détalent.
+        // Géant : il grandit d'un coup jusqu'à toucher presque le haut de l'écran, piétine en rugissant, et les autres détalent.
         void Grandir()
         {
             RangerScene();
-            double maxi = Math.Min(3.4, (ancre.Y - SystemParameters.VirtualScreenTop - 10) / (300 * R.D("taille")));
-            if (maxi < 1.5) { Repos(); return; }
-            echelleVisee = maxi; finEchelle = temps + 14;
+            double debout = (2 * R.D("jambes") + R.D("torse") + 2 * R.D("tete") + 1 + R.D("epaisseur") / 2) * R.D("taille");      // sa hauteur, des pieds au sommet du crâne
+            double maxi = 0.94 * (ancre.Y - SystemParameters.VirtualScreenTop) / debout;
+            if (maxi < 2) { Repos(); return; }
+            echelleVisee = maxi; finEchelle = temps + 16;
             Sons.Jouer("energie", "sonsPouvoirs");
             Dire("GRAOUH !", 2.5);
+            double gauche, droite;
+            Limites(out gauche, out droite);
+            int sens = ancre.X - gauche > droite - ancre.X ? -1 : 1;
+            double trajet = 130 * R.D("taille") * maxi;              // quelques pas de géant
             foreach (Bonhomme b in Tous.Where(x => x != this && x.etat == Etat.Anime && x.scene == null && x.ami == null && !x.dort).ToList())
             {
+                int cote = b.ancre.X >= ancre.X ? 1 : -1;
                 b.Dire("Aaah !", 2);
-                b.AllerVers(b.ancre.X + (b.ancre.X >= ancre.X ? 1 : -1) * (360 + hasard.Next(260)) * b.s, Biblio.Course, null);
+                b.AllerVers(b.ancre.X + cote * ((cote == sens ? trajet : 0) + (520 + hasard.Next(420)) * b.s), Biblio.Course, null);      // hors de son chemin
             }
             Jouer(Biblio.Rugit, 1, () =>
-            {
-                double gauche, droite;
-                Limites(out gauche, out droite);
-                double x = ancre.X + (ancre.X - gauche > droite - ancre.X ? -1 : 1) * 260 * R.D("taille");
-                AllerVers(x, Biblio.Trouver("Marche lourde") ?? Biblio.Marche, () => Jouer(Biblio.Rugit, 1, () => { echelleVisee = 1; Dire("Ouf, c'était grand là-haut.", 2.5); Repos(); }));
-            });
+                AllerVers(ancre.X + sens * trajet, Biblio.Trouver("Marche lourde") ?? Biblio.Marche, () => Jouer(Biblio.Rugit, 1, () => { echelleVisee = 1; Dire("Ouf, c'était grand là-haut.", 2.5); Repos(); })));
         }
 
         // Minuscule : tout petit, il file d'un bout à l'autre avant de retrouver sa taille.
