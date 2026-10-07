@@ -253,6 +253,7 @@ namespace MascotteStickman
             Sixieme();
             Septieme();
             Huitieme();
+            Neuvieme();
             Sonoriser();
             ADeux();
         }
@@ -677,6 +678,165 @@ namespace MascotteStickman
             Func<double, double[]> pasPoisson = poisson.Pose;
             poisson.Pose = t => { double[] p = pasPoisson(t); p[I.Ep1] = 20; p[I.Co1] = 10; return p; };
             poisson.Famille = F; poisson.Objet = "item:tropical_fish_bucket";
+        }
+
+        // ------------------------------------------------------------ neuvième fournée : enchaînements, ralentis et nouveautés
+
+        // Plusieurs animations bout à bout : un enchaînement de coups, une série d'acrobaties.
+        static Anim Suite(string famille, params string[] noms)
+        {
+            var morceaux = new Anim[noms.Length];
+            double total = 0;
+            for (int i = 0; i < noms.Length; i++)
+            {
+                morceaux[i] = Trouver(noms[i]);
+                if (morceaux[i] == null || morceaux[i].Nom != noms[i]) return null;      // un nom mal écrit : pas d'enchaînement bancal
+                total += morceaux[i].Duree * morceaux[i].Tours;
+            }
+            return Ajouter(famille, string.Join(" + ", noms), total, 1, t =>
+            {
+                double reste = t * total;
+                for (int i = 0; i < morceaux.Length; i++)
+                {
+                    Anim m = morceaux[i];
+                    double duree = m.Duree * m.Tours;
+                    if (reste < duree || i == morceaux.Length - 1)
+                    {
+                        double u = reste / m.Duree;
+                        return m.Pose(u >= m.Tours ? 1 : u - Math.Floor(u));
+                    }
+                    reste -= duree;
+                }
+                return morceaux[0].Pose(0);
+            });
+        }
+
+        // Une marche dont le bras avant tient quelque chose (ou une laisse invisible).
+        static Anim PasAvec(string nom, string objet, double epaule, double coude, double A, double K, double v, double T, double penche = 2, double tete = 0)
+        {
+            Anim a = Pas(nom, A, K, 12, 10, penche, 0, v, T);
+            Func<double, double[]> pas = a.Pose;
+            a.Pose = t => { double[] p = pas(t); p[I.Ep1] = epaule; p[I.Co1] = coude; p[I.Tete] += tete; return p; };
+            a.Objet = objet;
+            return a;
+        }
+
+        static void Neuvieme()
+        {
+            // --- enchaînements de combat : deux coups, puis quelques séries de trois
+            string[] coups = { "Coup de poing", "Crochet", "Uppercut", "Coup de coude", "Coup de pied", "Coup de pied haut", "Coup de genou", "Coup de pied arrière", "Balayage", "Coup de tête" };
+            for (int i = 0; i < coups.Length; i++)
+                for (int j = i + 1; j < coups.Length; j++)
+                    Suite("Combat", coups[i], coups[j]);
+            foreach (string[] serie in new[]
+            {
+                new[] { "Coup de poing", "Crochet", "Uppercut" }, new[] { "Coup de poing", "Coup de coude", "Coup de genou" },
+                new[] { "Coup de pied", "Coup de pied haut", "Coup de pied arrière" }, new[] { "Crochet", "Uppercut", "Coup de tête" },
+                new[] { "Coup de genou", "Coup de coude", "Balayage" }, new[] { "Coup de pied", "Coup de poing", "Coup de pied sauté" },
+                new[] { "Uppercut", "Coup de pied haut", "Coup de pied retourné" }, new[] { "Balayage", "Coup de pied sauté", "Coup de pied marteau" },
+                new[] { "Frappe de la paume", "Coup de coude", "Coup de tête" }, new[] { "Coup de poing", "Crochet", "Coup de pied retourné" },
+                new[] { "Coup de pied bas", "Coup de pied", "Coup de pied haut" }, new[] { "Crochet", "Coup de genou", "Double coup de pied sauté" },
+            })
+                Suite("Combat", serie);
+
+            // --- séries d'acrobaties
+            string[] figures = { "Salto avant", "Salto arrière", "Roue", "Saut de mains", "Flip-flap", "Saut carpé", "Saut en étoile", "Roulade avant", "Saut groupé" };
+            for (int i = 0; i < figures.Length; i++)
+                for (int j = i + 1; j < figures.Length; j++)
+                    Suite("Acrobaties", figures[i], figures[j]);
+
+            // --- au ralenti : les mêmes, trois fois plus lentes, pour bien voir
+            foreach (string nom in new[] { "Salto avant", "Salto arrière", "Double salto avant", "Coup de pied retourné", "Coup de pied sauté", "Roue", "Flip-flap", "Saut de l'ange",
+                "Uppercut sauté", "Salto vrillé", "Triple salto", "Grand écart sauté", "Coup de pied de la grue", "Plongeon de gardien", "Saut de biche", "Salto arrière frappé" })
+            {
+                Anim m = Trouver(nom);
+                if (m == null || m.Nom != nom) continue;
+                Anim lent = Ajouter(m.Famille, nom + " au ralenti", m.Duree * 3, m.Tours, m.Pose);
+                lent.Objet = m.Objet; lent.Vitesse = m.Vitesse / 3;
+            }
+
+            // --- déplacements
+            Pas("Soldat de plomb", 30, 0, 30, 0, 0, 0, 55, 0.9);
+            Pas("Trot de poney", 28, 90, 20, 80, 2, 6, 120, 0.42);
+            Pas("Ninja accroupi", 30, 50, 0, 0, 34, 0, 150, 0.5, 2, 60, 40);
+            Pas("Marche nordique", 30, 36, 60, 20, 8, 0, 95, 0.8);
+            Pas("Pas de l'oie", 46, 0, 50, 0, -4, 0, 70, 1.0);
+            Pas("Petite foulée", 30, 60, 30, 90, 8, 5, 170, 0.5);
+            Pas("Marche du penseur", 18, 24, 0, 0, 10, 0, 30, 1.5, 5);
+            Pas("Défilé, mains sur les hanches", 30, 44, 0, 0, -8, 2, 80, 0.8, 4);
+            Pas("Randonneur chargé", 22, 34, 0, 0, 20, 0, 40, 1.1, 5);
+            PasAvec("Promène un chien invisible", null, 50, 10, 22, 34, 60, 1.0);
+            PasAvec("Marche le nez sur son téléphone", "telephone", 55, 115, 18, 26, 40, 1.2, 6, 24);
+            PasAvec("Marche en lisant un livre", "livre", 55, 105, 18, 26, 36, 1.3, 6, 22);
+            PasAvec("Se promène sous son parapluie", "parapluie", 60, 110, 20, 28, 45, 1.1);
+            PasAvec("Défile en majorette", "baton", 150, 10, 34, 90, 70, 0.6, -4);
+
+            // --- gestes
+            Osc("Gestes", "Se gratte le dos", "0 6 170 150 -8 12", "0 6 174 140 -8 12", 0.3, 8);
+            Osc("Gestes", "Shaka", "0 -4 120 60 -8 12", "0 -4 124 80 -8 12", 0.3, 6);
+            Cles("Gestes", "Attrape une mouche au vol", "0:" + S + ";200:0 -6 120 20 -10 12 6 0 -6 0;320:4 0 100 90 -10 12 8 -4 -8 -4;900:6 10 70 110 -10 12 6 0 -6 0;1300:" + S);
+            Osc("Gestes", "Regarde s'il pleut", "-4 -14 80 20 -8 12", "-6 -20 84 16 -8 12", 1.2, 3);
+            Osc("Gestes", "Pouce vers le bas", "0 6 60 30 -8 12", "0 8 56 24 -8 12", 0.5, 4);
+
+            // --- combat, sport
+            Osc("Combat", "Garde du tigre", "20 0 100 60 80 80 40 -60 -30 -20", "24 2 104 56 84 76 44 -66 -30 -24", 1.2, 3);
+            Cles("Sport", "Lance un frisbee", "0:" + S + ";300:-10 0 40 110 -10 12 14 -14 -12 -8;480:10 0 100 0 -30 20 20 -16 -18 -6;800:" + S);
+            Cles("Sport", "Trampoline", "0:" + S + ";200:" + Cr + ";450:-4 -10 150 20 -150 -20 8 0 -8 0 50;700:" + Cr + ";950:0 0 160 0 -160 0 60 0 -60 0 70;1200:" + Cr
+                + ";1450:" + Boule + " 80 180;1700:-4 -10 150 20 -150 -20 8 0 -8 0 40 360;1900:" + Cr + " 0 360;2100:" + S + " 0 360");
+            Osc("Sport", "Étire ses mollets", "20 0 80 0 76 4 30 -30 -40 0", "24 0 82 0 78 4 34 -36 -42 0", 1.5, 3);
+            Osc("Sport", "Slalom à ski", "30 -10 -30 60 -34 60 50 -90 46 -86 0 0 8", "30 -10 -30 60 -34 60 60 -100 56 -96 0 0 -8", 0.6, 8, "planche");
+            Osc("Sport", "Rodéo", "-20 -10 160 20 40 60 60 -70 50 -64 6 0 4", "20 10 140 -20 40 60 70 -80 60 -74 0 0 -4", 0.35, 12);
+
+            // --- quotidien
+            Osc("Quotidien", "Range en haut d'une étagère", "-4 -14 170 10 160 20 6 0 -6 0 4", "0 0 80 30 70 40 8 -6 -8 -4", 1.0, 4);
+            Bruit(Osc("Quotidien", "Frappe à une porte", "4 0 90 100 -8 12", "4 0 96 70 -8 12", 0.2, 8), "coup", 0.2);
+            Cles("Quotidien", "Appelle l'ascenseur", "0:" + S + ";300:4 0 80 10 -10 12 6 0 -6 0;500:4 0 84 4 -10 12 6 0 -6 0;700:" + S + ";1500:-4 -16 10 12 -10 12 6 0 -6 0;2300:" + S);
+            Cles("Quotidien", "Arrache une mauvaise herbe", "0:" + S + ";400:40 20 40 10 36 14 62 -112 52 -104;700:44 22 44 6 40 10 62 -112 52 -104;900:-10 -6 60 60 56 64 30 -40 20 -30 6;1100:-14 -8 50 80 46 84 20 -20 -10 -10 0 0 -6;1500:" + S);
+            Cles("Quotidien", "Se brûle avec son café", "0:" + S + ";400:0 6 70 125 -10 12 6 0 -6 0;700:0 10 74 132 -10 12 6 0 -6 0;850:-10 -10 40 60 -30 20 8 -6 -8 -4;1300:-6 -4 60 80 -10 12 6 0 -6 0;1700:" + S, "exclam");
+
+            // --- émotions
+            Osc("Émotions", "L'air innocent, sifflote", "-6 -16 -30 -20 -34 -20 6 0 -6 0", "-4 -20 -30 -20 -34 -20 6 0 10 -14", 0.8, 4, "note");
+            Osc("Émotions", "Prie pour que ça marche", "10 20 70 110 66 114 6 0 -6 0", "14 26 72 112 68 116 6 0 -6 0", 1.4, 3);
+            Cles("Émotions", "Se fait tout petit", "0:" + S + ";400:30 30 60 130 56 134 70 -130 60 -124;1500:34 34 62 132 58 136 74 -134 64 -128;1900:" + S);
+            Osc("Émotions", "Exaspéré, lève les yeux au ciel", "-6 -30 -35 105 -45 112 6 0 -6 0", "-2 -6 -35 105 -45 112 6 0 -6 0", 1.2, 3);
+            Osc("Émotions", "Se retient, danse d'un pied sur l'autre", "10 10 30 60 26 64 14 -30 -4 -20 0 0 2", "10 10 30 60 26 64 -4 -20 14 -30 0 0 -2", 0.2, 16);
+            Osc("Émotions", "S'époussette les mains, travail fini", "0 -6 60 70 50 80 6 0 -6 0", "0 -6 50 80 60 70 6 0 -6 0", 0.25, 8);
+
+            // --- objets de Minecraft tenus en main
+            const string F = "Minecraft";
+            const string mange1 = "0 8 60 125 -8 12", mange2 = "0 14 70 140 -8 12", boit1 = "-6 -18 70 135 -8 12", boit2 = "-10 -28 78 142 -8 12";
+            foreach (string[] m in new[]
+            {
+                new[] { "Mange un poulet rôti", "cooked_chicken" }, new[] { "Mange une pomme de terre cuite", "baked_potato" }, new[] { "Mange une côtelette", "cooked_porkchop" },
+                new[] { "Mange un saumon grillé", "cooked_salmon" }, new[] { "Mange du mouton rôti", "cooked_mutton" }, new[] { "Mange une morue grillée", "cooked_cod" },
+                new[] { "Grignote des baies sucrées", "sweet_berries" }, new[] { "Grignote des baies lumineuses", "glow_berries" }, new[] { "Mâchouille du varech séché", "dried_kelp" },
+                new[] { "Croque une betterave", "beetroot" }, new[] { "Croque une carotte", "carrot" },
+            })
+                Osc(F, m[0], mange1, mange2, 0.5, 6, "item:" + m[1]);
+            Osc(F, "Mange un ragoût de lapin", boit1, boit2, 0.9, 3, "item:rabbit_stew");
+            Osc(F, "Goûte une soupe suspecte", boit1, boit2, 1.1, 3, "item:suspicious_stew");
+            foreach (string[] m in new[]
+            {
+                new[] { "Admire un éclat d'améthyste", "amethyst_shard" }, new[] { "Admire un cœur de la mer", "heart_of_the_sea" },
+                new[] { "Admire un lingot de netherite", "netherite_ingot" }, new[] { "Admire une perle de l'Ender", "ender_pearl" },
+            })
+                Osc(F, m[0], "0 -8 110 60 -8 12", "0 -12 118 66 -8 12", 0.8, 4, "item:" + m[1]);
+            Osc(F, "Écoute la mer dans un coquillage", "4 6 150 125 -8 12", "6 10 152 127 -8 12", 1.4, 3, "item:nautilus_shell");
+            Osc(F, "Se chatouille avec une plume", "0 8 100 150 -8 12", "0 4 104 140 -8 12", 0.25, 10, "item:feather");
+            Osc(F, "Fait rebondir une boule de slime", "0 0 70 60 -8 12", "0 -4 96 70 -8 12", 0.35, 8, "item:slime_ball");
+            Osc(F, "Porte un seau de lave à bout de bras", "-10 -8 86 0 -8 12 8 -4 -8 -4", "-12 -10 90 0 -8 12 10 -8 -6 -2", 0.4, 6, "item:lava_bucket");
+            Osc(F, "Sème des graines", "10 8 50 20 -8 12", "14 10 90 10 -8 12", 0.7, 5, "item:wheat_seeds");
+            Osc(F, "Montre sa récolte de blé", "-4 -10 150 10 -8 12", "-6 -14 158 4 -8 12", 0.8, 4, "item:wheat");
+            Osc(F, "Saupoudre de la redstone", "10 10 70 30 -8 12", "10 12 74 50 -8 12", 0.3, 8, "item:redstone");
+            Osc(F, "Répand de la poudre d'os", "14 12 60 20 -8 12", "14 14 64 44 -8 12", 0.35, 8, "item:bone_meal");
+            Osc(F, "Lit une feuille de papier", "6 18 60 105 -8 12", "6 22 62 110 -8 12", 1.3, 3, "item:paper");
+            Osc(F, "Regarde au fond de son seau", "14 30 50 80 -8 12", "16 36 52 84 -8 12", 1.2, 3, "item:bucket");
+            foreach (string[] m in new[] { new[] { "Mine avec une pioche en fer", "iron_pickaxe" }, new[] { "Mine avec une pioche en or", "golden_pickaxe" }, new[] { "Mine avec une pioche en netherite", "netherite_pickaxe" } })
+                Bruit(Osc(F, m[0], "-6 -5 150 40 -10 12 12 -8 -10 -4", "14 6 45 5 -10 12 16 -12 -12 -4", 0.5, 8, "outil:" + m[1]), "coup", 0.45);
+            foreach (string[] m in new[] { new[] { "Fend l'air avec une épée en fer", "iron_sword" }, new[] { "Fend l'air avec une épée en or", "golden_sword" } })
+                Bruit(Osc(F, m[0], "-10 -5 160 30 55 110 14 -15 -14 -10", "22 5 40 0 50 115 24 -22 -22 -6 0 0 8", 0.5, 6, "outil:" + m[1]), "swish", 0.3);
+            Bruit(Osc(F, "Frappe le sol avec une masse", "-12 -8 170 10 60 100 20 -30 -10 -30 16", "26 8 50 0 50 115 40 -70 20 -60", 0.7, 5, "outil:mace"), "coup", 0.5);
+            Osc(F, "Agite un bâton de blaze", "0 -6 150 20 -8 12", "0 -6 150 -30 -8 12", 0.4, 6, "outil:blaze_rod");
         }
 
         // ------------------------------------------------------------ sixième fournée
@@ -1338,7 +1498,9 @@ namespace MascotteStickman
                 "Twist des bras", "Robot", "Guitare", "Lasso", "Égyptien", "Poulet", "Dab", "Rouleau",
                 "Floss", "YMCA", "Essuie-glaces", "Pom-pom",
                 "Macarena", "Hélicoptère", "Cadres", "Brasse", "Fièvre du samedi soir", "Tape des cuisses", "Maracas", "Bras qui se balancent",
-                "Manivelle", "Papillon", "Clap haut-bas", "Roulé d'épaules", "Pointe gauche-droite", "Vague à deux bras" };
+                "Manivelle", "Papillon", "Clap haut-bas", "Roulé d'épaules", "Pointe gauche-droite", "Vague à deux bras",
+                "Pluie", "Pêche à la ligne", "Caddie", "Pousse le plafond", "Poing qui pompe", "Bisous", "Batterie", "Mains sur la tête",
+                "Ciseaux", "Balancier", "Chef d'orchestre", "Thriller" };
             // les quatre temps de la macarena : bras tendus, mains aux épaules, mains sur la tête, mains aux hanches
             var macarena = new[] { new double[] { 90, 0, 86, 0 }, new double[] { 70, 150, 66, 150 }, new double[] { 150, 110, 146, 110 }, new double[] { 30, 100, -30, -100 } };
             // les quatre lettres de YMCA : (épaule1, coude1, épaule2, coude2)
@@ -1391,9 +1553,22 @@ namespace MascotteStickman
                 (f, s, c, p) => { p[I.Ep1] = 10 + 22 * s; p[I.Co1] = 30 + 22 * c; p[I.Ep2] = -10 + 22 * c; p[I.Co2] = 30 + 22 * s; p[I.Torse] += 8 * s; p[I.Tete] -= 8 * s; },
                 (f, s, c, p) => { p[I.Ep1] = 90 + 62 * Math.Max(0, s); p[I.Co1] = 0; p[I.Ep2] = -90 - 62 * Math.Max(0, -s); p[I.Co2] = 0; p[I.Tete] += 10 * s; },
                 (f, s, c, p) => { p[I.Ep1] = 100 + 40 * s; p[I.Co1] = 30 * Math.Sin(f - 1.2); p[I.Ep2] = 100 + 40 * Math.Sin(f - 0.6); p[I.Co2] = 30 * Math.Sin(f - 1.8); },
+                // pluie : les mains descendent en frétillant ; pêche : il lance la ligne et mouline ; caddie : il pousse et attrape sur l'étagère
+                (f, s, c, p) => { double d = (1 - c) / 2; p[I.Ep1] = 170 - 90 * d; p[I.Co1] = 10 + 12 * Math.Sin(6 * f); p[I.Ep2] = 166 - 90 * d; p[I.Co2] = 14 - 12 * Math.Sin(6 * f); },
+                (f, s, c, p) => { p[I.Ep1] = 40 + 120 * Math.Max(0, s); p[I.Co1] = 20; p[I.Ep2] = 60; p[I.Co2] = 100 + 30 * Math.Sin(4 * f); },
+                (f, s, c, p) => { p[I.Ep1] = 78; p[I.Co1] = 12; p[I.Ep2] = 78 + 80 * Math.Max(0, s); p[I.Co2] = 12 + 30 * Math.Max(0, -s); },
+                (f, s, c, p) => { double d = Math.Abs(s); p[I.Ep1] = 140 + 20 * d; p[I.Co1] = 70 - 60 * d; p[I.Ep2] = 136 + 20 * d; p[I.Co2] = 74 - 60 * d; },
+                (f, s, c, p) => { double d = Math.Abs(s); p[I.Ep1] = 120 + 40 * d; p[I.Co1] = 90 - 80 * d; p[I.Ep2] = -20; p[I.Co2] = 30; },
+                (f, s, c, p) => { p[I.Ep1] = 100; p[I.Co1] = 150 - 140 * Math.Max(0, s); p[I.Ep2] = 96; p[I.Co2] = 150 - 140 * Math.Max(0, -s); },
+                (f, s, c, p) => { double w = Math.Sin(2 * f); p[I.Ep1] = 70; p[I.Co1] = 60 + 50 * Math.Max(0, w); p[I.Ep2] = 60; p[I.Co2] = 60 + 50 * Math.Max(0, -w); p[I.Tete] += 6 * w; },
+                (f, s, c, p) => { p[I.Ep1] = 150 + 12 * s; p[I.Co1] = 130; p[I.Ep2] = 146 - 12 * s; p[I.Co2] = 134; p[I.Torse] += 5 * s; },
+                (f, s, c, p) => { p[I.Ep1] = 90 + 34 * s; p[I.Co1] = 0; p[I.Ep2] = 90 - 34 * s; p[I.Co2] = 0; },
+                (f, s, c, p) => { p[I.Ep1] = 75 * s; p[I.Co1] = 12; p[I.Ep2] = -75 * s; p[I.Co2] = 12; },
+                (f, s, c, p) => { p[I.Ep1] = 110 + 30 * s; p[I.Co1] = 40 + 30 * c; p[I.Ep2] = 110 - 30 * s; p[I.Co2] = 40 - 30 * c; p[I.Tete] -= 6; },
+                (f, s, c, p) => { double w = Math.Tanh(4 * s); p[I.Ep1] = 95 * w; p[I.Co1] = 60 * w; p[I.Ep2] = 80 * w; p[I.Co2] = 70 * w; p[I.Tete] += 10 * w; },
             };
-            var nomsJambes = new[] { "rebond", "pas chassés", "coups de pied", "twist", "course sur place", "sauts", "squats", "talons" };
-            var tempos = new[] { 0.7, 0.9, 0.8, 0.8, 0.6, 0.7, 1.1, 0.8 };
+            var nomsJambes = new[] { "rebond", "pas chassés", "coups de pied", "twist", "course sur place", "sauts", "squats", "talons", "genoux", "charleston", "accroupi" };
+            var tempos = new[] { 0.7, 0.9, 0.8, 0.8, 0.6, 0.7, 1.1, 0.8, 0.7, 0.8, 0.8 };
             var jambes = new Action<double, double, double, double[]>[]
             {
                 (f, s, c, p) => { double d = Math.Abs(s); p[I.Ha1] = 8 + 14 * d; p[I.Ge1] = -28 * d; p[I.Ha2] = -8 + 14 * d; p[I.Ge2] = -28 * d; },
@@ -1404,6 +1579,10 @@ namespace MascotteStickman
                 (f, s, c, p) => { double u = Math.Max(0, s), d = Math.Max(0, -s); p[I.Air] = 26 * u * u; p[I.Ha1] = 8 + 10 * u + 17 * d; p[I.Ha2] = -8 - 10 * u + 17 * d; p[I.Ge1] = p[I.Ge2] = -34 * d; },
                 (f, s, c, p) => { double d = (1 - c) / 2; p[I.Ha1] = 8 + 62 * d; p[I.Ge1] = -112 * d; p[I.Ha2] = -4 + 56 * d; p[I.Ge2] = -104 * d; p[I.Torse] = 22 * d; },
                 (f, s, c, p) => { p[I.Ha1] = 6 + 28 * Math.Max(0, s); p[I.Ge1] = -10 * Math.Max(0, -s); p[I.Ha2] = -6 + 34 * Math.Max(0, -s); p[I.Ge2] = -10 * Math.Max(0, s); },
+                // genoux levés tour à tour ; charleston : la même jambe devant puis derrière ; accroupi : les coups de pied du kazatchok
+                (f, s, c, p) => { double u = Math.Max(0, s), d = Math.Max(0, -s); p[I.Ha1] = 8 + 78 * u; p[I.Ge1] = -8 - 92 * u; p[I.Ha2] = -8 + 86 * d; p[I.Ge2] = -8 - 92 * d; p[I.Air] = 3 * Math.Abs(s); },
+                (f, s, c, p) => { p[I.Ha1] = 46 * s; p[I.Ge1] = -6 - 44 * Math.Max(0, -s); p[I.Ha2] = -6; p[I.Ge2] = -10 - 12 * Math.Abs(s); p[I.Torse] = -4 * s; },
+                (f, s, c, p) => { double u = Math.Max(0, s), d = Math.Max(0, -s); p[I.Ha1] = 62 + 33 * u; p[I.Ge1] = -128 + 123 * u; p[I.Ha2] = 58 + 37 * d; p[I.Ge2] = -124 + 119 * d; p[I.Torse] = -6; },
             };
             for (int i = 0; i < bras.Length; i++)
                 for (int j = 0; j < jambes.Length; j++)

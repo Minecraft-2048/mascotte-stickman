@@ -52,7 +52,7 @@ namespace MascotteStickman
 
         static readonly string[][] suffixes =
         {
-            new[] { " (autre main)", " (other hand)" }, new[] { " (autre jambe)", " (other leg)" },
+            new[] { " (autre main)", " (other hand)" }, new[] { " (autre jambe)", " (other leg)" }, new[] { " au ralenti", " in slow motion" },
             new[] { "  — tête creuse", "  — ring head" }, new[] { " (tête creuse)", " (ring head)" }, new[] { " (tête pleine)", " (solid head)" },
         };
 
@@ -374,6 +374,33 @@ namespace MascotteStickman
             "Frotte son briquet", "Strikes his flint and steel", "Fait sauter un lingot d'or dans sa main", "Tosses a gold ingot in his hand", "Brandit une étoile du Nether", "Raises a Nether star",
             "Lance un œil de l'Ender", "Throws an eye of Ender", "Coupe aux cisailles", "Snips with shears", "Fouille à la brosse", "Brushes for treasure",
             "Avance, une carotte au bout du bâton", "Walks with a carrot on a stick", "Promène son poisson dans un seau", "Takes his fish for a walk in a bucket",
+
+            // ---------------------------------------------------------------- neuvième fournée
+            // (les enchaînements « A + B » et les « … au ralenti » se traduisent tout seuls, morceau par morceau)
+            "…", "…",
+            "Pluie", "Rain", "Pêche à la ligne", "Fishing", "Caddie", "Shopping cart", "Pousse le plafond", "Raise the roof", "Poing qui pompe", "Fist pump", "Bisous", "Blowing kisses",
+            "Batterie", "Drums", "Mains sur la tête", "Hands on head", "Ciseaux", "Scissors", "Balancier", "Pendulum", "Chef d'orchestre", "Conductor", "Thriller", "Thriller",
+            "genoux", "knees", "charleston", "charleston", "accroupi", "squat kicks",
+            "Soldat de plomb", "Tin soldier", "Trot de poney", "Pony trot", "Ninja accroupi", "Crouching ninja", "Marche nordique", "Nordic walking", "Pas de l'oie", "Goose step",
+            "Petite foulée", "Easy jog", "Marche du penseur", "Thinker's walk", "Défilé, mains sur les hanches", "Struts with his hands on his hips", "Randonneur chargé", "Loaded hiker",
+            "Promène un chien invisible", "Walks an invisible dog", "Marche le nez sur son téléphone", "Walks glued to his phone", "Marche en lisant un livre", "Walks while reading a book",
+            "Se promène sous son parapluie", "Strolls under his umbrella", "Défile en majorette", "Marches like a majorette",
+            "Se gratte le dos", "Scratches his back", "Shaka", "Shaka", "Attrape une mouche au vol", "Catches a fly in mid-air", "Regarde s'il pleut", "Checks if it's raining",
+            "Pouce vers le bas", "Thumbs down", "Garde du tigre", "Tiger stance", "Lance un frisbee", "Throws a frisbee", "Trampoline", "Trampoline", "Étire ses mollets", "Stretches his calves",
+            "Slalom à ski", "Ski slalom", "Rodéo", "Rodeo", "Range en haut d'une étagère", "Tidies the top shelf", "Frappe à une porte", "Knocks on a door", "Appelle l'ascenseur", "Calls the lift",
+            "Arrache une mauvaise herbe", "Pulls out a weed", "Se brûle avec son café", "Burns himself on his coffee", "L'air innocent, sifflote", "Whistles innocently",
+            "Prie pour que ça marche", "Prays that it works", "Se fait tout petit", "Makes himself tiny", "Exaspéré, lève les yeux au ciel", "Exasperated, rolls his eyes",
+            "Se retient, danse d'un pied sur l'autre", "Holding it in, hops from foot to foot", "S'époussette les mains, travail fini", "Dusts off his hands, job done",
+            "Mange un poulet rôti", "Eats a roast chicken", "Mange une pomme de terre cuite", "Eats a baked potato", "Mange une côtelette", "Eats a pork chop", "Mange un saumon grillé", "Eats cooked salmon",
+            "Mange du mouton rôti", "Eats roast mutton", "Mange une morue grillée", "Eats cooked cod", "Grignote des baies sucrées", "Nibbles sweet berries", "Grignote des baies lumineuses", "Nibbles glow berries",
+            "Mâchouille du varech séché", "Chews dried kelp", "Croque une betterave", "Bites a beetroot", "Croque une carotte", "Bites a carrot", "Mange un ragoût de lapin", "Eats rabbit stew",
+            "Goûte une soupe suspecte", "Tastes a suspicious stew", "Admire un éclat d'améthyste", "Admires an amethyst shard", "Admire un cœur de la mer", "Admires a heart of the sea",
+            "Admire un lingot de netherite", "Admires a netherite ingot", "Admire une perle de l'Ender", "Admires an Ender pearl", "Écoute la mer dans un coquillage", "Listens to the sea in a shell",
+            "Se chatouille avec une plume", "Tickles himself with a feather", "Fait rebondir une boule de slime", "Bounces a slime ball", "Porte un seau de lave à bout de bras", "Carries a lava bucket at arm's length",
+            "Sème des graines", "Sows seeds", "Montre sa récolte de blé", "Shows off his wheat harvest", "Saupoudre de la redstone", "Sprinkles redstone", "Répand de la poudre d'os", "Spreads bone meal",
+            "Lit une feuille de papier", "Reads a sheet of paper", "Regarde au fond de son seau", "Peers into his bucket", "Mine avec une pioche en fer", "Mines with an iron pickaxe",
+            "Mine avec une pioche en or", "Mines with a golden pickaxe", "Mine avec une pioche en netherite", "Mines with a netherite pickaxe", "Fend l'air avec une épée en fer", "Slashes with an iron sword",
+            "Fend l'air avec une épée en or", "Slashes with a golden sword", "Frappe le sol avec une masse", "Smashes the ground with a mace", "Agite un bâton de blaze", "Waves a blaze rod",
         };
     }
 }

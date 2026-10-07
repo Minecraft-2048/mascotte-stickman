@@ -1982,12 +1982,23 @@ namespace MascotteStickman
             {
                 List<Anim> liste = Biblio.Toutes.Where(a => a.Famille == famille).ToList();
                 var sous = new MenuItem { Header = famille + "  (" + liste.Count + ")" };
+                var groupes = new Dictionary<string, MenuItem>();      // « Disco + twist », « Disco + sauts »… : rangés sous « Disco + … »
                 foreach (Anim a in liste)
                 {
                     Anim celle = a;
                     var element = new MenuItem { Header = a.Nom };
                     element.Click += (o, e) => { JouerDemande(celle); Dire(celle.Nom, 2.5); };
-                    sous.Items.Add(element);
+                    int plus = a.Nom.IndexOf(" + ", StringComparison.Ordinal);
+                    if (plus < 0) { sous.Items.Add(element); continue; }
+                    string debut = a.Nom.Substring(0, plus);
+                    MenuItem groupe;
+                    if (!groupes.TryGetValue(debut, out groupe))
+                    {
+                        groupe = new MenuItem { Header = debut + " + …" };
+                        groupes[debut] = groupe;
+                        sous.Items.Add(groupe);
+                    }
+                    groupe.Items.Add(element);
                 }
                 animations.Items.Add(sous);
             }
