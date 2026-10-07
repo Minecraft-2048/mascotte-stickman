@@ -1719,7 +1719,9 @@ namespace MascotteStickman
                 case 2: a = Biblio.Danse; break;
                 case 3: a = Biblio.Trouver("Enchaînement de 3 coups"); break;
                 default:
-                    List<Anim> libres = Biblio.Toutes.Where(x => !x.Deplace && !R.Coupees.Contains(x.Nom)).ToList();
+                    // au hasard, mais jamais un tour spécial décoché ni une commande sans bâton
+                    List<Anim> libres = Biblio.Toutes.Where(x => !x.Deplace && !R.Coupees.Contains(x.Nom)
+                        && (x.Special == null || (x.Special.StartsWith("x:") ? R.O("special." + x.Special.Substring(2)) : !x.Special.StartsWith("cmd:") || ABaton))).ToList();
                     a = libres.Count > 0 ? libres[hasard.Next(libres.Count)] : Biblio.Salut;
                     break;
             }
@@ -2047,6 +2049,22 @@ namespace MascotteStickman
             };
             menu.Opened += (o, e) => correcteur.IsChecked = R.O("correcteur");
             menu.Items.Add(correcteur);
+            // les tours spéciaux (géant, minuscule…) se cochent et se décochent ici comme dans l'onglet « Spécial »
+            var speciales = new MenuItem { Header = "Animations spéciales" };
+            foreach (Anim a in Biblio.Toutes.Where(x => x.Special != null && x.Special.StartsWith("x:")))
+            {
+                string cle = "special." + a.Special.Substring(2);
+                var element = new MenuItem { Header = a.Nom, IsCheckable = true, StaysOpenOnClick = true, Tag = cle };
+                element.Click += (o, e) =>
+                {
+                    R.Mettre(cle, element.IsChecked ? 1 : 0);
+                    if (!element.IsChecked && (cle == "special.geant" || cle == "special.mini"))      // décoché en plein tour : tout le monde reprend sa taille
+                        foreach (Bonhomme b in Tous) b.echelleVisee = 1;
+                };
+                speciales.Items.Add(element);
+            }
+            speciales.SubmenuOpened += (o, e) => { foreach (MenuItem element in speciales.Items) element.IsChecked = R.O((string)element.Tag); };
+            menu.Items.Add(speciales);
             var coin = new MenuItem { Header = "Revenir dans le coin" };
             coin.Click += (o, e) =>
             {
