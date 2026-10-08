@@ -401,6 +401,30 @@ namespace MascotteStickman
             "Lit une feuille de papier", "Reads a sheet of paper", "Regarde au fond de son seau", "Peers into his bucket", "Mine avec une pioche en fer", "Mines with an iron pickaxe",
             "Mine avec une pioche en or", "Mines with a golden pickaxe", "Mine avec une pioche en netherite", "Mines with a netherite pickaxe", "Fend l'air avec une épée en fer", "Slashes with an iron sword",
             "Fend l'air avec une épée en or", "Slashes with a golden sword", "Frappe le sol avec une masse", "Smashes the ground with a mace", "Agite un bâton de blaze", "Waves a blaze rod",
+
+            // ---------------------------------------------------------------- dixième fournée
+            "Tire la corde", "Rope pull", "Soleil", "Sun circles", "fentes", "lunges",
+            "Assis au bord, lit un livre", "Sitting on the edge, reading a book", "Assis au bord, joue de la guitare", "Sitting on the edge, playing the guitar",
+            "Assis au bord, casse la croûte", "Sitting on the edge, having a snack", "Assis au bord, fait coucou en bas", "Sitting on the edge, waving down",
+            "Assis au bord, pianote sur son téléphone", "Sitting on the edge, tapping on his phone", "Assis au bord, s'étire", "Sitting on the edge, stretching",
+            "Assis au bord, pique du nez", "Sitting on the edge, nodding off", "Assis au bord, lance des cailloux", "Sitting on the edge, throwing pebbles",
+            "Guette l'horizon du haut de sa fenêtre", "Scans the horizon from his window",
+            "Marathonien épuisé", "Exhausted marathon runner", "Patine à reculons", "Skates backwards", "Marche sur des braises", "Walks on hot coals",
+            "Pirate à jambe de bois", "Peg-leg pirate", "Flotte comme un fantôme", "Floats like a ghost",
+            "Hèle un taxi", "Hails a taxi", "Main sur le cœur", "Hand on his heart", "Robot en panne", "Robot breaking down", "Tour de magie", "Magic trick",
+            "Fait craquer son cou", "Cracks his neck", "Tend la main", "Holds out his hand", "Double uppercut", "Double uppercut", "Saute par-dessus sa jambe", "Jumps over his own leg",
+            "Frappe de baseball", "Baseball swing", "Curling", "Curling", "Billard", "Pool", "Ping-pong", "Table tennis", "Soulevé de terre", "Deadlift",
+            "Fait un château de sable", "Builds a sandcastle", "Flotte sur le dos", "Floats on his back", "Se réveille en sursaut", "Wakes up with a start",
+            "Regarde sa montre et panique", "Checks his watch and panics", "Passe la serpillière", "Mops the floor",
+            "Assis sur un bloc, s'ennuie", "Sitting on a block, bored", "Assis sur un bloc, le menton dans la main", "Sitting on a block, chin in hand",
+            "Assis sur un bloc, balance les pieds", "Sitting on a block, swinging his feet",
+            "Bondit comme un cabri", "Leaps about like a kid goat", "Tombe à genoux, désespéré", "Falls to his knees in despair", "Méfiant, jette des coups d'œil", "Wary, glancing around",
+            "Essuie une larme", "Wipes away a tear",
+            "Fait griller un poulet", "Roasts a chicken", "Ça sent bon…", "Smells good…", "Oups… trop cuit.", "Oops… overcooked.", "À table !", "Dinner's ready!",
+            "Applaudissements", "Applause", "Bravo !", "Bravo!", "Bravo à toi !", "Well done you!", "Bras de fer", "Pushing contest", "On pousse !", "Push!",
+            "Tu ne passeras pas !", "You won't get past me!", "Trop fort !", "Too strong!", "Hé, doucement !", "Hey, easy!", "Coup d'épaule sauté", "Jumping shoulder bump", "Ouais !", "Yeah!",
+            "Tape-mains", "Patty-cake", "Un, deux, trois…", "One, two, three…", "…soleil !", "…go!", "Dispute et réconciliation", "Quarrel and make up",
+            "C'est ta faute !", "It's your fault!", "Non, la tienne !", "No, yours!", "Pardon…", "Sorry…", "Moi aussi…", "Me too…",
         };
     }
 }

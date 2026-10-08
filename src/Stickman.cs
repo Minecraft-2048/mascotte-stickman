@@ -53,6 +53,8 @@ namespace MascotteStickman
             if (args.Length >= 2 && args[0] == "--web") { Planches.ExporterWeb(args[1]); return 0; }
             // MascotteStickman.exe --noms fichier : tous les noms affichés (familles, animations, duos), pour vérifier les traductions
             if (args.Length >= 2 && args[0] == "--noms") { Planches.EcrireNoms(args[1]); return 0; }
+            // MascotteStickman.exe --film dossier : les images d'une courte vidéo de démonstration (à assembler avec ffmpeg)
+            if (args.Length >= 2 && args[0] == "--film") { Film.Ecrire(args[1]); return 0; }
 
             bool premiere;
             using (new Mutex(true, "MascotteStickman-Instance", out premiere))
@@ -504,6 +506,9 @@ namespace MascotteStickman
                 case "slime":
                     Bloc(dc, Blocs.Slime, -Biblio.Bloc / 2, 0, e, couleur);
                     break;
+                case "assise":
+                    Bloc(dc, Blocs.Planches, -44, 0, e, couleur);      // le bloc sur lequel il est assis, les jambes devant
+                    break;
                 case "craft":
                     Bloc(dc, Blocs.Etabli, 34, 0, e, couleur);
                     if (phase > 0.6)                             // ce qu'il vient de fabriquer s'élève au-dessus de l'établi
@@ -851,9 +856,11 @@ namespace MascotteStickman
         }
 
         // nom : "block/dirt", "item/diamond_pickaxe"… ; null si la texture n'est pas disponible
+        public static bool Interdites;               // le film de démonstration : rien que ce que le programme dessine lui-même
+
         public static BitmapSource Lire(string nom)
         {
-            if (!R.O("texturesMinecraft")) return null;
+            if (Interdites || !R.O("texturesMinecraft")) return null;
             BitmapSource image;
             if (cache.TryGetValue(nom, out image)) return image;
             Chercher();
@@ -1151,6 +1158,174 @@ namespace MascotteStickman
             }
             File.WriteAllText(Path.Combine(dossier, "compte.txt"), Biblio.Toutes.Count + " animations, " + R.Tous.Count(p => p.Cat != "") + " réglages généraux ; doublons : "
                 + string.Join(", ", Biblio.Toutes.GroupBy(a => a.Nom).Where(g => g.Count() > 1).Select(g => g.Key)));
+        }
+    }
+
+    // ============================================================ film de démonstration
+    // Une courte vidéo de présentation, image par image, sur un faux bureau. Tout y est dessiné par le
+    // programme : aucune texture de jeu, rien du vrai écran. Les images s'assemblent ensuite avec ffmpeg :
+    //   ffmpeg -framerate 30 -i f%04d.png -c:v libx264 -pix_fmt yuv420p demo.mp4
+
+    static class Film
+    {
+        const int L = 1280, H = 720, Ips = 30;
+        const double Sol = 632, E = 1.5;
+        static readonly int[] teintes = { 0xFF8A1A, 0x1E88E5, 0x43A047, 0xE53935, 0xFDD835, 0x8E24AA };
+        static readonly string[] permis = { "note", "coeur", "exclam", "question", "zzz", "epee", "guitare", "corde", "baton", "haltere", "planche", "livre", "telephone" };
+
+        static void Poser(DrawingContext dc, Anim a, double t, double x, int face, int teinte, double sol = Sol, double echelle = E, string bulle = null)
+        {
+            if (a == null) return;
+            double phase = t / a.Duree;
+            phase -= Math.Floor(phase);
+            Corps(dc, a.Pose(phase), a, phase, x, face, teinte, sol, echelle, bulle);
+        }
+
+        static void Corps(DrawingContext dc, double[] p, Anim a, double phase, double x, int face, int teinte, double sol, double echelle, string bulle)
+        {
+            if (a != null && a.Haut) p = Bonhomme.Superposer(Biblio.Neutre(), p);
+            Dessin.Os o = Dessin.Calculer(p, false);
+            Func<Point, Point> e = q => new Point(x + face * q.X * echelle, sol + q.Y * echelle);
+            Color c = R.Rvb(teinte);
+            Pen trait = Dessin.Plume(c, 6 * echelle);
+            dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(70, 0, 0, 0)), null, new Point(e(o.Hanche).X, sol + 3), 22 * echelle, 4 * echelle);
+            Dessin.Tracer(dc, o, e, echelle, null, trait, teinte == teintes[0] ? null : trait.Brush);      // l'orange a la tête en anneau
+            if (a != null && a.Objet != null && permis.Contains(a.Objet)) Dessin.Objet(dc, a.Objet, o, e, echelle, phase, c, 6 * echelle);
+            if (bulle == null) return;
+            FormattedText texte = Dessin.Texte(Langue.EnAnglais(bulle), 20, new SolidColorBrush(Color.FromRgb(0x30, 0x30, 0x30)), true);
+            Point tete = e(o.Tete);
+            double l = texte.Width + 26, h = texte.Height + 14;
+            double bx = Math.Max(8, Math.Min(L - l - 8, tete.X - l / 2)), by = Math.Max(8, tete.Y - 13 * echelle - 22 - h);
+            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(0xFA, 0xF9, 0xF5)), null, new Rect(bx, by, l, h), 14, 14);
+            dc.DrawText(texte, new Point(bx + 13, by + 7));
+        }
+
+        // Deux amis face à face : l'animation se joue, la pose finale tient un instant, puis ça recommence.
+        static void Amis(DrawingContext dc, Duo d, double t, double centre, int ta, int tb)
+        {
+            if (d == null || d.A == null) return;
+            double tour = d.A.Duree + 0.9, phase = Math.Min(1, t % tour / d.A.Duree), demi = d.Distance * E / 2;
+            bool fin = phase > 0.6;
+            Corps(dc, d.A.Pose(phase), null, phase, centre - demi, 1, ta, Sol, E, fin ? d.FinA : phase < 0.45 ? d.DitA : null);
+            Corps(dc, d.B.Pose(phase), null, phase, centre + demi, -1, tb, Sol, E, fin ? d.FinB : phase < 0.45 ? d.DitB : null);
+        }
+
+        static void Bureau(DrawingContext dc, string legende)
+        {
+            dc.DrawRectangle(new LinearGradientBrush(Color.FromRgb(0x2C, 0x4E, 0x80), Color.FromRgb(0x16, 0x22, 0x3C), 90), null, new Rect(0, 0, L, H));
+            dc.DrawRectangle(new SolidColorBrush(Color.FromRgb(0x12, 0x16, 0x1E)), null, new Rect(0, Sol, L, H - Sol));      // la barre des tâches : c'est sur elle qu'ils marchent
+            var icones = new[] { 0x4FC3F7, 0xFFB74D, 0x81C784, 0xE57373 };
+            for (int i = 0; i < icones.Length; i++) dc.DrawRoundedRectangle(new SolidColorBrush(R.Rvb(icones[i])), null, new Rect(22 + i * 50, Sol + 27, 34, 34), 8, 8);
+            if (legende == null) return;
+            FormattedText texte = Dessin.Texte(legende, 27, Brushes.White, true);
+            dc.DrawText(texte, new Point(Math.Max(240, (L - texte.Width) / 2), Sol + 25));
+        }
+
+        static void Cadre(DrawingContext dc, Rect r, string titre)
+        {
+            Brush barre = new SolidColorBrush(Color.FromRgb(0xDD, 0xE1, 0xE8));
+            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(0xF4, 0xF5, 0xF7)), null, r, 10, 10);
+            dc.DrawRoundedRectangle(barre, null, new Rect(r.X, r.Y, r.Width, 34), 10, 10);
+            dc.DrawRectangle(barre, null, new Rect(r.X, r.Y + 20, r.Width, 14));
+            dc.DrawText(Dessin.Texte(titre, 15, new SolidColorBrush(Color.FromRgb(0x50, 0x56, 0x62))), new Point(r.X + 14, r.Y + 7));
+            for (int i = 0; i < 3; i++) dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(0xA8, 0xAE, 0xBA)), null, new Point(r.Right - 22 - i * 22, r.Y + 17), 5, 5);
+            for (int i = 0; i < 6; i++) dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(0xE2, 0xE5, 0xEA)), null, new Rect(r.X + 20, r.Y + 58 + i * 28, r.Width * (i % 2 == 0 ? 0.72 : 0.5), 10), 5, 5);
+        }
+
+        public static void Ecrire(string dossier)
+        {
+            Directory.CreateDirectory(dossier);
+            Textures.Interdites = true;
+            Func<string, Anim> A = Biblio.Trouver;
+            Anim course = Biblio.Course, salut = A("Grand salut"), fuite = A("Fuite paniquée"), assis = A("Assis au bord, balance les jambes");
+            Duo lent = Biblio.Duos.FirstOrDefault(d => d.Nom == "Trop lent !"), check = Biblio.Duos.FirstOrDefault(d => d.Nom == "Check complet");
+            var cadre = new Rect(830, 250, 390, 280);
+            string total = Biblio.Toutes.Count.ToString("N0", CultureInfo.GetCultureInfo("en-US"));
+            var scenes = new List<Tuple<double, string, Action<DrawingContext, double>>>();
+            Action<double, string, Action<DrawingContext, double>> scene = (duree, legende, dessin) => scenes.Add(Tuple.Create(duree, legende, dessin));
+
+            scene(3.8, "A stick figure that lives on your Windows desktop", (dc, t) =>
+            {
+                Cadre(dc, cadre, "notes.txt");
+                Poser(dc, assis, t, cadre.X + 96, 1, teintes[4], cadre.Y);
+                const double arrivee = 1.9;
+                if (t < arrivee) Poser(dc, course, t, -90 + 700 * t / arrivee, 1, teintes[0]);
+                else Poser(dc, salut, t - arrivee, 610, 1, teintes[0], Sol, E, "Salut !");
+            });
+            scene(4.2, "Hundreds of dances, in time with your music", (dc, t) =>
+            {
+                string[] danses = { "Disco + pas chassés", "Floss + twist", "YMCA + sauts", "Robot + rebond", "Thriller + genoux" };
+                for (int i = 0; i < danses.Length; i++) Poser(dc, A(danses[i]), t, 200 + i * 220, i % 2 == 0 ? 1 : -1, teintes[i]);
+            });
+            scene(4.4, "Fighting combos", (dc, t) =>
+            {
+                Poser(dc, A("Coup de poing + Crochet + Uppercut"), t, 330, 1, teintes[0]);
+                Poser(dc, A("Esquives de boxeur"), t, 470, -1, teintes[3]);
+                Poser(dc, A("Coup de pied retourné au ralenti"), t, 790, 1, teintes[1]);
+                Poser(dc, A("Kata de karaté"), t, 1060, -1, teintes[2]);
+            });
+            scene(4.4, "Flips, cartwheels, handstands", (dc, t) =>
+            {
+                Poser(dc, A("Roue + Flip-flap"), t, 230, 1, teintes[0]);
+                Poser(dc, A("Triple salto"), t, 520, 1, teintes[2]);
+                Poser(dc, A("Poirier, grand écart"), t, 810, -1, teintes[1]);
+                Poser(dc, A("Salto vrillé"), t, 1080, -1, teintes[4]);
+            });
+            scene(5.0, "Friends: fist bumps, high fives... and pranks", (dc, t) =>
+            {
+                Cadre(dc, cadre, "notes.txt");
+                Poser(dc, assis, t, cadre.X + 96, 1, teintes[5], cadre.Y);
+                Amis(dc, lent, t, 250, teintes[0], teintes[1]);
+                Amis(dc, check, t, 600, teintes[2], teintes[3]);
+            });
+            scene(4.4, "...and now and then, one of them turns giant", (dc, t) =>
+            {
+                double k = Math.Min(1, t / 0.7), grand = E + (5.1 - E) * k * k * (3 - 2 * k);
+                for (int i = 1; i <= 3; i++)
+                {
+                    double depart = new[] { 0, 410, 880, 250 }[i];
+                    int sens = depart < 640 ? -1 : 1;
+                    if (t < 0.4) Poser(dc, Biblio.Sursaut, t, depart, -sens, teintes[i], Sol, E, "Aaah !");
+                    else Poser(dc, fuite, t, depart + sens * 390 * (t - 0.4), sens, teintes[i]);
+                }
+                Poser(dc, Biblio.Rugit, t, 640, 1, teintes[0], Sol, grand, t > 0.5 && t < 3.2 ? "GRAOUH !" : null);
+            });
+            scene(4.0, null, (dc, t) =>
+            {
+                dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(110, 0, 0, 0)), null, new Rect(0, 0, L, Sol));
+                string[] lignes = { "Mascotte Stickman", total + " animations, all drawn by code", "Free and open source  -  Windows, and a phone version", "github.com/Minecraft-2048/mascotte-stickman" };
+                double[] tailles = { 62, 30, 26, 30 }, hauteurs = { 110, 210, 262, 330 };
+                for (int i = 0; i < lignes.Length; i++)
+                {
+                    FormattedText texte = Dessin.Texte(lignes[i], tailles[i], i == 3 ? new SolidColorBrush(R.Rvb(teintes[0])) : Brushes.White, i != 2);
+                    dc.DrawText(texte, new Point((L - texte.Width) / 2, hauteurs[i]));
+                }
+                Poser(dc, A("Disco + pas chassés"), t, 470, 1, teintes[0]);
+                Poser(dc, A("Macarena + rebond"), t, 640, -1, teintes[1]);
+                Poser(dc, A("Floss + twist"), t, 810, 1, teintes[2]);
+            });
+
+            int numero = 0;
+            foreach (var sc in scenes)
+            {
+                int images = (int)Math.Round(sc.Item1 * Ips);
+                for (int i = 0; i < images; i++)
+                {
+                    double t = i / (double)Ips, bord = Math.Min(t, sc.Item1 - t);
+                    var visuel = new DrawingVisual();
+                    using (DrawingContext dc = visuel.RenderOpen())
+                    {
+                        Bureau(dc, sc.Item2);
+                        sc.Item3(dc, t);
+                        if (bord < 0.2) dc.DrawRectangle(new SolidColorBrush(Color.FromArgb((byte)(255 * (1 - bord / 0.2)), 0x16, 0x22, 0x3C)), null, new Rect(0, 0, L, H));      // fondu entre deux scènes
+                    }
+                    var image = new RenderTargetBitmap(L, H, 96, 96, PixelFormats.Pbgra32);
+                    image.Render(visuel);
+                    var png = new PngBitmapEncoder();
+                    png.Frames.Add(BitmapFrame.Create(image));
+                    using (FileStream flux = File.Create(Path.Combine(dossier, "f" + (numero++).ToString("0000") + ".png"))) png.Save(flux);
+                }
+            }
         }
     }
 
@@ -2488,6 +2663,7 @@ namespace MascotteStickman
                 case "sieste": Rentrer(true); break;
                 case "batir": BatirMaison(); break;
                 case "camp": FeuDeCamp(); break;
+                case "grillade": Grillade(); break;
                 case "jardin": Jardin(); break;
                 case "x:geant": Grandir(); break;
                 case "x:mini": Retrecir(); break;
@@ -3389,25 +3565,72 @@ namespace MascotteStickman
             Jouer(Biblio.PoseDevant, 1, () =>
             {
                 double c = 56 * s, x = ancre.X + face * 62 * s;
-                Planter(x - c / 2, ancre.Y - c, c, c, 10, true, (dc, l, h) =>
+                Planter(x - c / 2, ancre.Y - c, c, c, 10, true, PeindreFeu);
+                Sons.Jouer("pop", "sonsPouvoirs");
+                Jouer(Biblio.AssisFeu, 5, () => { Dire("Il fait bon.", 2); Repos(); });
+            });
+        }
+
+        // Le feu : deux bûches et trois flammes qui dansent, dans un carré de l sur h.
+        void PeindreFeu(DrawingContext dc, double l, double h)
+        {
+            Blocs.Dessiner(dc, new Rect(l * 0.08, h * 0.74, l * 0.84, h * 0.2), Blocs.Tronc, Colors.White, 0);
+            Blocs.Dessiner(dc, new Rect(l * 0.26, h * 0.6, l * 0.48, h * 0.18), Blocs.Tronc, Colors.White, 1);
+            for (int i = 0; i < 3; i++)
+            {
+                double larg = l * (0.5 - i * 0.13), haut = h * (0.5 - i * 0.1) * (0.8 + 0.2 * Math.Sin(tScene * (9 + i * 4) + i)), cx = l / 2 + l * 0.05 * Math.Sin(tScene * (6 + i * 3));
+                var flamme = new StreamGeometry();
+                using (StreamGeometryContext g = flamme.Open())
                 {
-                    Blocs.Dessiner(dc, new Rect(l * 0.08, h * 0.74, l * 0.84, h * 0.2), Blocs.Tronc, Colors.White, 0);       // deux bûches
-                    Blocs.Dessiner(dc, new Rect(l * 0.26, h * 0.6, l * 0.48, h * 0.18), Blocs.Tronc, Colors.White, 1);
-                    for (int i = 0; i < 3; i++)                      // trois flammes qui dansent
+                    g.BeginFigure(new Point(cx - larg / 2, h * 0.7), true, true);
+                    g.QuadraticBezierTo(new Point(cx - larg * 0.1, h * 0.7 - haut * 0.5), new Point(cx, h * 0.7 - haut), true, true);
+                    g.QuadraticBezierTo(new Point(cx + larg * 0.1, h * 0.7 - haut * 0.5), new Point(cx + larg / 2, h * 0.7), true, true);
+                }
+                dc.DrawGeometry(Blocs.Pinceau(i == 0 ? Color.FromRgb(0xF0, 0x6A, 0x10) : i == 1 ? Color.FromRgb(0xFF, 0xA8, 0x20) : Color.FromRgb(0xFF, 0xE6, 0x70)), null, flamme);
+            }
+        }
+
+        // Grillade : il fait cuire un poulet sur le feu et attend, assis devant. Une fois sur trois il l'oublie :
+        // fumée noire, poulet carbonisé.
+        void Grillade()
+        {
+            RangerScene();
+            Jouer(Biblio.PoseDevant, 1, () =>
+            {
+                double c = 56 * s, x = ancre.X + face * 62 * s;
+                bool brule = hasard.Next(3) == 0;
+                BitmapSource cru = Textures.Lire("item/chicken"), cuit = Textures.Lire("item/cooked_chicken");
+                BitmapSource charbon = Textures.Teintee("item/cooked_chicken", Color.FromRgb(0x40, 0x36, 0x30));
+                Planter(x - c, ancre.Y - 3 * c, 2 * c, 3 * c, 11, true, (dc, l, h) =>
+                {
+                    double u = l / 2, bas = h - u;                     // le feu occupe le carré du bas, au milieu
+                    dc.PushTransform(new TranslateTransform(u / 2, bas));
+                    PeindreFeu(dc, u, u);
+                    dc.Pop();
+                    // le poulet au-dessus des flammes : cru, puis doré, puis (parfois) carbonisé
+                    bool pret = tScene > 4, noir = brule && tScene > 7;
+                    var place = new Rect(l / 2 - u * 0.3, bas - u * 0.2, u * 0.6, u * 0.6);
+                    BitmapSource image = noir ? (charbon ?? cuit) : pret ? cuit : cru;
+                    if (image != null) dc.DrawImage(image, place);
+                    else dc.DrawEllipse(Blocs.Pinceau(noir ? Color.FromRgb(0x24, 0x1C, 0x18) : pret ? Color.FromRgb(0xB8, 0x6A, 0x28) : Color.FromRgb(0xF0, 0xC8, 0xB0)), null,
+                        new Point(l / 2, place.Y + place.Height / 2), place.Width * 0.42, place.Height * 0.3);
+                    // la fumée : des bouffées qui montent en s'élargissant, noires quand ça brûle
+                    for (int i = 0; i < 6; i++)
                     {
-                        double larg = l * (0.5 - i * 0.13), haut = h * (0.5 - i * 0.1) * (0.8 + 0.2 * Math.Sin(tScene * (9 + i * 4) + i)), cx = l / 2 + l * 0.05 * Math.Sin(tScene * (6 + i * 3));
-                        var flamme = new StreamGeometry();
-                        using (StreamGeometryContext g = flamme.Open())
-                        {
-                            g.BeginFigure(new Point(cx - larg / 2, h * 0.7), true, true);
-                            g.QuadraticBezierTo(new Point(cx - larg * 0.1, h * 0.7 - haut * 0.5), new Point(cx, h * 0.7 - haut), true, true);
-                            g.QuadraticBezierTo(new Point(cx + larg * 0.1, h * 0.7 - haut * 0.5), new Point(cx + larg / 2, h * 0.7), true, true);
-                        }
-                        dc.DrawGeometry(Blocs.Pinceau(i == 0 ? Color.FromRgb(0xF0, 0x6A, 0x10) : i == 1 ? Color.FromRgb(0xFF, 0xA8, 0x20) : Color.FromRgb(0xFF, 0xE6, 0x70)), null, flamme);
+                        double age = (tScene * 0.45 + i / 6.0) % 1, y = place.Y - age * (bas - u * 0.4), r = u * (0.1 + 0.22 * age) * (noir ? 1.5 : 1);
+                        byte gris = (byte)(noir ? 40 : 200);
+                        dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)((noir ? 190 : 110) * (1 - age)), gris, gris, gris)), null,
+                            new Point(l / 2 + u * 0.18 * Math.Sin(age * 5 + i * 2.1), y), r, r);
                     }
                 });
                 Sons.Jouer("pop", "sonsPouvoirs");
-                Jouer(Biblio.AssisFeu, 5, () => { Dire("Il fait bon.", 2); Repos(); });
+                Dire("Ça sent bon…", 2.5);
+                Anim mange = Biblio.Trouver("Mange un poulet rôti"), honte = Biblio.Trouver("Facepalm");
+                Jouer(Biblio.AssisFeu, 5, () =>
+                {
+                    if (brule) { Dire("Oups… trop cuit.", 3); if (honte != null) Jouer(honte, 2); else Repos(); }
+                    else { Dire("À table !", 2.5); if (mange != null) Jouer(mange, 5); else Repos(); }
+                });
             });
         }
 

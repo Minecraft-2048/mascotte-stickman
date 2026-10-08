@@ -1,10 +1,12 @@
 # Mascotte Stickman
 
-![Quelques-unes de ses animations](apercus/animations.png)
+![Le stickman en action](apercus/demo.gif)
 
 Un bonhomme-bâton qui vit sur le bureau de Windows : il se promène, saute sur le haut des fenêtres, danse, se bat contre le curseur, bâtit des tours de blocs, s'envole en élytres… et on peut l'attraper à la souris pour le lancer. Il n'a aucune image : tout est dessiné par le programme à partir d'un squelette, ce qui permet de choisir sa couleur et de lui donner des centaines d'animations.
 
 *[English version](README.md)*
+
+![Quelques-unes de ses animations](apercus/animations.png)
 
 > **Projet de fan, non officiel.** L'idée vient des animations où un stick figure s'échappe de son logiciel de dessin et sème la pagaille sur le bureau, celles d'Alan Becker en tête. Ce projet n'est ni créé ni approuvé par lui. Minecraft est une marque de Mojang ; ce projet n'y est pas affilié et ne contient aucun fichier du jeu.
 
@@ -18,10 +20,10 @@ L'exe n'est pas signé : Windows peut afficher « Windows a protégé votre ordi
 
 - **Clic droit** : couleur, animations rangées par famille, amis, paramètres, mode muet, lancement au démarrage de Windows, quitter.
 - **Couleur et tête** : 16 teintes ou n'importe quelle couleur. La tête est un disque plein, sauf pour l'orange, le noir et le rouge sombre où c'est un anneau ; un réglage force l'un ou l'autre.
-- **1 359 animations** : déplacements, danses (46 mouvements de bras × 11 de jambes, et aussi valse, french cancan, sirtaki, haka…), gestes, combat (avec des enchaînements de deux et trois coups), acrobaties (saltos et roues enchaînés, certains au ralenti), sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
+- **1 479 animations** : déplacements, danses (48 mouvements de bras × 12 de jambes, et aussi valse, french cancan, sirtaki, haka…), gestes, combat (avec des enchaînements de deux et trois coups), acrobaties (saltos et roues enchaînés, certains au ralenti), sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
 - **Souris** : on l'attrape, on le balance, on le lance ; il se bat contre le curseur s'il s'approche, et un curseur trop rapide l'envoie valser.
 - **Fenêtres** : il saute sur le haut des fenêtres (saut simple, salto ou atterrissage de héros), voyage avec elles, et retombe si elles se ferment.
-- **Amis** : jusqu'à six stickmen à la fois (clic droit → *Amis* → *Ajouter un stickman*), chacun de sa couleur. Ils vont se voir d'eux-mêmes, même perchés sur des fenêtres différentes : bonjour, check, tope-là, poignée de main, check complet, câlin, pierre-feuille-ciseaux, duel amical, tchin, check du pied, ola, concours de pompes, le tope-là « trop lent ! », danse à deux… Dix-huit animations à deux.
+- **Amis** : jusqu'à six stickmen à la fois (clic droit → *Amis* → *Ajouter un stickman*), chacun de sa couleur. Ils vont se voir d'eux-mêmes, même perchés sur des fenêtres différentes : bonjour, check, tope-là, poignée de main, check complet, câlin, pierre-feuille-ciseaux, duel amical, tchin, check du pied, ola, concours de pompes, le tope-là « trop lent ! », danse à deux… Ils s'applaudissent aussi, jouent à tape-mains, font un bras de fer, se disputent et se réconcilient. Vingt-trois animations à deux.
 
 ![Les animations à deux](apercus/duos.png)
 
@@ -29,7 +31,7 @@ L'exe n'est pas signé : Windows peut afficher « Windows a protégé votre ordi
 - **Minecraft** : des scènes entières. Il monte une tour ou un escalier de blocs sous ses pieds puis saute dans le vide, s'envole en élytres, amortit une chute immense avec un seau d'eau, lance une perle de l'Ender et s'y téléporte, allume une TNT qui souffle toute la bande, tire un feu d'artifice, traverse un portail du Nether ; et aussi : pioche, établi, lit, wagonnet, bateau, trampoline de slime…
 - **Bâton de commande** : le premier stickman porte un bâton surmonté d'un bloc de commande. Il le lève, la commande s'écrit en l'air comme dans la console du jeu (`/setblock ~1 ~ ~ hay_block`, `/tp @s 512 0`…), puis son effet se produit : poser un bloc, se téléporter, appeler toute la bande, faire tomber la foudre ou la pluie, léviter, courir à toute allure, faire apparaître la maison… Quinze commandes en tout.
 - **Téléportation** : plus de téléportation « magique ». Il faut une commande du bâton, une perle de l'Ender ou un portail du Nether.
-- **Maison et décor** : une petite maison de blocs apparaît près de chez eux quand ils la bâtissent ou y rentrent (la fenêtre s'allume quand il y a quelqu'un), puis s'en va au bout d'un moment — ou reste, selon le réglage. Ils allument aussi un feu de camp pour s'y chauffer et plantent des fleurs.
+- **Maison et décor** : une petite maison de blocs apparaît près de chez eux quand ils la bâtissent ou y rentrent (la fenêtre s'allume quand il y a quelqu'un), puis s'en va au bout d'un moment — ou reste, selon le réglage. Ils allument aussi un feu de camp pour s'y chauffer, y font griller un poulet (qu'ils oublient parfois : fumée noire, dîner carbonisé), s'assoient sur un bloc pour attendre, et plantent des fleurs.
 - **Animations spéciales** (clic droit → *Animations spéciales*, ou onglet *Spécial* des paramètres ; une case chacune, donc chacune peut être coupée) : il devient géant d'un coup — sa tête touche presque le haut de l'écran — et traverse l'écran à grands pas pendant que les autres détalent, rétrécit et file partout, dessine sur l'écran. Trois autres sont décochées au départ parce qu'elles touchent au PC : ouvrir YouTube sur la chaîne d'Alan Becker, attraper le curseur de la souris au lasso, secouer la fenêtre où il est perché.
 - **Langue** : en français sur un Windows français, en anglais sinon (réglable dans Paramètres → Système).
 - **Mode farceur** (désactivé par défaut) : de temps en temps, il saute sur une fenêtre, marche jusqu'à sa croix et appuie dessus avec la main. C'est un vrai clic sur la croix : un programme qui a du travail non enregistré demande encore confirmation, mais un jeu ou une vidéo se ferment aussitôt. Il épargne la fenêtre en cours d'utilisation (réglable), prévient par une bulle, et il suffit de l'attraper à la souris pour l'en empêcher.
@@ -47,7 +49,7 @@ Sans Minecraft, ou si la case *Vraies textures de Minecraft* est décochée (Par
 
 **À ouvrir sur son téléphone ou sa tablette : https://minecraft-2048.github.io/mascotte-stickman/**
 
-C'est une version web (le dossier `docs/`) : une page où le stickman vit dans l'écran. On peut l'ajouter à l'écran d'accueil pour l'avoir en plein écran, comme une appli.
+C'est une version web (le dossier `docs/`) : une page où le stickman vit dans l'écran. Elle s'installe comme une appli et **marche ensuite sans réseau** : bouton *Installer* (Android, ou Chrome/Edge sur ordinateur) ; sur iPhone et iPad, Partager puis *Sur l'écran d'accueil*.
 
 - **La gravité suit l'appareil** : il se tient sur le bord de l'écran qui est en bas. Penche ou retourne l'appareil, il glisse, décroche et retombe du nouveau côté. Une bonne secousse l'envoie valser. (Sur iPhone et iPad, toucher *Inclinaison* pour autoriser le capteur.)
 - **Au doigt** : on l'attrape et on le lance, on le touche pour une animation au hasard, on touche ailleurs pour qu'il y aille.

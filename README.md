@@ -1,10 +1,12 @@
 # Mascotte Stickman
 
-![A few of his animations](apercus/animations.png)
+![The stickman in action](apercus/demo.gif)
 
 A stick figure that lives on your Windows desktop. He walks around, jumps onto the top of your windows, dances, fights the mouse cursor, builds block towers, glides with elytra… and you can grab him with the mouse and throw him. There are no image files: everything is drawn by code from a skeleton, which is why you can pick his colour and why he has hundreds of animations.
 
 *[Version française](README.fr.md)*
+
+![A few of his animations](apercus/animations.png)
 
 **On a phone or tablet:** https://minecraft-2048.github.io/mascotte-stickman/ — gravity follows the way you hold the device.
 
@@ -22,10 +24,10 @@ The app is in English unless Windows is in French; you can force either language
 
 - **Right-click** him for the menu: colour, animations sorted by family, friends, settings, mute, start with Windows, quit.
 - **Colour and head**: 16 colours or any colour you like. The head is a solid disc, except for orange, black and dark red where it is a ring; a setting forces one or the other.
-- **1,359 animations**: moving around, dances (46 arm moves × 11 leg moves, plus waltz, can-can, sirtaki, haka…), gestures, fighting (with two- and three-hit combos), acrobatics (flips and cartwheels chained together, some in slow motion), sport, everyday life, emotions, and a few that only make sense on the edge of a window (sitting with his legs dangling, fishing). About forty props drawn by the program: sword, hammer, guitar, umbrella, broom…
+- **1,479 animations**: moving around, dances (48 arm moves × 12 leg moves, plus waltz, can-can, sirtaki, haka…), gestures, fighting (with two- and three-hit combos), acrobatics (flips and cartwheels chained together, some in slow motion), sport, everyday life, emotions, and a few that only make sense on the edge of a window (sitting with his legs dangling, fishing). About forty props drawn by the program: sword, hammer, guitar, umbrella, broom…
 - **Mouse**: grab him, swing him, throw him. He fights the cursor when it comes close, and a fast cursor knocks him over.
 - **Windows**: he jumps onto the top of your windows (plain jump, somersault or hero landing), travels with them, and falls when they close.
-- **Friends**: up to six stickmen at once (right-click → *Friends* → *Add a stickman*), each with his own colour. They go and see each other on their own, even from one window to another: hello, fist bump, high five, handshake, hug, rock paper scissors, friendly duel, cheers, foot tap, the wave, a push-up contest, the "too slow!" high five, dancing together… Eighteen two-player animations.
+- **Friends**: up to six stickmen at once (right-click → *Friends* → *Add a stickman*), each with his own colour. They go and see each other on their own, even from one window to another: hello, fist bump, high five, handshake, hug, rock paper scissors, friendly duel, cheers, foot tap, the wave, a push-up contest, the "too slow!" high five, dancing together… They also applaud each other, play patty-cake, have a pushing contest, quarrel and make up. Twenty-three two-player animations.
 
 ![The two-player animations](apercus/duos.png)
 
@@ -33,7 +35,7 @@ The app is in English unless Windows is in French; you can force either language
 - **Minecraft scenes**: he stacks a block tower or a staircase under his feet and jumps off, glides with elytra, saves a huge fall with a water bucket, throws an Ender pearl and teleports to it, lights TNT that blows the whole gang away, launches a firework, walks through a Nether portal; plus pickaxe, crafting table, bed, minecart, boat, slime trampoline…
 - **Command staff**: the first stickman carries a staff topped with a command block. He raises it, the command types itself in the air like in the game console (`/setblock ~1 ~ ~ hay_block`, `/tp @s 512 0`…), then it takes effect: place a block, teleport, call the whole gang, summon lightning or rain, levitate, run at full speed, make the house appear… Fifteen commands.
 - **Teleporting**: no "magic" teleporting. It takes a staff command, an Ender pearl or a Nether portal.
-- **House and scenery**: a small block house appears near their home when they build it or go inside (the window lights up when someone is in), then goes away after a while — or stays, if you tick the setting. They also light a campfire to warm up, and plant flowers.
+- **House and scenery**: a small block house appears near their home when they build it or go inside (the window lights up when someone is in), then goes away after a while — or stays, if you tick the setting. They also light a campfire to warm up, roast a chicken over it (and sometimes forget it: black smoke, burnt dinner), sit on a block to wait, and plant flowers.
 - **Special tricks** (right-click → *Special tricks*, or the *Special* tab; one checkbox each, so any of them can be switched off): he suddenly turns giant — his head almost touches the top of the screen — and stomps across it while the others run away, shrinks and scurries around, draws on the screen. Three more are off by default because they touch your PC: opening Alan Becker's YouTube channel, lassoing the mouse cursor, shaking the window he stands on.
 - **Spell checker** (off by default, right-click → *Spell checker*): when you have just typed a misspelled word, he flies to it, points at it with a pencil, and the word is replaced; the caret goes back where it was. He does not listen to the keyboard: he asks Windows for the bit of text before the caret (as a screen reader does), never reads a password field, and keeps or sends nothing. Spelling comes from the Windows spell checker, in the Windows language.
 - **Prank mode** (off by default): now and then he jumps onto a window, walks to its X and presses it. It is a real click on the X: a program with unsaved work still asks for confirmation, but a game or a video closes at once. He spares the window you are using (configurable), warns you with a speech bubble, and grabbing him with the mouse stops him.
@@ -50,7 +52,7 @@ Without Minecraft, or if you untick *Real Minecraft textures* (Settings → Appe
 
 **https://minecraft-2048.github.io/mascotte-stickman/**
 
-It is a web page (the `docs/` folder) where the stickman lives inside the screen. Add it to your home screen to run it full screen, like an app.
+It is a web page (the `docs/` folder) where the stickman lives inside the screen. It installs like an app and then **works offline**: tap *Install* (Android, or Chrome/Edge on a computer); on iPhone and iPad tap Share, then *Add to Home Screen*.
 
 - **Gravity follows the device**: he stands on whichever edge of the screen is down. Tilt or flip the device and he slides, loses his footing and falls to the new side. A good shake sends him flying. (On iPhone and iPad, tap *Tilt* first to allow the sensor.)
 - **Touch**: grab him and throw him, tap him for a random animation, tap elsewhere to send him there.

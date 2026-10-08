@@ -19,7 +19,7 @@
   button { min-width: 44px; height: 44px; padding: 0 12px; border: 0; border-radius: 22px; background: rgba(255, 255, 255, .12); color: #f1f2f4;
     font: 600 16px system-ui, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
   button:active { background: rgba(255, 255, 255, .28); }
-  #capteurs { background: #ff8a1a; color: #1d1f24; }
+  #capteurs, #installer { background: #ff8a1a; color: #1d1f24; }
   #aide { position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); text-align: center; color: #c9ccd3; font-size: 14px;
     line-height: 1.4; pointer-events: none; transition: opacity 1.2s; }
 </style>
@@ -27,6 +27,7 @@
 <body>
 <canvas id="toile"></canvas>
 <div id="barre">
+  <button id="installer" hidden>Installer</button>
   <button id="capteurs" hidden>Inclinaison</button>
   <button id="tourner" title="Tourner la gravité d'un quart de tour">↻</button>
   <button id="couleur" title="Changer sa couleur">Couleur</button>
@@ -55,6 +56,7 @@ if (!FR) {
   document.documentElement.lang = 'en';
   document.getElementById('aide').textContent = 'Tilt the device: gravity follows. Grab him and throw him, tap him for an animation, tap elsewhere to send him there.';
   document.getElementById('capteurs').textContent = 'Tilt';
+  document.getElementById('installer').textContent = 'Install';
   document.getElementById('couleur').textContent = 'Colour';
   const titres = { tourner: 'Turn gravity a quarter turn', couleur: 'Change his colour', moins: 'One stickman fewer', plus: 'One more stickman' };
   for (const id in titres) document.getElementById(id).title = titres[id];
@@ -477,6 +479,25 @@ boutonTourner.addEventListener('click', () => fixerGravite((angleFictif + 90) % 
 window.addEventListener('keydown', e => {
   const sens = { ArrowDown: 0, ArrowLeft: 90, ArrowUp: 180, ArrowRight: 270 }[e.key];
   if (sens !== undefined && !capteur) fixerGravite(sens);
+});
+
+// ---------------------------------------------------------------- installation : une appli qui marche sans réseau
+// Le service worker garde la page et ses animations dans l'appareil. Le bouton « Installer » la pose sur
+// l'écran d'accueil : Android et les ordinateurs ont une invite, sur iPhone il faut passer par Partager.
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { });
+const boutonInstaller = document.getElementById('installer');
+const installee = window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
+let invite = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); invite = e; if (!installee) boutonInstaller.hidden = false; });
+window.addEventListener('appinstalled', () => { boutonInstaller.hidden = true; });
+if (IOS && !installee) boutonInstaller.hidden = false;
+boutonInstaller.addEventListener('click', () => {
+  if (invite) { invite.prompt(); invite = null; boutonInstaller.hidden = true; return; }
+  const aide = document.getElementById('aide');
+  aide.textContent = FR ? 'Pour l’installer : bouton Partager, puis « Sur l’écran d’accueil ». Elle marche ensuite sans réseau.'
+    : 'To install: tap Share, then "Add to Home Screen". After that it works offline.';
+  aide.style.opacity = 1;
+  setTimeout(() => { aide.style.opacity = 0; }, 9000);
 });
 
 // ---------------------------------------------------------------- boutons
