@@ -146,6 +146,7 @@ namespace MascotteStickman
             N(C, "sommeil", "S'endort après (minutes sans toucher au PC, 0 = jamais)", 10, 0, 120);
             N(C, "teleporte", "Envie de se téléporter : commande, perle de l'Ender ou portail (%)", 6, 0, 100);
             B(C, "baton", "Le premier stickman a le bâton de commande", true);
+            B(C, "maison", "Ils ont une maison (elle apparaît près de chez eux)", true);
             B(C, "maisonToujours", "Leur maison reste toujours visible", false);
             B(C, "correcteur", "CORRECTEUR : il corrige mes fautes d'orthographe (lit le texte près du curseur, jamais les mots de passe)", false);
             B(C, "ferme", "MODE FARCEUR : il ferme des fenêtres en appuyant sur leur croix", false);
@@ -1823,7 +1824,8 @@ namespace MascotteStickman
             Func<Anim, bool> permise = a => !R.Coupees.Contains(a.Nom) && (!a.SurFenetre || support != IntPtr.Zero)
                 && (a.Special == null || !a.Special.StartsWith("cmd:") || ABaton)
                 && (a.Special == null || !a.Special.StartsWith("x:") || R.O("special." + a.Special.Substring(2)))
-                && (a.Special != "x:youtube" || temps > prochainYoutube);      // le navigateur : pas plus d'une fois par heure
+                && (a.Special != "x:youtube" || temps > prochainYoutube)       // le navigateur : pas plus d'une fois par heure
+                && !SansMaison(a);
             var possibles = new List<Anim>();
             double total = 0;
             var poids = new Dictionary<string, double>();
@@ -1895,7 +1897,7 @@ namespace MascotteStickman
                 case 3: a = Biblio.Trouver("Enchaînement de 3 coups"); break;
                 default:
                     // au hasard, mais jamais un tour spécial décoché ni une commande sans bâton
-                    List<Anim> libres = Biblio.Toutes.Where(x => !x.Deplace && !R.Coupees.Contains(x.Nom)
+                    List<Anim> libres = Biblio.Toutes.Where(x => !x.Deplace && !R.Coupees.Contains(x.Nom) && !SansMaison(x)
                         && (x.Special == null || (x.Special.StartsWith("x:") ? R.O("special." + x.Special.Substring(2)) : !x.Special.StartsWith("cmd:") || ABaton))).ToList();
                     a = libres.Count > 0 ? libres[hasard.Next(libres.Count)] : Biblio.Salut;
                     break;
@@ -2251,6 +2253,14 @@ namespace MascotteStickman
             }
             speciales.SubmenuOpened += (o, e) => { foreach (MenuItem element in speciales.Items) element.IsChecked = R.O((string)element.Tag); };
             menu.Items.Add(speciales);
+            var avecMaison = new MenuItem { Header = "Ils ont une maison", IsCheckable = true };
+            avecMaison.Click += (o, e) =>
+            {
+                R.Mettre("maison", avecMaison.IsChecked ? 1 : 0);
+                Dire(avecMaison.IsChecked ? "Chouette, une maison !" : "D'accord, plus de maison.", 2.5);
+            };
+            menu.Opened += (o, e) => avecMaison.IsChecked = R.O("maison");
+            menu.Items.Add(avecMaison);
             var coin = new MenuItem { Header = "Revenir dans le coin" };
             coin.Click += (o, e) =>
             {
@@ -2649,6 +2659,7 @@ namespace MascotteStickman
         void Speciale(Anim a)
         {
             if (Geant) { echelleFx = echelleVisee = 1; AppliquerUn(); }      // les scènes sont bâties à sa taille normale
+            if (SansMaison(a)) { Dire("La maison est désactivée (clic droit pour la remettre)", 3.5); Repos(); return; }
             switch (a.Special)
             {
                 case "tour": Batir(false); break;
@@ -2664,6 +2675,8 @@ namespace MascotteStickman
                 case "batir": BatirMaison(); break;
                 case "camp": FeuDeCamp(); break;
                 case "grillade": Grillade(); break;
+                case "golem": GolemDeNeige(); break;
+                case "arbre": Arbre(); break;
                 case "jardin": Jardin(); break;
                 case "x:geant": Grandir(); break;
                 case "x:mini": Retrecir(); break;
@@ -3434,6 +3447,7 @@ namespace MascotteStickman
                     Ordonner("/say Salut tout le monde !", () => { Dire("[Stickman] Salut tout le monde !", 3.5); Repos(); Jouer(Biblio.Salut, 4); });
                     break;
                 case "maison":
+                    if (!R.O("maison")) { Repos(); break; }
                     Ordonner("/fill ~ ~ ~ ~4 ~5 ~ oak_planks", () => { MontrerMaison(false); Jouer(Biblio.Admire, 2); });
                     break;
                 case "appui": Jouer(Biblio.Appui, 3); break;
@@ -3456,8 +3470,15 @@ namespace MascotteStickman
 
         double CoteMaison { get { return 32 * s; } }
 
+        // La maison peut être désactivée (réglage « maison ») : alors plus rien ne la fait apparaître.
+        static bool SansMaison(Anim a)
+        {
+            return !R.O("maison") && (a.Special == "maison" || a.Special == "sieste" || a.Special == "batir" || a.Special == "cmd:maison");
+        }
+
         void MontrerMaison(bool dUnCoup)
         {
+            if (!R.O("maison")) return;
             double c = CoteMaison;
             if (maisonDecor == null || !maisonDecor.IsVisible)
             {
@@ -3495,6 +3516,12 @@ namespace MascotteStickman
         void TenirMaison()
         {
             if (maisonDecor == null || !maisonDecor.IsVisible) return;
+            if (!R.O("maison"))                                  // désactivée en cours de route : ceux qui étaient dedans ressortent, et elle s'en va
+            {
+                foreach (Bonhomme b in Tous) b.Sortir();
+                maisonDecor.Cacher();
+                return;
+            }
             if (maisonBlocs < 23 && temps > maisonTic)
             {
                 maisonTic = temps + 0.07;
@@ -3510,9 +3537,11 @@ namespace MascotteStickman
         void BatirMaison()
         {
             RangerScene();
+            if (!R.O("maison")) { Repos(); return; }
             MontrerMaison(false);
             AllerVers(maisonLieu.X + 3.4 * CoteMaison, Biblio.Marche, () =>
             {
+                if (!R.O("maison")) { Repos(); return; }
                 face = -1;
                 Jouer(Biblio.PoseDevant, 3, () => { Dire("Et voilà la maison !", 2.5); Jouer(Biblio.Admire, 1); });
             });
@@ -3522,15 +3551,18 @@ namespace MascotteStickman
         void Rentrer(bool sieste)
         {
             RangerScene();
+            if (!R.O("maison")) { Repos(); return; }
             MontrerMaison(maisonDecor != null && maisonDecor.IsVisible && maisonBlocs > 0);
             if (support != IntPtr.Zero) { apresSaut = () => Rentrer(sieste); Bondir(new Point(maisonLieu.X + (ancre.X > maisonLieu.X ? 1 : -1) * 130 * s, SystemParameters.WorkArea.Bottom), IntPtr.Zero); return; }
             AllerVers(maisonLieu.X, Math.Abs(maisonLieu.X - ancre.X) > 420 * s ? Biblio.Course : Biblio.Marche, () =>
             {
+                if (!R.O("maison")) { Repos(); return; }          // désactivée pendant qu'il y allait
                 if (maisonBlocs < 23) maisonBlocs = 99;           // pas encore finie : elle l'est maintenant
                 voileVise = 0;
                 Sons.Jouer("pop", "sonsPouvoirs");
                 Jouer(Biblio.Concentration, 1, () =>
                 {
+                    if (!R.O("maison")) { voileVise = 1; Repos(); return; }
                     maisonDedans++;
                     if (sieste) maisonDort = true;
                     maisonFin = temps + 75;
@@ -3588,6 +3620,73 @@ namespace MascotteStickman
                 }
                 dc.DrawGeometry(Blocs.Pinceau(i == 0 ? Color.FromRgb(0xF0, 0x6A, 0x10) : i == 1 ? Color.FromRgb(0xFF, 0xA8, 0x20) : Color.FromRgb(0xFF, 0xE6, 0x70)), null, flamme);
             }
+        }
+
+        // Golem de neige : deux blocs de neige l'un sur l'autre, une citrouille sculptée par-dessus, et il le salue.
+        void GolemDeNeige()
+        {
+            RangerScene();
+            Jouer(Biblio.PoseDevant, 1, () =>
+            {
+                double c = 40 * s, x = ancre.X + face * 78 * s;
+                BitmapSource tete = Textures.Lire("block/carved_pumpkin"), neige = Textures.Lire("block/snow");
+                Planter(x - c / 2, ancre.Y - 3 * c, c, 3 * c, 12, true, (dc, l, h) =>
+                {
+                    int poses = Math.Min(3, 1 + (int)(tScene / 0.9));      // un bloc toutes les 0,9 s, de bas en haut
+                    for (int i = 0; i < poses; i++)
+                    {
+                        var r = new Rect(0, h - (i + 1) * l, l, l);
+                        if (i < 2)
+                        {
+                            if (neige != null) dc.DrawImage(neige, r);
+                            else dc.DrawRectangle(Blocs.Pinceau(Color.FromRgb(0xF4, 0xF8, 0xFA)), new Pen(Blocs.Pinceau(Color.FromRgb(0xD0, 0xDA, 0xE2)), l * 0.04), r);
+                        }
+                        else if (tete != null) dc.DrawImage(tete, r);
+                        else
+                        {
+                            Brush sombre = Blocs.Pinceau(Color.FromRgb(0x30, 0x1C, 0x08));
+                            dc.DrawRectangle(Blocs.Pinceau(Color.FromRgb(0xE0, 0x82, 0x1E)), null, r);
+                            dc.DrawRectangle(sombre, null, new Rect(r.X + l * 0.2, r.Y + l * 0.28, l * 0.18, l * 0.16));
+                            dc.DrawRectangle(sombre, null, new Rect(r.X + l * 0.62, r.Y + l * 0.28, l * 0.18, l * 0.16));
+                            dc.DrawRectangle(sombre, null, new Rect(r.X + l * 0.26, r.Y + l * 0.62, l * 0.48, l * 0.12));
+                        }
+                    }
+                });
+                Sons.Jouer("pop", "sonsPouvoirs");
+                Jouer(Biblio.PoseDevant, 3, () => { Dire("Salut, toi !", 2.5); Jouer(Biblio.Salut, 3); });
+            });
+        }
+
+        // Un arbre : il plante une pousse, l'arrose, elle grandit bloc après bloc, et il admire son chêne.
+        void Arbre()
+        {
+            RangerScene();
+            Jouer(Biblio.PoseDevant, 1, () =>
+            {
+                double c = 34 * s, x = ancre.X + face * 86 * s;
+                BitmapSource pousse = Textures.Lire("block/oak_sapling");
+                Planter(x - 1.5 * c, ancre.Y - 5 * c, 3 * c, 5 * c, 14, true, (dc, l, h) =>
+                {
+                    double u = l / 3;
+                    int etape = (int)(tScene / 0.55);                      // la pousse d'abord, puis le tronc, puis le feuillage
+                    if (etape < 2)
+                    {
+                        if (pousse != null) dc.DrawImage(pousse, new Rect(u, h - u, u, u));
+                        else
+                        {
+                            dc.DrawLine(Dessin.Plume(Color.FromRgb(0x6B, 0x4A, 0x22), u * 0.08), new Point(l / 2, h), new Point(l / 2, h - u * 0.6));
+                            dc.DrawEllipse(Blocs.Pinceau(Color.FromRgb(0x4E, 0x9A, 0x36)), null, new Point(l / 2, h - u * 0.7), u * 0.26, u * 0.22);
+                        }
+                        return;
+                    }
+                    int troncs = Math.Min(3, etape - 1), feuilles = Math.Max(0, Math.Min(6, etape - 4));
+                    for (int i = 0; i < troncs; i++) Blocs.Dessiner(dc, new Rect(u, h - (i + 1) * u, u, u), Blocs.Tronc, Colors.White, i);
+                    for (int i = 0; i < feuilles; i++) Blocs.Dessiner(dc, new Rect(i % 3 * u, h - (4 + i / 3) * u, u, u), Blocs.Feuilles, Colors.White, i);
+                });
+                Sons.Jouer("pop", "sonsPouvoirs");
+                Anim arrose = Biblio.Trouver("Arrose des fleurs");
+                Jouer(arrose ?? Biblio.PoseDevant, 4, () => { Dire("Il a bien poussé !", 2.5); Jouer(Biblio.Admire, 2); });
+            });
         }
 
         // Grillade : il fait cuire un poulet sur le feu et attend, assis devant. Une fois sur trois il l'oublie :

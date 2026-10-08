@@ -425,6 +425,25 @@ namespace MascotteStickman
             "Tu ne passeras pas !", "You won't get past me!", "Trop fort !", "Too strong!", "Hé, doucement !", "Hey, easy!", "Coup d'épaule sauté", "Jumping shoulder bump", "Ouais !", "Yeah!",
             "Tape-mains", "Patty-cake", "Un, deux, trois…", "One, two, three…", "…soleil !", "…go!", "Dispute et réconciliation", "Quarrel and make up",
             "C'est ta faute !", "It's your fault!", "Non, la tienne !", "No, yours!", "Pardon…", "Sorry…", "Moi aussi…", "Me too…",
+
+            // ---------------------------------------------------------------- onzième fournée
+            "Ils ont une maison (elle apparaît près de chez eux)", "They have a house (it appears near their home)", "Ils ont une maison", "They have a house",
+            "Chouette, une maison !", "Great, a house!", "D'accord, plus de maison.", "All right, no more house.",
+            "La maison est désactivée (clic droit pour la remettre)", "The house is switched off (right-click to bring it back)",
+            "Bâtit un golem de neige", "Builds a snow golem", "Fait pousser un arbre", "Grows a tree", "Salut, toi !", "Hello, you!", "Il a bien poussé !", "It grew nicely!",
+            "Pagaie", "Paddle", "Confettis", "Confetti", "pointes", "toe taps",
+            "Apporte un plat à bout de bras", "Carries a dish at arm's length", "Pousse un chariot", "Pushes a trolley", "Marche sur les talons", "Walks on his heels",
+            "Court après son chapeau", "Runs after his hat", "S'en va à reculons en saluant", "Backs away, waving",
+            "Chasse la fumée de la main", "Waves the smoke away", "Renifle une bonne odeur", "Sniffs something tasty", "Fait signe que non, des deux mains", "Waves no with both hands",
+            "Se tourne les pouces", "Twiddles his thumbs", "Salue le public", "Bows to the audience", "Coup de coude complice", "Knowing nudge",
+            "Se brûle la langue", "Burns his tongue", "Souffle sur sa soupe", "Blows on his soup", "Met la table", "Lays the table", "Épluche des légumes", "Peels vegetables",
+            "Touille la marmite", "Stirs the pot", "Ouvre un cadeau", "Opens a present", "Zappe avec la télécommande", "Flicks through the channels", "Accroche un tableau", "Hangs a picture",
+            "Souffle dans ses mains", "Blows into his hands", "Assis sur un bloc, s'étire", "Sitting on a block, stretching", "Assis sur un bloc, tape du pied", "Sitting on a block, tapping his foot",
+            "Affamé, se tient le ventre", "Starving, holds his stomach", "Repu, se tapote le ventre", "Full, pats his belly", "Siffle d'admiration", "Whistles in admiration",
+            "Souffle sur les flammes, paniqué", "Blows on the flames in a panic", "Cambre le dos", "Arches his back", "Gardien sur sa ligne", "Goalkeeper on his line",
+            "Sort un carton rouge", "Shows a red card", "Échauffe ses poignets", "Warms up his wrists",
+            "Croque une pomme dorée enchantée", "Bites an enchanted golden apple", "Mange un poisson-globe (mauvaise idée)", "Eats a pufferfish (bad idea)", "Agite un os", "Waves a bone",
+            "S'éclaire à la bougie", "Lights his way with a candle",
         };
     }
 }
