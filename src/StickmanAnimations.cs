@@ -258,6 +258,7 @@ namespace MascotteStickman
             Onzieme();
             Douzieme();
             Treizieme();
+            Quatorzieme();
             Sonoriser();
             ADeux();
         }
@@ -1063,6 +1064,25 @@ namespace MascotteStickman
             Cles("Quotidien", "Empile des cailloux", "0:" + S + ";400:" + Cr + ";700:40 20 50 10 40 20 62 -112 52 -104;1000:" + Cr + ";1300:40 20 60 0 50 10 62 -112 52 -104;1600:" + Cr + ";2000:" + S);
         }
 
+        // ------------------------------------------------------------ quatorzième fournée : les métiers
+
+        static void Quatorzieme()
+        {
+            Osc("Quotidien", "Pompier à la lance", "-10 0 80 20 60 60 20 -24 -16 -10 0 0 -2", "-14 0 84 16 64 56 22 -28 -16 -12 0 0 2", 0.3, 10);
+            Cles("Gestes", "Fait la circulation", "0:" + S + ";300:0 0 90 0 -10 12 6 0 -6 0;900:0 0 90 0 -10 12 6 0 -6 0;1100:0 0 90 0 -90 -90 6 0 -6 0;1300:0 0 90 0 -120 -40 6 0 -6 0;1500:0 0 90 0 -90 -90 6 0 -6 0;1700:0 0 90 0 -120 -40 6 0 -6 0;2100:" + S);
+            PasAvec("Serveur pressé", null, 120, 100, 30, 44, 150, 0.5);
+            Osc("Quotidien", "Peint un tableau", "-4 4 90 20 -30 100", "-4 0 100 40 -30 100", 0.6, 6, "crayon");
+            Osc("Quotidien", "Photographe à genoux", "30 -10 80 120 70 130 62 -112 52 -104", "32 -12 82 122 72 132 62 -112 52 -104", 1.2, 3);
+            Osc("Quotidien", "Pétrit la pâte", "24 16 50 30 44 36 10 -8 -8 -6", "30 20 60 10 54 16 12 -10 -8 -8", 0.5, 8);
+            Cles("Quotidien", "Monte un mur de briques", "0:" + S + ";300:40 20 50 10 40 20 40 -70 20 -50;600:10 0 80 30 70 40 10 -8 -8 -4;800:10 2 84 20 74 30 10 -8 -8 -4;1000:10 0 80 30 70 40 10 -8 -8 -4;1300:" + S);
+            Cles("Quotidien", "Goûte et approuve", "0:" + S + ";400:0 8 60 125 -10 12 6 0 -6 0;900:0 12 64 130 -10 12 6 0 -6 0;1200:-6 -8 120 60 -10 12 6 0 -6 0;1700:-6 -8 124 80 -10 12 6 0 -6 0;2000:" + S);
+            Osc("Quotidien", "Taille une haie", "0 -6 110 20 100 30", "0 -6 100 50 90 60", 0.3, 10);
+            Pas("Marche sur la Lune", 26, 40, 20, 20, 0, 22, 45, 1.6);
+            Pas("Marche avec des palmes", 14, 70, 10, 10, -6, 0, 30, 0.9);
+            PasAvec("Détective à la loupe", null, 70, 60, 14, 24, 24, 1.3, 26, 20);
+            Fixe("Émotions", "Pose de super-héros", "-8 -12 -35 105 -45 112 12 0 -12 0", 4);
+        }
+
         // ------------------------------------------------------------ sixième fournée
 
         static void Sixieme()
@@ -1360,8 +1380,17 @@ namespace MascotteStickman
                 + ";2200:" + ouvre + ";2500:" + serre1 + ";2900:" + serre2 + ";3200:" + ouvre + ";3500:" + S;
             Deux("Dispute et réconciliation", 46, "C'est ta faute !", "Non, la tienne !", "Pardon…", "Moi aussi…", dispute, dispute, null);
 
-            // danse à deux : la même danse, face à face (sur le tempo s'il y a de la musique)
-            Duos.Add(new Duo { Nom = "Danse à deux", Distance = 85, DitA = "On danse ?", DitB = "Carrément !" });
+            // un cadeau : l'un le tend, l'autre n'en revient pas
+            Deux("Un cadeau", 76, "Tiens, c'est pour toi !", "Pour moi ?", null, "Merci !!",
+                "0:" + S + ";400:6 4 70 10 -12 14 10 -4 -8 -2;1300:6 4 70 10 -12 14 10 -4 -8 -2;1700:" + S + ";2000:" + S,
+                "0:" + S + ";500:6 4 60 20 50 30 10 -4 -8 -2;1300:6 4 60 20 50 30 10 -4 -8 -2;1600:-6 -10 150 20 -150 -20 8 -8 -8 -8 12;2000:" + S, null);
+
+            // un secret : il se penche à l'oreille de l'autre, qui n'en croit pas ses oreilles
+            Deux("Un secret", 50, "Psst…", "Quoi ?", null, "Nooon ?!",
+                "0:" + S + ";400:24 10 100 130 -12 14 14 -8 -10 -4 0 0 14;1400:26 12 102 132 -12 14 14 -8 -10 -4 0 0 14;1800:" + S + ";2200:" + S,
+                "0:" + S + ";400:6 -10 10 12 -10 12 6 0 -6 0;1400:8 -14 10 12 -10 12 6 0 -6 0;1600:-10 -16 140 120 130 130 8 -4 -8 -4;2200:" + S, null);
+
+            // danse à deux : la même danse, face à face (sur le tempo s'il y a de la musique)            Duos.Add(new Duo { Nom = "Danse à deux", Distance = 85, DitA = "On danse ?", DitB = "Carrément !" });
         }
 
         static Duo Deux(string nom, double distance, string ditA, string ditB, string finA, string finB, string a, string b, string bruits)
@@ -1752,7 +1781,7 @@ namespace MascotteStickman
                 "Macarena", "Hélicoptère", "Cadres", "Brasse", "Fièvre du samedi soir", "Tape des cuisses", "Maracas", "Bras qui se balancent",
                 "Manivelle", "Papillon", "Clap haut-bas", "Roulé d'épaules", "Pointe gauche-droite", "Vague à deux bras",
                 "Pluie", "Pêche à la ligne", "Caddie", "Pousse le plafond", "Poing qui pompe", "Bisous", "Batterie", "Mains sur la tête",
-                "Ciseaux", "Balancier", "Chef d'orchestre", "Thriller", "Tire la corde", "Soleil", "Pagaie", "Confettis", "Vitres", "Cloche", "Tambourin", "Bras en croix" };
+                "Ciseaux", "Balancier", "Chef d'orchestre", "Thriller", "Tire la corde", "Soleil", "Pagaie", "Confettis", "Vitres", "Cloche", "Tambourin", "Bras en croix", "Petit chien", "Lancer franc" };
             // les quatre temps de la macarena : bras tendus, mains aux épaules, mains sur la tête, mains aux hanches
             var macarena = new[] { new double[] { 90, 0, 86, 0 }, new double[] { 70, 150, 66, 150 }, new double[] { 150, 110, 146, 110 }, new double[] { 30, 100, -30, -100 } };
             // les quatre lettres de YMCA : (épaule1, coude1, épaule2, coude2)
@@ -1830,9 +1859,12 @@ namespace MascotteStickman
                 // tambourin : une main le secoue au-dessus de la tête ; bras en croix : il se balance, les bras grands ouverts
                 (f, s, c, p) => { double w = Math.Sin(4 * f); p[I.Ep1] = 150 + 10 * w; p[I.Co1] = 40 + 30 * w; p[I.Ep2] = -20; p[I.Co2] = 30; p[I.Torse] += 4 * s; },
                 (f, s, c, p) => { p[I.Ep1] = 95 + 20 * s; p[I.Co1] = 0; p[I.Ep2] = -95 + 20 * s; p[I.Co2] = 0; p[I.Torse] += 8 * s; },
+                // petit chien : il nage comme un chiot ; lancer franc : un bras arme et tire, encore et encore
+                (f, s, c, p) => { p[I.Ep1] = 70 + 20 * s; p[I.Co1] = 60 + 30 * c; p[I.Ep2] = 70 - 20 * s; p[I.Co2] = 60 - 30 * c; },
+                (f, s, c, p) => { double u = Math.Max(0, s); p[I.Ep1] = 100 + 60 * u; p[I.Co1] = 100 - 90 * u; p[I.Ep2] = 60; p[I.Co2] = 100; p[I.Tete] -= 10 * u; },
             };
-            var nomsJambes = new[] { "rebond", "pas chassés", "coups de pied", "twist", "course sur place", "sauts", "squats", "talons", "genoux", "charleston", "accroupi", "fentes", "pointes", "ruades", "sautillés" };
-            var tempos = new[] { 0.7, 0.9, 0.8, 0.8, 0.6, 0.7, 1.1, 0.8, 0.7, 0.8, 0.8, 1.0, 0.7, 0.7, 0.6 };
+            var nomsJambes = new[] { "rebond", "pas chassés", "coups de pied", "twist", "course sur place", "sauts", "squats", "talons", "genoux", "charleston", "accroupi", "fentes", "pointes", "ruades", "sautillés", "glissés" };
+            var tempos = new[] { 0.7, 0.9, 0.8, 0.8, 0.6, 0.7, 1.1, 0.8, 0.7, 0.8, 0.8, 1.0, 0.7, 0.7, 0.6, 0.9 };
             var jambes = new Action<double, double, double, double[]>[]
             {
                 (f, s, c, p) => { double d = Math.Abs(s); p[I.Ha1] = 8 + 14 * d; p[I.Ge1] = -28 * d; p[I.Ha2] = -8 + 14 * d; p[I.Ge2] = -28 * d; },
@@ -1851,6 +1883,7 @@ namespace MascotteStickman
                 (f, s, c, p) => { double u = Math.Max(0, s), d = Math.Max(0, -s); p[I.Ha1] = 6 + 34 * u; p[I.Ge1] = -4; p[I.Ha2] = -6 - 30 * d; p[I.Ge2] = -22 * d; },      // pointes : un pied devant, l'autre derrière
                 (f, s, c, p) => { double u = Math.Max(0, s), d = Math.Max(0, -s); p[I.Ha1] = 6 - 36 * u; p[I.Ge1] = -72 * u; p[I.Ha2] = -6 - 30 * d; p[I.Ge2] = -72 * d; p[I.Torse] = 6; },      // ruades : les talons partent en arrière
                 (f, s, c, p) => { double u = Math.Max(0, s), d = Math.Max(0, -s); p[I.Ha1] = 6 + 50 * u; p[I.Ge1] = -60 * u; p[I.Ha2] = -6 + 50 * d; p[I.Ge2] = -60 * d; p[I.Air] = 10 * Math.Abs(s); },      // sautillés
+                (f, s, c, p) => { p[I.X] = 10 * c; p[I.Ha1] = 18 * s; p[I.Ha2] = -18 * s; p[I.Ge1] = -24 * Math.Max(0, c); p[I.Ge2] = -24 * Math.Max(0, -c); },      // glissés
             };
             for (int i = 0; i < bras.Length; i++)
                 for (int j = 0; j < jambes.Length; j++)

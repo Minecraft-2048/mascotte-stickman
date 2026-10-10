@@ -29,8 +29,8 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("Mascotte Stickman")]
 [assembly: System.Reflection.AssemblyCompany("Minecraft-2048 (open source)")]
 [assembly: System.Reflection.AssemblyCopyright("MIT licence")]
-[assembly: System.Reflection.AssemblyVersion("1.8.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.8.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.8.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.8.1.0")]
 
 namespace MascotteStickman
 {
@@ -1921,8 +1921,8 @@ namespace MascotteStickman
                     a = libres.Count > 0 ? libres[hasard.Next(libres.Count)] : Biblio.Salut;
                     break;
             }
-            JouerDemande(a);
             if (R.O("bulles") && (int)R.D("clic") == 4) Dire(a.Nom, 2.5);
+            JouerDemande(a);
         }
 
         void Attraper()
@@ -2207,7 +2207,7 @@ namespace MascotteStickman
                 {
                     Anim celle = a;
                     var element = new MenuItem { Header = a.Nom };
-                    element.Click += (o, e) => { JouerDemande(celle); Dire(celle.Nom, 2.5); };
+                    element.Click += (o, e) => { Dire(celle.Nom, 2.5); JouerDemande(celle); };
                     int plus = a.Nom.IndexOf(" + ", StringComparison.Ordinal);
                     if (plus < 0) { sous.Items.Add(element); continue; }
                     string debut = a.Nom.Substring(0, plus);
@@ -2747,6 +2747,17 @@ namespace MascotteStickman
             }
         }
 
+        // Les scènes qui ont besoin de hauteur ou du sol (géant, tour, dessin, paysage…) : perché sur une fenêtre,
+        // il saute d'abord en bas, puis s'y met. Faux s'il est déjà au sol.
+        bool DescendreDAbord(Action ensuite)
+        {
+            if (support == IntPtr.Zero || etat != Etat.Anime) return false;
+            double gauche = SystemParameters.VirtualScreenLeft + 90 * s, droite = SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 90 * s;
+            apresSaut = ensuite;
+            Bondir(new Point(Math.Max(gauche, Math.Min(droite, ancre.X + face * 70 * s)), SystemParameters.WorkArea.Bottom), IntPtr.Zero);
+            return true;
+        }
+
         // Un endroit où aller : un rebord de fenêtre s'il y en a un (une fois sur deux), sinon loin sur le sol.
         void Destination(double mini, double maxi, out Point but, out IntPtr vers)
         {
@@ -2810,8 +2821,15 @@ namespace MascotteStickman
                         break;
                     }
                 case "decor":                                    // un décor qui reste un moment (bloc posé, feu, fleurs, nuage, éclair)
-                    if (tScene > dureeScene) RangerScene();
-                    else if (animeDecor) decor.Redessiner();
+                    if (tScene > dureeScene) { RangerScene(); break; }
+                    if (decorSur != IntPtr.Zero)                 // sur une fenêtre : il voyage avec elle, et disparaît avec elle
+                    {
+                        Bord sous;
+                        if (!LireBord(decorSur, out sous)) { RangerScene(); break; }
+                        double gx = sous.Gauche + decorDx, gy = sous.Haut + decorDy;
+                        if (Math.Abs(decor.Left - gx) > 0.5 || Math.Abs(decor.Top - gy) > 0.5) { decor.Left = gx; decor.Top = gy; }
+                    }
+                    if (animeDecor) decor.Redessiner();
                     break;
                 case "chute":                                    // un bloc de moins toutes les 80 ms, par le haut
                     if (tScene < 0.08) break;
@@ -2899,7 +2917,11 @@ namespace MascotteStickman
             double cote = Biblio.Bloc * s;
             int possibles = (int)((ancre.Y - SystemParameters.VirtualScreenTop - HauteurCorps - 30) / cote);      // sans sortir par le haut de l'écran
             blocsVoulus = Math.Min(3 + hasard.Next(escalier ? 3 : 5), possibles);
-            if (blocsVoulus < 2) { Repos(); return; }
+            if (blocsVoulus < 2)                                 // pas la place au-dessus : du haut d'une fenêtre, il va bâtir en bas
+            {
+                if (!DescendreDAbord(() => Batir(escalier))) { Dire("Pas la place de bâtir ici…", 2.5); Repos(); }
+                return;
+            }
             pasTour = escalier ? (hasard.Next(2) == 0 ? -1 : 1) : 0;
             if (escalier)
             {
@@ -3217,7 +3239,10 @@ namespace MascotteStickman
             RangerScene();
             double debout = (2 * R.D("jambes") + R.D("torse") + 2 * R.D("tete") + 1 + R.D("epaisseur") / 2) * R.D("taille");      // sa hauteur, des pieds au sommet du crâne
             double maxi = 0.94 * (ancre.Y - SystemParameters.VirtualScreenTop) / debout;
-            if (maxi < 2) { Repos(); return; }
+            // perché sur une fenêtre, il redescend d'abord : en grandissant il « perdait » son rebord (plus la place
+            // d'y tenir) et reprenait sa taille aussitôt
+            if (DescendreDAbord(Grandir)) return;
+            if (maxi < 2) { Dire("Pas la place de grandir ici…", 2.5); Repos(); return; }
             echelleVisee = maxi; finEchelle = temps + 16;
             Sons.Jouer("energie", "sonsPouvoirs");
             Dire("GRAOUH !", 2.5);
@@ -3270,6 +3295,7 @@ namespace MascotteStickman
         void DessinerSurLEcran()
         {
             RangerScene();
+            if (ancre.Y - SystemParameters.VirtualScreenTop < 280 * s && DescendreDAbord(DessinerSurLEcran)) return;      // il lui faut de la place au-dessus
             double[][] traits = croquis[hasard.Next(croquis.Length)];
             double c = 190 * s, total = traits.Sum(t => t.Length / 2 - 1);
             double x = ancre.X + face * (c / 2 + 46 * s);
@@ -3352,6 +3378,7 @@ namespace MascotteStickman
         // en l'air, puis son effet se produit. C'est aussi la seule façon de se téléporter sans perle ni portail.
 
         double dureeScene; bool animeDecor;           // décor de la scène « decor » : combien de temps il reste, s'il bouge
+        IntPtr decorSur; double decorDx, decorDy;     // la fenêtre qui le porte, et sa place par rapport à son coin
 
         bool ABaton { get { return place == 0 && R.O("baton"); } }
 
@@ -3370,6 +3397,9 @@ namespace MascotteStickman
         {
             Fenetre(ref decor).Peindre = peindre;
             decor.Poser(gauche, haut, largeur, hauteur, Topmost);
+            decorSur = IntPtr.Zero;                               // posé sur une fenêtre : on retient où, pour la suivre si elle bouge
+            Bord sous;
+            if (support != IntPtr.Zero && LireBord(support, out sous)) { decorSur = support; decorDx = gauche - sous.Gauche; decorDy = haut - sous.Haut; }
             Devant();
             scene = "decor"; tScene = 0; dureeScene = secondes; animeDecor = anime;
         }
@@ -3677,6 +3707,7 @@ namespace MascotteStickman
             RangerScene();
             string[] plan;
             if (!R.O("paysages") || !plansPaysages.TryGetValue(nom, out plan)) { Repos(); return; }
+            if (DescendreDAbord(() => Paysage(nom))) return;      // le paysage se bâtit au sol : il y descend d'abord
             Jouer(Biblio.PoseDevant, 1, () =>
             {
                 double c = 32 * s, l = plan[0].Length * c, h = plan.Length * c;
@@ -3783,6 +3814,7 @@ namespace MascotteStickman
         void Apesanteur()
         {
             RangerScene();
+            if (ancre.Y - SystemParameters.VirtualScreenTop < 270 * s && DescendreDAbord(Apesanteur)) return;
             Sons.Jouer("energie", "sonsPouvoirs");
             Dire("Plus de gravité !", 2.5);
             Jouer(Biblio.Levitation, 1, () => { Dire("Ouf, le sol.", 2); Repos(); });

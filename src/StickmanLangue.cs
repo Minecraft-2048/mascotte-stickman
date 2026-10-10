@@ -472,6 +472,16 @@ namespace MascotteStickman
             "Saute dans les flaques", "Jumps in puddles", "Suit un papillon des yeux", "Watches a butterfly", "Contemple l'horizon, assis", "Sits and gazes at the horizon",
             "S'abrite sous ses mains", "Shelters under his hands", "Sieste adossé", "Naps leaning back", "Lance des graines aux oiseaux", "Throws seeds to the birds",
             "Empile des cailloux", "Stacks pebbles",
+
+            // ---------------------------------------------------------------- quatorzième fournée
+            "Pas la place de grandir ici…", "No room to grow here…", "Pas la place de bâtir ici…", "No room to build here…",
+            "Petit chien", "Doggy paddle", "Lancer franc", "Free throw", "glissés", "slides",
+            "Pompier à la lance", "Firefighter with the hose", "Fait la circulation", "Directs the traffic", "Serveur pressé", "Waiter in a hurry", "Peint un tableau", "Paints a picture",
+            "Photographe à genoux", "Kneeling photographer", "Pétrit la pâte", "Kneads the dough", "Monte un mur de briques", "Builds a brick wall", "Goûte et approuve", "Tastes and approves",
+            "Taille une haie", "Trims a hedge", "Marche sur la Lune", "Walks on the Moon", "Marche avec des palmes", "Walks in flippers", "Détective à la loupe", "Detective with a magnifying glass",
+            "Pose de super-héros", "Superhero pose",
+            "Un cadeau", "A present", "Tiens, c'est pour toi !", "Here, it's for you!", "Pour moi ?", "For me?", "Merci !!", "Thank you!!",
+            "Un secret", "A secret", "Psst…", "Psst…", "Quoi ?", "What?", "Nooon ?!", "Nooo?!",
         };
     }
 }
