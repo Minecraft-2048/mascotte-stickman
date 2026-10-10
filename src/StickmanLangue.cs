@@ -444,6 +444,15 @@ namespace MascotteStickman
             "Sort un carton rouge", "Shows a red card", "Échauffe ses poignets", "Warms up his wrists",
             "Croque une pomme dorée enchantée", "Bites an enchanted golden apple", "Mange un poisson-globe (mauvaise idée)", "Eats a pufferfish (bad idea)", "Agite un os", "Waves a bone",
             "S'éclaire à la bougie", "Lights his way with a candle",
+
+            // ---------------------------------------------------------------- douzième fournée
+            "Vitres", "Window cleaning", "Cloche", "Bell ringing", "ruades", "back kicks",
+            "Écrit au tableau", "Writes on the board", "Efface le tableau", "Wipes the board", "Fait tourner son stylo", "Spins his pen",
+            "Assis sur un bloc, s'endort", "Sitting on a block, falling asleep", "Cartable trop lourd", "Schoolbag far too heavy", "File à la récré", "Dashes off to break",
+            "Manette en main", "Controller in hand", "Rage quit", "Rage quit", "Imite un singe", "Does a monkey impression", "Imite un flamant rose", "Does a flamingo impression",
+            "Marche du gorille", "Gorilla walk", "Bonds de kangourou", "Kangaroo hops", "Montre les étoiles, allongé", "Lies back and points at the stars",
+            "Fait des ricochets", "Skims stones", "Cueille un fruit", "Picks a fruit", "Souffle sur un pissenlit", "Blows on a dandelion", "Saut de précision", "Precision jump",
+            "Yoga : salutation au soleil", "Yoga: sun salutation", "Outré, les poings sur les hanches", "Outraged, fists on his hips", "Ricane dans sa main", "Sniggers into his hand",
         };
     }
 }
