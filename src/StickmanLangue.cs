@@ -453,6 +453,25 @@ namespace MascotteStickman
             "Marche du gorille", "Gorilla walk", "Bonds de kangourou", "Kangaroo hops", "Montre les étoiles, allongé", "Lies back and points at the stars",
             "Fait des ricochets", "Skims stones", "Cueille un fruit", "Picks a fruit", "Souffle sur un pissenlit", "Blows on a dandelion", "Saut de précision", "Precision jump",
             "Yoga : salutation au soleil", "Yoga: sun salutation", "Outré, les poings sur les hanches", "Outraged, fists on his hips", "Ricane dans sa main", "Sniggers into his hand",
+
+            // ---------------------------------------------------------------- treizième fournée : paysages, tours spéciaux
+            "Des paysages de blocs apparaissent (colline, mine, ferme, mare…)", "Block landscapes appear (hill, mine, farm, pond…)", "Paysages de blocs", "Block landscapes",
+            "Les paysages sont désactivés (clic droit pour les remettre)", "Landscapes are switched off (right-click to bring them back)",
+            "Paysage : colline fleurie", "Landscape: flowery hill", "Paysage : mine de diamants", "Landscape: diamond mine", "Paysage : ferme", "Landscape: farm",
+            "Paysage : portail en ruine", "Landscape: ruined portal", "Paysage : mare", "Landscape: pond",
+            "Un vieux portail…", "An old portal…", "Des diamants !", "Diamonds!", "Joli coin !", "Nice spot!",
+            "Il se dédouble : deux reflets dansent avec lui", "He splits in three: two reflections dance with him", "Il passe en arc-en-ciel un moment", "He turns rainbow for a while",
+            "Il devient presque invisible et se faufile", "He turns almost invisible and sneaks about", "Apesanteur : il flotte en l'air", "Zero gravity: he floats in the air",
+            "Il prend feu et court partout (pour rire)", "He catches fire and runs around (just for fun)",
+            "Se dédouble", "Splits in three", "Passe en arc-en-ciel", "Turns rainbow", "Devient presque invisible", "Turns almost invisible", "Apesanteur", "Zero gravity",
+            "Prend feu (pour rire)", "Catches fire (just for fun)", "On est trois !", "There are three of us!", "Toutes les couleurs !", "All the colours!",
+            "Vous ne me voyez plus…", "You can't see me now…", "Coucou !", "Peekaboo!", "Plus de gravité !", "No more gravity!", "Ouf, le sol.", "Phew, the ground.",
+            "Chaud ! Chaud ! Chaud !", "Hot! Hot! Hot!", "Ouf… éteint.", "Phew… it's out.",
+            "Tambourin", "Tambourine", "Bras en croix", "Arms spread", "sautillés", "skips",
+            "Lance un boomerang", "Throws a boomerang", "Remonte un gros poisson", "Reels in a big fish", "Plante son drapeau, conquérant", "Plants his flag, triumphant",
+            "Saute dans les flaques", "Jumps in puddles", "Suit un papillon des yeux", "Watches a butterfly", "Contemple l'horizon, assis", "Sits and gazes at the horizon",
+            "S'abrite sous ses mains", "Shelters under his hands", "Sieste adossé", "Naps leaning back", "Lance des graines aux oiseaux", "Throws seeds to the birds",
+            "Empile des cailloux", "Stacks pebbles",
         };
     }
 }

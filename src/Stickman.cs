@@ -29,8 +29,8 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("Mascotte Stickman")]
 [assembly: System.Reflection.AssemblyCompany("Minecraft-2048 (open source)")]
 [assembly: System.Reflection.AssemblyCopyright("MIT licence")]
-[assembly: System.Reflection.AssemblyVersion("1.7.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.7.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.8.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.8.0.0")]
 
 namespace MascotteStickman
 {
@@ -158,6 +158,7 @@ namespace MascotteStickman
             B(C, "baton", "Le premier stickman a le bâton de commande", true);
             B(C, "maison", "Ils ont une maison (elle apparaît près de chez eux)", true);
             B(C, "maisonToujours", "Leur maison reste toujours visible", false);
+            B(C, "paysages", "Des paysages de blocs apparaissent (colline, mine, ferme, mare…)", true);
             B(C, "correcteur", "CORRECTEUR : il corrige mes fautes d'orthographe (lit le texte près du curseur, jamais les mots de passe)", false);
             B(C, "ferme", "MODE FARCEUR : il ferme des fenêtres en appuyant sur leur croix", false);
             N(C, "fermeDelai", "Mode farceur : minutes entre deux fermetures", 5, 0.5, 120);
@@ -177,6 +178,11 @@ namespace MascotteStickman
             B(Sp, "special.youtube", "Il ouvre YouTube sur la chaîne d'Alan Becker (ouvre le navigateur)", false);
             B(Sp, "special.curseur", "Il attrape le curseur au lasso (la souris bouge vraiment)", false);
             B(Sp, "special.secousse", "Il secoue la fenêtre où il est perché (la fenêtre bouge vraiment)", false);
+            B(Sp, "special.clones", "Il se dédouble : deux reflets dansent avec lui", true);
+            B(Sp, "special.arc", "Il passe en arc-en-ciel un moment", true);
+            B(Sp, "special.invisible", "Il devient presque invisible et se faufile", true);
+            B(Sp, "special.apesanteur", "Apesanteur : il flotte en l'air", true);
+            B(Sp, "special.feu", "Il prend feu et court partout (pour rire)", true);
 
             const string Am = "Amis";
             Ch(Am, "nombre", "Nombre de stickmen", 0, "1", "2", "3", "4", "5", "6");
@@ -1473,6 +1479,7 @@ namespace MascotteStickman
                 minuteur.Stop();                                 // sinon il continuerait à vivre, invisible, et à aller voir les autres
                 Sortir();
                 if (place == 0 && maisonDecor != null) maisonDecor.Close();
+                if (place == 0 && paysageDecor != null) paysageDecor.Close();
                 if (decor != null) decor.Close();
                 if (volant != null) volant.Close();
                 Rompre();
@@ -1525,7 +1532,7 @@ namespace MascotteStickman
 
         Color CouleurDuMoment()
         {
-            if (!R.O("arcenciel")) return R.Couleur(CleCouleur);
+            if (!R.O("arcenciel") && temps >= finArc) return R.Couleur(CleCouleur);
             double h = (temps * R.D("arcVitesse") + place * 67) % 360 / 60, x = 1 - Math.Abs(h % 2 - 1);
             double r = h < 1 ? 1 : h < 2 ? x : h < 4 ? 0 : h < 5 ? x : 1, v = h < 1 ? x : h < 3 ? 1 : h < 4 ? x : 0, b = h < 2 ? 0 : h < 3 ? x : h < 5 ? 1 : x;
             return Color.FromRgb((byte)(255 * r), (byte)(255 * v), (byte)(255 * b));
@@ -1544,6 +1551,7 @@ namespace MascotteStickman
                 if (temps > prochaineCommande) { prochaineCommande = temps + 0.4; LireCommande(); }
                 if (Tous.Count != (int)R.D("nombre") + 1) AjusterNombre();
                 TenirMaison();
+                TenirPaysage();
             }
 
             switch (etat)
@@ -1555,6 +1563,7 @@ namespace MascotteStickman
             }
             Scene(dt);
             if (echelleVisee != 1 && temps > finEchelle) echelleVisee = 1;      // géant ou minuscule : jamais pour toujours
+            if (finInvisible > 0 && temps > finInvisible) { finInvisible = 0; if (voileVise > 0 && voileVise < 1) voileVise = 1; }      // invisible : pareil
             if (Geant && etat != Etat.Anime) { echelleFx = echelleVisee = 1; AppliquerUn(); }      // attrapé ou envoyé en l'air : il reprend sa taille d'un coup
             if (echelleFx != echelleVisee)
             {
@@ -1835,7 +1844,7 @@ namespace MascotteStickman
                 && (a.Special == null || !a.Special.StartsWith("cmd:") || ABaton)
                 && (a.Special == null || !a.Special.StartsWith("x:") || R.O("special." + a.Special.Substring(2)))
                 && (a.Special != "x:youtube" || temps > prochainYoutube)       // le navigateur : pas plus d'une fois par heure
-                && !SansMaison(a);
+                && !DecorCoupe(a);
             var possibles = new List<Anim>();
             double total = 0;
             var poids = new Dictionary<string, double>();
@@ -1907,7 +1916,7 @@ namespace MascotteStickman
                 case 3: a = Biblio.Trouver("Enchaînement de 3 coups"); break;
                 default:
                     // au hasard, mais jamais un tour spécial décoché ni une commande sans bâton
-                    List<Anim> libres = Biblio.Toutes.Where(x => !x.Deplace && !R.Coupees.Contains(x.Nom) && !SansMaison(x)
+                    List<Anim> libres = Biblio.Toutes.Where(x => !x.Deplace && !R.Coupees.Contains(x.Nom) && !DecorCoupe(x)
                         && (x.Special == null || (x.Special.StartsWith("x:") ? R.O("special." + x.Special.Substring(2)) : !x.Special.StartsWith("cmd:") || ABaton))).ToList();
                     a = libres.Count > 0 ? libres[hasard.Next(libres.Count)] : Biblio.Salut;
                     break;
@@ -2108,7 +2117,31 @@ namespace MascotteStickman
             }
             else if (trace.Count > 0) trace.Clear();
 
+            if (temps < finClones)                               // dédoublé : deux reflets pâles, de part et d'autre
+                foreach (double ecart in new[] { -92 * s, 92 * s })
+                {
+                    double d = ecart;
+                    Pen reflet = Dessin.Plume(Color.FromArgb(105, couleur.R, couleur.G, couleur.B), epaisseur);
+                    Dessin.Tracer(dc, o, p => { Point q = e(p); return new Point(q.X + d, q.Y); }, s, null, reflet, TeteCreuse(couleur) ? null : reflet.Brush);
+                }
             Dessin.Tracer(dc, o, e, s, contour, trait, TeteCreuse(couleur) ? null : trait.Brush);
+            if (temps < finFeu)                                  // en feu (pour rire) : trois flammes dansent sur sa tête
+            {
+                Point sommet = e(o.Tete);
+                double pied = sommet.Y - o.Rayon * s * 0.5;
+                for (int i = 0; i < 3; i++)
+                {
+                    double larg = (30 - i * 8) * s, haut = (40 - i * 9) * s * (0.8 + 0.2 * Math.Sin(temps * (9 + i * 4) + i)), cx = sommet.X + 3 * s * Math.Sin(temps * (6 + i * 3));
+                    var flamme = new StreamGeometry();
+                    using (StreamGeometryContext g = flamme.Open())
+                    {
+                        g.BeginFigure(new Point(cx - larg / 2, pied), true, true);
+                        g.QuadraticBezierTo(new Point(cx - larg * 0.1, pied - haut * 0.5), new Point(cx, pied - haut), true, true);
+                        g.QuadraticBezierTo(new Point(cx + larg * 0.1, pied - haut * 0.5), new Point(cx + larg / 2, pied), true, true);
+                    }
+                    dc.DrawGeometry(Blocs.Pinceau(i == 0 ? Color.FromRgb(0xF0, 0x6A, 0x10) : i == 1 ? Color.FromRgb(0xFF, 0xA8, 0x20) : Color.FromRgb(0xFF, 0xE6, 0x70)), null, flamme);
+                }
+            }
             if (objet != null) Dessin.Objet(dc, objet, o, e, s, phaseObjet, couleur, epaisseur);
 
             if (commande != null && temps < finCommande)
@@ -2271,6 +2304,10 @@ namespace MascotteStickman
             };
             menu.Opened += (o, e) => avecMaison.IsChecked = R.O("maison");
             menu.Items.Add(avecMaison);
+            var avecPaysages = new MenuItem { Header = "Paysages de blocs", IsCheckable = true };
+            avecPaysages.Click += (o, e) => R.Mettre("paysages", avecPaysages.IsChecked ? 1 : 0);
+            menu.Opened += (o, e) => avecPaysages.IsChecked = R.O("paysages");
+            menu.Items.Add(avecPaysages);
             var coin = new MenuItem { Header = "Revenir dans le coin" };
             coin.Click += (o, e) =>
             {
@@ -2670,6 +2707,11 @@ namespace MascotteStickman
         {
             if (Geant) { echelleFx = echelleVisee = 1; AppliquerUn(); }      // les scènes sont bâties à sa taille normale
             if (SansMaison(a)) { Dire("La maison est désactivée (clic droit pour la remettre)", 3.5); Repos(); return; }
+            if (a.Special.StartsWith("paysage:"))
+            {
+                if (R.O("paysages")) Paysage(a.Special.Substring(8)); else { Dire("Les paysages sont désactivés (clic droit pour les remettre)", 3.5); Repos(); }
+                return;
+            }
             switch (a.Special)
             {
                 case "tour": Batir(false); break;
@@ -2694,6 +2736,11 @@ namespace MascotteStickman
                 case "x:youtube": OuvrirYoutube(); break;
                 case "x:curseur": LassoCurseur(); break;
                 case "x:secousse": SecouerFenetre(); break;
+                case "x:clones": SeDedoubler(); break;
+                case "x:arc": ArcEnCiel(); break;
+                case "x:invisible": Invisible(); break;
+                case "x:apesanteur": Apesanteur(); break;
+                case "x:feu": PrendreFeu(); break;
                 default:
                     if (a.Special.StartsWith("cmd:")) Commande(a.Special.Substring(4));
                     break;
@@ -3598,6 +3645,166 @@ namespace MascotteStickman
             if (maisonDedans == 0) maisonDort = false;
             voileVise = 1;
             if (maisonDecor != null) maisonDecor.Redessiner();
+        }
+
+        // Ce qu'un réglage a coupé : la maison, ou les paysages de blocs.
+        static bool DecorCoupe(Anim a)
+        {
+            return SansMaison(a) || (a.Special != null && a.Special.StartsWith("paysage:") && !R.O("paysages"));
+        }
+
+        // ------------------------------------------------------------ paysages de blocs
+        // Un bout de paysage qui se bâtit bloc après bloc au pied de l'écran (colline, mine, ferme, portail en
+        // ruine, mare), reste quelques minutes puis s'en va. Un seul à la fois ; le réglage « paysages » les coupe.
+        // Légende des plans : H herbe, D terre, P pierre, R roche, d diamant, o or, T tronc, F feuilles, E eau,
+        // f foin, M pastèque, O obsidienne, X portail, t pierre taillée, c une fleur.
+
+        static readonly Dictionary<string, string[]> plansPaysages = new Dictionary<string, string[]>
+        {
+            { "colline", new[] { ".....FFF..", ".....FFF..", "..c...T...", ".HHH..T.c.", "HDDDHHHHHH" } },
+            { "mine", new[] { "...PPP...", "..PPdPP..", ".PPoPPPP.", "PPPPP..PP", "RPdPP..oP" } },
+            { "ferme", new[] { "....f....", ".M..ff.M.", "HHHHHHHHH" } },
+            { "ruines", new[] { ".OOO...", ".OXO...", ".OX.t..", ".O..tR.", "RtRRtRR" } },
+            { "mare", new[] { ".FFF.....", ".FFF.....", "..T.....c", "HHHEEEEHH" } },
+        };
+        static Decor paysageDecor;
+        static string[] paysagePlan;
+        static int paysageBlocs, paysageTotal;
+        static double paysageFin, paysageTic;
+
+        void Paysage(string nom)
+        {
+            RangerScene();
+            string[] plan;
+            if (!R.O("paysages") || !plansPaysages.TryGetValue(nom, out plan)) { Repos(); return; }
+            Jouer(Biblio.PoseDevant, 1, () =>
+            {
+                double c = 32 * s, l = plan[0].Length * c, h = plan.Length * c;
+                double gauche = SystemParameters.VirtualScreenLeft + 10, droite = SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 10 - l;
+                double x = Math.Max(gauche, Math.Min(droite, face > 0 ? ancre.X + 60 * s : ancre.X - 60 * s - l));
+                paysagePlan = plan; paysageBlocs = 0; paysageTotal = plan.Sum(ligne => ligne.Count(signe => signe != '.'));
+                if (paysageDecor == null) paysageDecor = new Decor();
+                paysageDecor.Peindre = PeindrePaysage;
+                paysageDecor.Poser(x, SystemParameters.WorkArea.Bottom - h, l, h, Topmost);
+                paysageFin = temps + 150;
+                paysageDecor.Redessiner();
+                Devant();
+                Sons.Jouer("pop", "sonsPouvoirs");
+                string suite = nom == "mine" ? "Mine avec une pioche" : nom == "ferme" ? "Sème des graines" : nom == "mare" ? "Lance sa ligne" : null;
+                Anim ensuite = suite == null ? null : Biblio.Trouver(suite);
+                Jouer(Biblio.PoseDevant, 3, () =>
+                {
+                    Dire(nom == "ruines" ? "Un vieux portail…" : nom == "mine" ? "Des diamants !" : "Joli coin !", 2.5);
+                    if (ensuite != null) Jouer(ensuite, Math.Max(1, ensuite.Tours)); else Jouer(Biblio.Admire, 2);
+                });
+            });
+        }
+
+        static void PeindrePaysage(DrawingContext dc, double l, double h)
+        {
+            if (paysagePlan == null) return;
+            int lignes = paysagePlan.Length, colonnes = paysagePlan[0].Length, pose = 0;
+            double cl = l / colonnes, ch = h / lignes;
+            for (int j = lignes - 1; j >= 0; j--)                // posé de bas en haut, comme la maison
+                for (int i = 0; i < colonnes; i++)
+                {
+                    char signe = paysagePlan[j][i];
+                    if (signe == '.' || pose++ >= paysageBlocs) continue;
+                    var r = new Rect(i * cl, j * ch, cl, ch);
+                    if (signe == 'c')
+                    {
+                        BitmapSource fleur = Textures.Lire(i % 2 == 0 ? "block/poppy" : "block/dandelion");
+                        if (fleur != null) dc.DrawImage(fleur, r);
+                        else
+                        {
+                            dc.DrawLine(Dessin.Plume(Color.FromRgb(0x4E, 0x8F, 0x30), cl * 0.09), new Point(r.X + cl / 2, r.Bottom), new Point(r.X + cl / 2, r.Y + ch * 0.45));
+                            dc.DrawEllipse(Blocs.Pinceau(i % 2 == 0 ? Color.FromRgb(0xE0, 0x30, 0x28) : Color.FromRgb(0xF8, 0xD8, 0x30)), null, new Point(r.X + cl / 2, r.Y + ch * 0.38), cl * 0.2, ch * 0.2);
+                        }
+                        continue;
+                    }
+                    int bloc = signe == 'H' ? Blocs.Herbe : signe == 'D' ? Blocs.Terre : signe == 'P' ? Blocs.Pierre : signe == 'R' ? Blocs.Roche : signe == 'd' ? Blocs.Diamant
+                        : signe == 'o' ? Blocs.Or : signe == 'T' ? Blocs.Tronc : signe == 'F' ? Blocs.Feuilles : signe == 'E' ? Blocs.Eau : signe == 'f' ? Blocs.Foin
+                        : signe == 'M' ? Blocs.Pasteque : signe == 'O' ? Blocs.Obsidienne : signe == 'X' ? Blocs.Portail : Blocs.PierreTaillee;
+                    Blocs.Dessiner(dc, r, bloc, Colors.White, i + j * colonnes);
+                }
+        }
+
+        // Tenue du paysage, une fois par image (par le premier stickman) : il se bâtit, puis s'en va.
+        void TenirPaysage()
+        {
+            if (paysageDecor == null || !paysageDecor.IsVisible) return;
+            if (!R.O("paysages") || temps > paysageFin) { paysageDecor.Cacher(); return; }
+            if (paysageBlocs < paysageTotal && temps > paysageTic)
+            {
+                paysageTic = temps + 0.06;
+                paysageBlocs++;
+                if (paysageBlocs % 5 == 0) Sons.Jouer("pop", "sonsPouvoirs");
+                paysageDecor.Redessiner();
+            }
+        }
+
+        // ------------------------------------------------------------ tours spéciaux qui se voient sur lui
+
+        double finClones, finFeu, finArc, finInvisible;
+
+        // Il se dédouble : deux reflets pâles dansent avec lui, puis s'évanouissent.
+        void SeDedoubler()
+        {
+            RangerScene();
+            finClones = temps + 6.5;
+            Sons.Jouer("energie", "sonsPouvoirs");
+            Dire("On est trois !", 2.5);
+            Jouer(Biblio.Danse, 7, () => { finClones = 0; Repos(); });
+        }
+
+        // Arc-en-ciel : il change de couleur en continu pendant quelques secondes.
+        void ArcEnCiel()
+        {
+            RangerScene();
+            finArc = temps + 9;
+            Sons.Jouer("tada", "sonsPouvoirs");
+            Dire("Toutes les couleurs !", 2.5);
+            Jouer(Biblio.Trouver("Saute de joie, bras en V") ?? Biblio.Danse, 3, () => Jouer(Biblio.Danse, 5));
+        }
+
+        // Presque invisible : il se faufile à pas de loup, puis réapparaît.
+        void Invisible()
+        {
+            RangerScene();
+            Dire("Vous ne me voyez plus…", 2);
+            voileVise = 0.16; finInvisible = temps + 12;
+            double gauche, droite;
+            Limites(out gauche, out droite);
+            double x = ancre.X + (ancre.X - gauche > droite - ancre.X ? -1 : 1) * 300 * s;
+            AllerVers(x, Biblio.Trouver("Pas de loup") ?? Biblio.Marche, () => { voileVise = 1; finInvisible = 0; Dire("Coucou !", 2); Jouer(Biblio.Salut, 3); });
+        }
+
+        // Apesanteur : il décolle, flotte un moment et se repose.
+        void Apesanteur()
+        {
+            RangerScene();
+            Sons.Jouer("energie", "sonsPouvoirs");
+            Dire("Plus de gravité !", 2.5);
+            Jouer(Biblio.Levitation, 1, () => { Dire("Ouf, le sol.", 2); Repos(); });
+        }
+
+        // Il prend feu (pour rire) : des flammes sur la tête, il court dans un sens puis dans l'autre, et ça s'éteint.
+        void PrendreFeu()
+        {
+            RangerScene();
+            finFeu = temps + 8;
+            Sons.Jouer("aie", "sonsPouvoirs");
+            Dire("Chaud ! Chaud ! Chaud !", 2.5);
+            double gauche, droite;
+            Limites(out gauche, out droite);
+            int sens = ancre.X - gauche > droite - ancre.X ? -1 : 1;
+            Anim panique = Biblio.Trouver("Fuite paniquée") ?? Biblio.Course;
+            AllerVers(ancre.X + sens * 420 * s, panique, () => AllerVers(ancre.X - sens * 300 * s, panique, () =>
+            {
+                finFeu = 0;
+                Dire("Ouf… éteint.", 2.5);
+                Jouer(Biblio.Trouver("Reprend son souffle") ?? Biblio.Repos[0], 2);
+            }));
         }
 
         // Feu de camp : il l'allume, s'assoit devant, se chauffe les mains.
