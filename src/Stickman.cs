@@ -22,6 +22,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
 
+// Ce que Windows affiche dans les propriétés du fichier : un exe sans nom, sans version et sans auteur inspire
+// moins confiance (aux gens comme aux antivirus). Ce n'est pas une signature : voir le README.
+[assembly: System.Reflection.AssemblyTitle("Mascotte Stickman")]
+[assembly: System.Reflection.AssemblyDescription("A stick figure that lives on your Windows desktop. Open source: github.com/Minecraft-2048/mascotte-stickman")]
+[assembly: System.Reflection.AssemblyProduct("Mascotte Stickman")]
+[assembly: System.Reflection.AssemblyCompany("Minecraft-2048 (open source)")]
+[assembly: System.Reflection.AssemblyCopyright("MIT licence")]
+[assembly: System.Reflection.AssemblyVersion("1.6.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.6.1.0")]
+
 namespace MascotteStickman
 {
     static class Programme

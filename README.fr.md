@@ -14,7 +14,7 @@ Un bonhomme-bâton qui vit sur le bureau de Windows : il se promène, saute sur 
 
 Télécharger `MascotteStickman.exe` dans les [Releases](../../releases) et le lancer. Windows 10 ou 11, rien d'autre à installer.
 
-L'exe n'est pas signé : Windows peut afficher « Windows a protégé votre ordinateur ». Cliquer sur *Informations complémentaires* puis *Exécuter quand même*.
+L'exe n'est pas signé (un certificat de signature est payant) : Windows peut afficher « Windows a protégé votre ordinateur ». Cliquer sur *Informations complémentaires* puis *Exécuter quand même*. Pour qui préfère ne pas faire confiance à un téléchargement : chaque release donne l'empreinte SHA-256 de son exe, tout le code est dans ce dépôt, et `construire.ps1` fabrique le même programme sur votre PC avec le compilateur livré avec Windows.
 
 ## Ce qu'il fait
 
@@ -54,6 +54,7 @@ C'est une version web (le dossier `docs/`) : une page où le stickman vit dans l
 - **La gravité suit l'appareil** : il se tient sur le bord de l'écran qui est en bas. Penche ou retourne l'appareil, il glisse, décroche et retombe du nouveau côté. Une bonne secousse l'envoie valser. (Sur iPhone et iPad, toucher *Inclinaison* pour autoriser le capteur.)
 - **Au doigt** : on l'attrape et on le lance, on le touche pour une animation au hasard, on touche ailleurs pour qu'il y aille.
 - **Boutons** : couleur, un stickman de plus ou de moins (jusqu'à six), et sur ordinateur un bouton pour tourner la gravité d'un quart de tour.
+- **Comme sur un écran d'accueil** : *Fond* affiche un faux écran d'accueil, et ils se tiennent au pied du dock, devant les icônes. *Mon écran* permet de choisir à la place une capture de son propre écran d'accueil (elle reste dans le navigateur). Une page web ne peut pas dessiner par-dessus le vrai écran d'accueil d'un téléphone : c'est ce qui s'en approche le plus.
 - Elle reprend les animations de la version Windows (exportées par `MascotteStickman.exe --web docs`), sans les scènes Minecraft, les accessoires, les sons ni les animations à deux.
 
 Pour l'essayer sur son PC : `python -m http.server --directory docs`, puis ouvrir `http://localhost:8000`.

@@ -16,7 +16,7 @@ A stick figure that lives on your Windows desktop. He walks around, jumps onto t
 
 Download `MascotteStickman.exe` from the [Releases](../../releases) and run it. Windows 10 or 11, nothing else to install.
 
-The exe is not signed, so Windows may show "Windows protected your PC". Click *More info*, then *Run anyway*.
+The exe is not signed (a code-signing certificate costs money), so Windows may show "Windows protected your PC". Click *More info*, then *Run anyway*. If you would rather not trust a download: each release lists the SHA-256 of its exe, the whole source is in this repository, and `construire.ps1` builds the same program on your own PC with the compiler that ships with Windows.
 
 The app is in English unless Windows is in French; you can force either language in *Settings → System*.
 
@@ -57,6 +57,7 @@ It is a web page (the `docs/` folder) where the stickman lives inside the screen
 - **Gravity follows the device**: he stands on whichever edge of the screen is down. Tilt or flip the device and he slides, loses his footing and falls to the new side. A good shake sends him flying. (On iPhone and iPad, tap *Tilt* first to allow the sensor.)
 - **Touch**: grab him and throw him, tap him for a random animation, tap elsewhere to send him there.
 - **Buttons**: colour, one more or one fewer stickman (up to six), and on a computer a button that turns gravity a quarter turn.
+- **Like a home screen**: *Wallpaper* shows a mock home screen, and they stand at the foot of its dock, in front of the icons. *My screen* lets you pick a screenshot of your own home screen instead (it stays in your browser). A web page cannot draw over the real home screen of a phone, so this is as close as it gets.
 - It reuses the animations of the Windows version (exported by `MascotteStickman.exe --web docs`), without the Minecraft scenes, the props, the sounds or the two-player animations.
 
 To try it on your own PC: `python -m http.server --directory docs`, then open `http://localhost:8000`.
