@@ -483,6 +483,19 @@ namespace MascotteStickman
             "Un cadeau", "A present", "Tiens, c'est pour toi !", "Here, it's for you!", "Pour moi ?", "For me?", "Merci !!", "Thank you!!",
             "Un secret", "A secret", "Psst…", "Psst…", "Quoi ?", "What?", "Nooon ?!", "Nooo?!",
 
+            // ---------------------------------------------------------------- seizième fournée : sports d'équipe, orchestre, personnages, petites bêtes
+            "Essai de rugby", "Rugby try", "Mêlée de rugby", "Rugby scrum", "Tir de hockey", "Hockey shot", "Sumo : frappe le sol", "Sumo: stomps the ground",
+            "Prise de judo", "Judo throw", "Tacle glissé", "Sliding tackle", "Vampire drapé dans sa cape", "Vampire wrapped in his cape", "Chevalier en armure", "Knight in armour",
+            "Chercheur de trésor, pelle sur l'épaule", "Treasure hunter, shovel on his shoulder", "Compte son trésor", "Counts his treasure", "Lance un sort", "Casts a spell",
+            "Chasse un moustique", "Swats a mosquito", "Poursuivi par une abeille", "Chased by a bee", "Voit une araignée", "Spots a spider",
+            "Pellette la neige", "Shovels snow", "Ratisse les feuilles", "Rakes the leaves", "Bain de soleil", "Sunbathing", "Arrose le gazon au jet", "Hoses the lawn",
+            "Gonfle un ballon", "Blows up a balloon", "Joue de la harpe", "Plays the harp", "Joue du saxophone", "Plays the saxophone", "Joue des cymbales", "Plays the cymbals",
+            "Joue du xylophone", "Plays the xylophone", "Joue de la contrebasse", "Plays the double bass", "Joue du triangle", "Plays the triangle",
+            "Allume un pétard", "Lights a firecracker", "Fouette des œufs", "Whisks eggs", "Ronfle debout", "Snores standing up", "Ola en solo", "Solo wave",
+            "Marionnette", "Puppet", "écarts", "jumping jacks",
+            "Selfie à deux", "Selfie for two", "Selfie !", "Selfie!", "Cheese !", "Cheese!", "Elle est bien !", "That's a good one!",
+            "Le miroir", "The mirror", "Fais comme moi !", "Do as I do!", "Comme ça ?", "Like this?", "Parfait !", "Perfect!",
+            "Bataille de pouces", "Thumb war", "Bataille de pouces !", "Thumb war!", "Je vais gagner !", "I'm going to win!", "Revanche !", "Rematch!",
             // ---------------------------------------------------------------- quinzième fournée : parole, pubs
             "L'orange écrit des messages à l'écran, du bout du doigt", "The orange one writes messages on the screen with his fingertip",
             "Seul l'orange sait écrire à l'écran.", "Only the orange one can write on the screen.", "L'orange est occupé…", "The orange one is busy…",

@@ -29,8 +29,8 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("Mascotte Stickman")]
 [assembly: System.Reflection.AssemblyCompany("Minecraft-2048 (open source)")]
 [assembly: System.Reflection.AssemblyCopyright("MIT licence")]
-[assembly: System.Reflection.AssemblyVersion("1.9.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.9.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.10.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.10.0.0")]
 
 namespace MascotteStickman
 {
@@ -52,7 +52,7 @@ namespace MascotteStickman
             Biblio.Construire();
             R.Familles();
             if (args.Contains("--anglais")) Langue.Force = true;
-            // MascotteStickman.exe --planches dossier [filtre] : planches de contrôle des animations, en PNG
+            // MascotteStickman.exe --planches dossier [filtre] : planches de contrôle des animations, en PNG (filtre : un mot, ou plusieurs séparés par |)
             if (args.Length >= 2 && args[0] == "--planches")
             {
                 Planches.Ecrire(args[1], args.Length > 2 ? args[2] : "");
@@ -1143,7 +1143,8 @@ namespace MascotteStickman
         {
             Directory.CreateDirectory(dossier);
             if (filtre == "duos") { EcrireDuos(dossier); return; }
-            List<Anim> liste = Biblio.Toutes.Where(a => filtre == "" || (a.Famille + " " + a.Nom).IndexOf(filtre, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+            string[] mots = filtre.Split('|');      // plusieurs mots séparés par | : toutes les animations qui contiennent l'un d'eux
+            List<Anim> liste = Biblio.Toutes.Where(a => filtre == "" || mots.Any(m => (a.Famille + " " + a.Nom).IndexOf(m, StringComparison.OrdinalIgnoreCase) >= 0)).ToList();
             const int parPage = 12, images = 8;
             const double cl = 100, ch = 108, marge = 190, echelle = 0.55;
             Pen plume = Dessin.Plume(Color.FromRgb(0xFF, 0x8A, 0x1A), 3.5);

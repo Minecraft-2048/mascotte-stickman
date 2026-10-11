@@ -24,10 +24,10 @@ The app is in English unless Windows is in French; you can force either language
 
 - **Right-click** him for the menu: colour, animations sorted by family, friends, settings, mute, start with Windows, quit.
 - **Colour and head**: 16 colours or any colour you like. The head is a solid disc, except for orange, black and dark red where it is a ring; a setting forces one or the other.
-- **2,001 animations**: moving around, dances (58 arm moves × 17 leg moves, plus waltz, can-can, sirtaki, haka…), gestures, fighting (with two- and three-hit combos), acrobatics (flips and cartwheels chained together, some in slow motion), sport, everyday life, emotions, and a few that only make sense on the edge of a window (sitting with his legs dangling, fishing). About forty props drawn by the program: sword, hammer, guitar, umbrella, broom…
+- **2,140 animations**: moving around, dances (60 arm moves × 18 leg moves, plus waltz, can-can, sirtaki, haka…), gestures, fighting (with two- and three-hit combos), acrobatics (flips and cartwheels chained together, some in slow motion), sport, everyday life, emotions, and a few that only make sense on the edge of a window (sitting with his legs dangling, fishing). About forty props drawn by the program: sword, hammer, guitar, umbrella, broom…
 - **Mouse**: grab him, swing him, throw him. He fights the cursor when it comes close, and a fast cursor knocks him over.
 - **Windows**: he jumps onto the top of your windows (plain jump, somersault or hero landing), travels with them, and falls when they close.
-- **Friends**: up to six stickmen at once (right-click → *Friends* → *Add a stickman*), each with his own colour. They go and see each other on their own, even from one window to another: hello, fist bump, high five, handshake, hug, rock paper scissors, friendly duel, cheers, foot tap, the wave, a push-up contest, the "too slow!" high five, dancing together… They also applaud each other, play patty-cake, have a pushing contest, quarrel and make up, hand over a present, whisper a secret. Twenty-five two-player animations.
+- **Friends**: up to six stickmen at once (right-click → *Friends* → *Add a stickman*), each with his own colour. They go and see each other on their own, even from one window to another: hello, fist bump, high five, handshake, hug, rock paper scissors, friendly duel, cheers, foot tap, the wave, a push-up contest, the "too slow!" high five, dancing together… They also applaud each other, play patty-cake, have a pushing contest, quarrel and make up, hand over a present, whisper a secret, take a selfie together, copy each other like a mirror, have a thumb war. Twenty-eight two-player animations.
 
 ![The two-player animations](apercus/duos.png)
 
@@ -75,7 +75,7 @@ MascotteStickman.exe --jouer "@duo Check"
 MascotteStickman.exe --planches folder
 ```
 
-`--jouer` talks to the stickman that is already running: an animation name (the internal names are French in both languages), or a command (`@amis N`, `@duo name`, `@musique`, `@fenetre`, `@reglages`, `@couleur RRGGBB`). `--planches` writes contact sheets: every animation in eight frames (`--planches folder duos` for the two-player ones). `--noms file` lists every name with its English translation.
+`--jouer` talks to the stickman that is already running: an animation name (the internal names are French in both languages), or a command (`@amis N`, `@duo name`, `@musique`, `@fenetre`, `@reglages`, `@couleur RRGGBB`). `--planches` writes contact sheets: every animation in eight frames (`--planches folder duos` for the two-player ones, `--planches folder "rugby|harp"` for the names containing one of these words). `--noms file` lists every name with its English translation. `--paroles file` writes sample sentences of the orange one, to proofread them.
 
 His settings live in `%LOCALAPPDATA%\MascotteStickman`.
 

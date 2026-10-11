@@ -20,10 +20,10 @@ L'exe n'est pas signé (un certificat de signature est payant) : Windows peut af
 
 - **Clic droit** : couleur, animations rangées par famille, amis, paramètres, mode muet, lancement au démarrage de Windows, quitter.
 - **Couleur et tête** : 16 teintes ou n'importe quelle couleur. La tête est un disque plein, sauf pour l'orange, le noir et le rouge sombre où c'est un anneau ; un réglage force l'un ou l'autre.
-- **2 001 animations** : déplacements, danses (58 mouvements de bras × 17 de jambes, et aussi valse, french cancan, sirtaki, haka…), gestes, combat (avec des enchaînements de deux et trois coups), acrobaties (saltos et roues enchaînés, certains au ralenti), sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
+- **2 140 animations** : déplacements, danses (60 mouvements de bras × 18 de jambes, et aussi valse, french cancan, sirtaki, haka…), gestes, combat (avec des enchaînements de deux et trois coups), acrobaties (saltos et roues enchaînés, certains au ralenti), sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
 - **Souris** : on l'attrape, on le balance, on le lance ; il se bat contre le curseur s'il s'approche, et un curseur trop rapide l'envoie valser.
 - **Fenêtres** : il saute sur le haut des fenêtres (saut simple, salto ou atterrissage de héros), voyage avec elles, et retombe si elles se ferment.
-- **Amis** : jusqu'à six stickmen à la fois (clic droit → *Amis* → *Ajouter un stickman*), chacun de sa couleur. Ils vont se voir d'eux-mêmes, même perchés sur des fenêtres différentes : bonjour, check, tope-là, poignée de main, check complet, câlin, pierre-feuille-ciseaux, duel amical, tchin, check du pied, ola, concours de pompes, le tope-là « trop lent ! », danse à deux… Ils s'applaudissent aussi, jouent à tape-mains, font un bras de fer, se disputent et se réconcilient, s'offrent un cadeau, se chuchotent un secret. Vingt-cinq animations à deux.
+- **Amis** : jusqu'à six stickmen à la fois (clic droit → *Amis* → *Ajouter un stickman*), chacun de sa couleur. Ils vont se voir d'eux-mêmes, même perchés sur des fenêtres différentes : bonjour, check, tope-là, poignée de main, check complet, câlin, pierre-feuille-ciseaux, duel amical, tchin, check du pied, ola, concours de pompes, le tope-là « trop lent ! », danse à deux… Ils s'applaudissent aussi, jouent à tape-mains, font un bras de fer, se disputent et se réconcilient, s'offrent un cadeau, se chuchotent un secret, prennent un selfie à deux, jouent au miroir, font une bataille de pouces. Vingt-huit animations à deux.
 
 ![Les animations à deux](apercus/duos.png)
 
@@ -72,7 +72,7 @@ MascotteStickman.exe --jouer "@duo Check"
 MascotteStickman.exe --planches dossier
 ```
 
-`--jouer` s'adresse au stickman déjà lancé : un nom d'animation, ou une commande (`@amis N`, `@duo nom`, `@musique`, `@fenetre`, `@reglages`, `@couleur RRVVBB`). `--planches` écrit des planches de contrôle : chaque animation en huit images (`--planches dossier duos` pour les animations à deux).
+`--jouer` s'adresse au stickman déjà lancé : un nom d'animation, ou une commande (`@amis N`, `@duo nom`, `@musique`, `@fenetre`, `@reglages`, `@couleur RRVVBB`). `--planches` écrit des planches de contrôle : chaque animation en huit images (`--planches dossier duos` pour les animations à deux, `--planches dossier "rugby|harpe"` pour les noms qui contiennent l'un de ces mots). `--paroles fichier` écrit des phrases de l'orange, pour les relire.
 
 Ses réglages sont dans `%LOCALAPPDATA%\MascotteStickman`.
 
