@@ -482,6 +482,24 @@ namespace MascotteStickman
             "Pose de super-héros", "Superhero pose",
             "Un cadeau", "A present", "Tiens, c'est pour toi !", "Here, it's for you!", "Pour moi ?", "For me?", "Merci !!", "Thank you!!",
             "Un secret", "A secret", "Psst…", "Psst…", "Quoi ?", "What?", "Nooon ?!", "Nooo?!",
+
+            // ---------------------------------------------------------------- quinzième fournée : parole, pubs
+            "L'orange écrit des messages à l'écran, du bout du doigt", "The orange one writes messages on the screen with his fingertip",
+            "Seul l'orange sait écrire à l'écran.", "Only the orange one can write on the screen.", "L'orange est occupé…", "The orange one is busy…",
+            "C'est l'orange qui écrit !", "The orange one does the writing!", "Pub passée, là-bas derrière !", "Ad skipped, back there!",
+            "Écrit du doigt", "Writes with his finger", "Cherche ses mots", "Looks for his words",
+            "Ses messages viennent de", "His messages come from", "phrases du programme (aucun réseau)", "built-in sentences (no network)",
+            "Claude (clé d'API Anthropic)", "Claude (Anthropic API key)", "Ollama (modèle sur ce PC)", "Ollama (a model on this PC)",
+            "Mon modèle ne répond pas : ", "My model is not answering: ", "Écrit un message à l'écran", "Writes a message on the screen",
+            "PUBS : ils appuient sur « Ignorer l'annonce » de YouTube dès qu'il apparaît (lit les boutons de la page YouTube)", "ADS: they press YouTube's \"Skip Ad\" as soon as it shows up (reads the buttons of the YouTube page)",
+            "Passer les pubs de YouTube", "Skip YouTube ads", "Dès que « Ignorer l'annonce » apparaît, j'appuie !", "As soon as \"Skip Ad\" shows up, I press it!",
+            "D'accord, je te laisse les pubs.", "All right, the ads are all yours.", "Une pub ? J'y vais !", "An ad? On my way!", "Hop, pub passée !", "There, ad skipped!",
+            "Coucou-caché", "Peekaboo", "Semeur", "Sower", "marche", "marching",
+            "Nettoie l'écran de l'intérieur", "Cleans the screen from the inside", "Toque à l'écran", "Knocks on the screen", "Range ses icônes", "Tidies his icons",
+            "Attend que ça charge", "Waits for it to load", "Écran bleu : panique", "Blue screen: panic", "Fait défiler la page", "Scrolls the page", "Copier-coller", "Copy and paste",
+            "Dirige une chorale", "Conducts a choir", "Beatbox", "Beatbox", "Assis sur un bloc, joue de la batterie", "Sitting on a block, playing the drums", "Casse une planche", "Breaks a board",
+            "Joue à la marelle", "Plays hopscotch", "Compte pour cache-cache", "Counts for hide and seek", "Joue aux billes", "Plays marbles",
+            "Fait voler un cerf-volant", "Flies a kite", "Souffle des bulles", "Blows bubbles",
         };
     }
 }

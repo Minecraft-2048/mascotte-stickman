@@ -29,8 +29,8 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("Mascotte Stickman")]
 [assembly: System.Reflection.AssemblyCompany("Minecraft-2048 (open source)")]
 [assembly: System.Reflection.AssemblyCopyright("MIT licence")]
-[assembly: System.Reflection.AssemblyVersion("1.8.1.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.8.1.0")]
+[assembly: System.Reflection.AssemblyVersion("1.9.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.9.0.0")]
 
 namespace MascotteStickman
 {
@@ -65,6 +65,8 @@ namespace MascotteStickman
             if (args.Length >= 2 && args[0] == "--noms") { Planches.EcrireNoms(args[1]); return 0; }
             // MascotteStickman.exe --film dossier : les images d'une courte vidéo de démonstration (à assembler avec ffmpeg)
             if (args.Length >= 2 && args[0] == "--film") { Film.Ecrire(args[1]); return 0; }
+            // MascotteStickman.exe --paroles fichier : des phrases comme l'orange en écrit, dans les deux langues, pour les relire
+            if (args.Length >= 2 && args[0] == "--paroles") { Paroles.Essai(args[1], 400); return 0; }
 
             bool premiere;
             using (new Mutex(true, "MascotteStickman-Instance", out premiere))
@@ -159,6 +161,7 @@ namespace MascotteStickman
             B(C, "maison", "Ils ont une maison (elle apparaît près de chez eux)", true);
             B(C, "maisonToujours", "Leur maison reste toujours visible", false);
             B(C, "paysages", "Des paysages de blocs apparaissent (colline, mine, ferme, mare…)", true);
+            B(C, "pubs", "PUBS : ils appuient sur « Ignorer l'annonce » de YouTube dès qu'il apparaît (lit les boutons de la page YouTube)", false);
             B(C, "correcteur", "CORRECTEUR : il corrige mes fautes d'orthographe (lit le texte près du curseur, jamais les mots de passe)", false);
             B(C, "ferme", "MODE FARCEUR : il ferme des fenêtres en appuyant sur leur croix", false);
             N(C, "fermeDelai", "Mode farceur : minutes entre deux fermetures", 5, 0.5, 120);
@@ -183,6 +186,8 @@ namespace MascotteStickman
             B(Sp, "special.invisible", "Il devient presque invisible et se faufile", true);
             B(Sp, "special.apesanteur", "Apesanteur : il flotte en l'air", true);
             B(Sp, "special.feu", "Il prend feu et court partout (pour rire)", true);
+            B(Sp, "special.parole", "L'orange écrit des messages à l'écran, du bout du doigt", true);
+            Ch(Sp, "parleur", "Ses messages viennent de", 0, "phrases du programme (aucun réseau)", "Claude (clé d'API Anthropic)", "Ollama (modèle sur ce PC)");
 
             const string Am = "Amis";
             Ch(Am, "nombre", "Nombre de stickmen", 0, "1", "2", "3", "4", "5", "6");
@@ -1469,7 +1474,9 @@ namespace MascotteStickman
                 AjusterNombre();
                 Correcteur.Trouvee = f => Dispatcher.BeginInvoke(new Action(() => FauteTrouvee(f)));
                 Correcteur.Appliquee = (f, reussi) => Dispatcher.BeginInvoke(new Action(() => FauteCorrigee(f, reussi)));
+            Pubs.Trouve = bouton => Dispatcher.BeginInvoke(new Action(() => PubTrouvee(bouton)));
                 Correcteur.Regler(R.O("correcteur"));
+            Pubs.Regler(R.O("pubs"));
                 oreille = new Oreille(
                     (active, duree) => Dispatcher.BeginInvoke(new Action(() => MusiqueChange(active, duree))),
                     fort => Dispatcher.BeginInvoke(new Action(() => DemiTemps(fort)))) { Active = R.O("musique") };
@@ -1502,6 +1509,7 @@ namespace MascotteStickman
             foreach (Bonhomme b in Tous) b.AppliquerUn();
             if (oreille != null) oreille.Active = R.O("musique");
             Correcteur.Regler(R.O("correcteur"));
+            Pubs.Regler(R.O("pubs"));
         }
 
         void AppliquerUn()
@@ -1564,6 +1572,11 @@ namespace MascotteStickman
             Scene(dt);
             if (echelleVisee != 1 && temps > finEchelle) echelleVisee = 1;      // géant ou minuscule : jamais pour toujours
             if (finInvisible > 0 && temps > finInvisible) { finInvisible = 0; if (voileVise > 0 && voileVise < 1) voileVise = 1; }      // invisible : pareil
+            if (!bonjourFait && temps > lancement + 6 && EstOrange && Libre && scene == null)      // au lancement, l'orange écrit bonjour
+            {
+                bonjourFait = true;
+                if (R.O("special.parole")) Parler(true);
+            }
             if (Geant && etat != Etat.Anime) { echelleFx = echelleVisee = 1; AppliquerUn(); }      // attrapé ou envoyé en l'air : il reprend sa taille d'un coup
             if (echelleFx != echelleVisee)
             {
@@ -1659,6 +1672,7 @@ namespace MascotteStickman
             if (scene == "portail" || scene == "eau" || scene == "perle") RangerScene();
             Renoncer();
             Sortir();
+            if (a.Special != "x:parole") dernierFait = a.Nom;      // il s'en souviendra pour en parler
             if (a.Special != null) { Speciale(a); return; }
             if (a.SurFenetre && support == IntPtr.Zero)          // jambes dans le vide : il lui faut un rebord
             {
@@ -1844,7 +1858,8 @@ namespace MascotteStickman
                 && (a.Special == null || !a.Special.StartsWith("cmd:") || ABaton)
                 && (a.Special == null || !a.Special.StartsWith("x:") || R.O("special." + a.Special.Substring(2)))
                 && (a.Special != "x:youtube" || temps > prochainYoutube)       // le navigateur : pas plus d'une fois par heure
-                && !DecorCoupe(a);
+                && !DecorCoupe(a)
+                && (a.Special != "x:parole" || EstOrange);      // seul l'orange écrit à l'écran
             var possibles = new List<Anim>();
             double total = 0;
             var poids = new Dictionary<string, double>();
@@ -1868,7 +1883,7 @@ namespace MascotteStickman
             }
             foreach (Anim a in Biblio.Toutes) if (a.Famille == choisie && permise(a)) possibles.Add(a);
             Anim suivante = possibles[hasard.Next(possibles.Count)];
-            if (suivante.Haut) { Jouer(suivante, suivante.Tours); prochaineAction = temps + suivante.Duree * suivante.Tours + R.D("activite") * (0.5 + hasard.NextDouble()); return; }
+            if (suivante.Haut) { dernierFait = suivante.Nom; Jouer(suivante, suivante.Tours); prochaineAction = temps + suivante.Duree * suivante.Tours + R.D("activite") * (0.5 + hasard.NextDouble()); return; }
             JouerDemande(suivante);
             // un geste en marchant, de temps en temps
             if (suivante.Deplace && hasard.NextDouble() * 100 < R.D("enchaine"))
@@ -2304,6 +2319,15 @@ namespace MascotteStickman
             };
             menu.Opened += (o, e) => avecMaison.IsChecked = R.O("maison");
             menu.Items.Add(avecMaison);
+            var passePubs = new MenuItem { Header = "Passer les pubs de YouTube", IsCheckable = true };
+            passePubs.Click += (o, e) =>
+            {
+                R.Mettre("pubs", passePubs.IsChecked ? 1 : 0);
+                Appliquer();
+                Dire(passePubs.IsChecked ? "Dès que « Ignorer l'annonce » apparaît, j'appuie !" : "D'accord, je te laisse les pubs.", 3.5);
+            };
+            menu.Opened += (o, e) => passePubs.IsChecked = R.O("pubs");
+            menu.Items.Add(passePubs);
             var avecPaysages = new MenuItem { Header = "Paysages de blocs", IsCheckable = true };
             avecPaysages.Click += (o, e) => R.Mettre("paysages", avecPaysages.IsChecked ? 1 : 0);
             menu.Opened += (o, e) => avecPaysages.IsChecked = R.O("paysages");
@@ -2741,6 +2765,7 @@ namespace MascotteStickman
                 case "x:invisible": Invisible(); break;
                 case "x:apesanteur": Apesanteur(); break;
                 case "x:feu": PrendreFeu(); break;
+                case "x:parole": DemanderDEcrire(); break;
                 default:
                     if (a.Special.StartsWith("cmd:")) Commande(a.Special.Substring(4));
                     break;
@@ -4083,6 +4108,160 @@ namespace MascotteStickman
             if (reussi) Sons.Jouer("tada", "sonsAnimations");
             b.styleSaut = 0;
             b.Lancer(new Vector(0, 0), true, 0);                 // mission accomplie : il se laisse retomber
+        }
+
+        // ------------------------------------------------------------ passer les pubs
+        // Le guetteur (StickmanPubs.cs) a vu le bouton « Ignorer l'annonce » de YouTube : un stickman libre vole
+        // jusqu'à lui et appuie. Si personne n'est libre, ou s'il est dérangé en route, le bouton est pressé quand même.
+
+        static void PubTrouvee(Rect zone)
+        {
+            Bonhomme libre = R.O("pubs") ? Tous.FirstOrDefault(b => b.Libre && b.scene == null && !b.Geant) : null;
+            if (libre == null) Pubs.Presser();
+            else if (zone.IsEmpty) { Pubs.Presser(); libre.Dire("Pub passée, là-bas derrière !", 3); }      // YouTube est caché par une autre fenêtre : pas de voyage
+            else libre.AllerAppuyer(zone);
+        }
+
+        void AllerAppuyer(Rect zone)
+        {
+            PresentationSource source = PresentationSource.FromVisual(this);
+            Matrix m = source != null ? source.CompositionTarget.TransformFromDevice : Matrix.Identity;
+            var bouton = new Rect(m.Transform(zone.TopLeft), m.Transform(zone.BottomRight));
+            int cote = bouton.Left - 70 * s > SystemParameters.VirtualScreenLeft ? 1 : -1;
+            var poste = new Point(cote > 0 ? bouton.Left - 42 * s : bouton.Right + 42 * s, Math.Min(SystemParameters.WorkArea.Bottom, bouton.Top + bouton.Height / 2 + 84 * s));
+            Rompre();
+            RangerScene();
+            Devant();                                            // par-dessus la vidéo
+            Dire("Une pub ? J'y vais !", 2);
+            face = poste.X >= ancre.X ? 1 : -1;
+            Jouer(Biblio.Elan, 1, () =>
+            {
+                double d = Math.Abs(poste.X - ancre.X);
+                double haut = Math.Max(40 * s, Math.Min(140 * s, Math.Min(ancre.Y, poste.Y) - SystemParameters.VirtualScreenTop - 170 * s));
+                double sommet = Math.Min(ancre.Y, poste.Y) - haut;
+                e0 = ancre; e3 = poste;
+                e1 = new Point(e0.X + (e3.X - e0.X) * 0.2, sommet - haut * 0.3);
+                e2 = new Point(e0.X + (e3.X - e0.X) * 0.75, sommet);
+                dureePlane = Math.Max(0.6, Math.Min(1.6, (d + haut) / (900 * s)));      // il se dépêche : la pub n'attend pas
+                tPlane = 0;
+                cibleElytres = IntPtr.Zero;
+                finVol = () =>
+                {
+                    face = cote;
+                    Jouer(Biblio.Presse, 1, () =>
+                    {
+                        Sons.Jouer("pop", "sonsAnimations");
+                        Pubs.Presser();
+                        Dire("Hop, pub passée !", 2.5);
+                        styleSaut = 0;
+                        Lancer(new Vector(0, 0), true, 0);       // mission accomplie : il se laisse retomber
+                    });
+                };
+                etat = Etat.Plane;
+                support = IntPtr.Zero;
+                geste = null; enRepos = false;
+                Sons.Jouer("grandsaut", "sonsSauts");
+                Fondre();
+            });
+        }
+
+        // ------------------------------------------------------------ la parole
+        // L'orange écrit à l'écran du bout du doigt, lettre après lettre et en orange. Lui seul : c'est une affaire
+        // de couleur, pas de place dans la bande. Chaque phrase est nouvelle et parle de ce qu'il vit (ce qu'il
+        // vient de faire, l'heure, ses amis…) : composée par le programme, ou par un modèle de langage si le
+        // réglage « parleur » en désigne un (voir StickmanParoles.cs).
+
+        static bool bonjourFait;
+        readonly double lancement = chrono.Elapsed.TotalSeconds;
+        static string avisDonne;                      // la dernière panne du modèle déjà signalée, pour ne pas la répéter
+        string dernierFait;                           // le nom de sa dernière animation
+        int demandeParole;                            // pour reconnaître la réponse du modèle qu'il attend encore
+
+        bool EstOrange
+        {
+            get
+            {
+                Color c = R.Couleur(CleCouleur);
+                double fort = Math.Max(c.R, Math.Max(c.G, c.B)), faible = Math.Min(c.R, Math.Min(c.G, c.B));
+                if (c.R < fort || fort < 140 || fort - faible < 0.45 * fort) return false;      // ni sombre, ni terne, et dans les rouges
+                double teinte = 60.0 * (c.G - c.B) / (fort - faible);
+                return teinte >= 10 && teinte <= 40;                                              // entre le rouge et le jaune d'or
+            }
+        }
+
+        // Demandé à un autre que lui, c'est quand même l'orange qui écrit (s'il y en a un, et s'il est libre).
+        void DemanderDEcrire()
+        {
+            if (EstOrange) { Parler(false); return; }
+            Bonhomme orange = Tous.FirstOrDefault(b => b.EstOrange);
+            if (orange == null) Dire("Seul l'orange sait écrire à l'écran.", 3.5);
+            else if (!orange.Libre || orange.scene != null) Dire("L'orange est occupé…", 2.5);
+            else { Dire("C'est l'orange qui écrit !", 2.5); orange.Rompre(); orange.Sortir(); orange.Parler(false); }
+            Repos();
+        }
+
+        Paroles.Contexte Situation(bool arrivee)
+        {
+            string fait = dernierFait;
+            dernierFait = null;                       // il n'en reparlera pas la prochaine fois
+            if (fait != null && fait.Length > 36 && fait.IndexOf(" + ") > 0) fait = fait.Substring(0, fait.IndexOf(" + "));      // d'un enchaînement, le premier geste
+            if (fait != null && fait.Length > 44) fait = null;
+            return new Paroles.Contexte
+            {
+                Animation = fait, Amis = Tous.Count - 1, Fenetres = Bords().Count, Animations = Biblio.Toutes.Count,
+                Musique = musique, Perche = support != IntPtr.Zero, Arrivee = arrivee,
+            };
+        }
+
+        void Parler(bool arrivee)
+        {
+            RangerScene();
+            if (ancre.Y - SystemParameters.VirtualScreenTop < 330 * s && DescendreDAbord(() => Parler(arrivee))) return;      // il lui faut de la place au-dessus
+            Paroles.Contexte c = Situation(arrivee);
+            if (!Paroles.AvecModele) { Ecrire(Paroles.Composee(c)); return; }
+            // un modèle compose la phrase : il cherche ses mots le temps que la réponse arrive, une douzaine de secondes au plus
+            int demande = ++demandeParole;
+            Jouer(Biblio.Cherche, 8, () => { if (demande == demandeParole) { demandeParole++; Ecrire(Paroles.Composee(c)); } });
+            Paroles.Demander(c, p => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (demande != demandeParole) return;                                  // trop tard : il a déjà écrit autre chose
+                demandeParole++;
+                if (etat != Etat.Anime || courante != Biblio.Cherche) return;          // dérangé entre-temps (attrapé, autre animation demandée)
+                Ecrire(p ?? Paroles.Composee(c));
+                // le modèle n'a pas répondu : il le dit une fois, pour qu'on sache pourquoi
+                string panne = Paroles.DerniereErreur;
+                if (p == null && panne != null && panne != avisDonne) { avisDonne = panne; Dire(Langue.T("Mon modèle ne répond pas : ") + panne, 5); }
+            })));
+        }
+
+        void Ecrire(string texte)
+        {
+            Paroles.Retenir(texte);
+            Color couleur = R.Couleur(CleCouleur);                 // sa couleur à lui, de l'orange, même s'il clignote en arc-en-ciel
+            var police = new Typeface(new FontFamily("Ink Free, Segoe Print, Comic Sans MS"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+            var contour = new Pen(new SolidColorBrush(Color.FromArgb(215, 18, 18, 22)), 4.5 * s) { LineJoin = PenLineJoin.Round };
+            Brush encre = new SolidColorBrush(couleur);
+            double l = 440 * s, duree = texte.Length / 16.0 + 4.5;
+            var entier = new FormattedText(texte, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, police, 27 * s, encre) { MaxTextWidth = l - 16 * s };
+            double h = Math.Max(150 * s, entier.Height + 16 * s);      // une phrase longue prend plus de lignes
+            double gauche = SystemParameters.VirtualScreenLeft + 8, droite = SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 8 - l;
+            double x = Math.Max(gauche, Math.Min(droite, face > 0 ? ancre.X + 34 * s : ancre.X - 34 * s - l));
+            Jouer(Biblio.Presse, 1, () =>                           // il lève la main, sans rien tenir
+            {
+                Planter(x, ancre.Y - 100 * s - h, l, h, duree, true, (dc, largeur, hauteur) =>
+                {
+                    int lettres = (int)Math.Min(texte.Length, tScene * 16);
+                    if (lettres < 1) return;
+                    var ecrit = new FormattedText(texte.Substring(0, lettres), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, police, 27 * s, encre);
+                    ecrit.MaxTextWidth = largeur - 16 * s;
+                    Geometry trace = ecrit.BuildGeometry(new Point(8 * s, hauteur - ecrit.Height - 6 * s));      // le texte se pose en bas, au-dessus de lui
+                    dc.PushOpacity(Math.Min(1, Math.Max(0, (duree - tScene) / 1.2)));
+                    dc.DrawGeometry(null, contour, trace);       // un contour sombre : lisible sur n'importe quel fond
+                    dc.DrawGeometry(encre, null, trace);
+                    dc.Pop();
+                });
+                Jouer(Biblio.Ecrit, Math.Max(2, Math.Ceiling(texte.Length / 16.0 / Biblio.Ecrit.Duree)), () => Jouer(Biblio.Admire, 1));      // et trace les lettres du doigt
+            });
         }
 
         // Dérangé en route (attrapé, bousculé, autre animation demandée) : la faute attendra.
