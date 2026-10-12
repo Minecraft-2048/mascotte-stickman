@@ -564,7 +564,7 @@ const choixImage = document.getElementById('choixImage');
 document.getElementById('fond').addEventListener('click', () => {
   fond = fond === 'sombre' ? 'accueil' : 'sombre';
   appliquerFond();
-  if (fond === 'accueil') dire('Pour ton vrai écran d’accueil : fais-en une capture, puis touche « Mon écran ».', 'For your real home screen: take a screenshot of it, then tap "My screen".');
+  if (fond === 'accueil') dire('Pour ton vrai écran d’accueil : fais-en une capture, puis touche « Mon écran ». Sur Android, il existe aussi un vrai fond d’écran animé : voir la page GitHub.', 'For your real home screen: take a screenshot of it, then tap "My screen". On Android there is also a real live wallpaper: see the GitHub page.');
 });
 document.getElementById('monEcran').addEventListener('click', () => choixImage.click());
 choixImage.addEventListener('change', () => {

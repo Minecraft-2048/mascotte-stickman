@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nom">Mascotte Stickman</string>
+    <string name="description">Des bonshommes-bâtons qui vivent sur ton écran d\'accueil</string>
+    <string name="explication">Des bonshommes-bâtons qui vivent sur ton écran d\'accueil, derrière tes icônes : ils marchent au-dessus de la barre du bas, dansent, font des saltos, du sport… Touche-en un pour une animation ; touche ailleurs et le plus proche y va.</string>
+    <string name="poser">Mettre en fond d\'écran</string>
+    <string name="nombre">Nombre de stickmen : %1$d</string>
+    <string name="sol">Hauteur du sol : %1$d %%</string>
+    <string name="aide_sol">Monte le sol jusqu\'à ce qu\'ils se tiennent juste au-dessus de ta rangée d\'icônes du bas.</string>
+    <string name="taille">Taille : %1$d %%</string>
+    <string name="image">Choisir une image de fond</string>
+    <string name="aide_image">Un fond d\'écran animé remplace ton fond d\'écran. Pour garder le tien, choisis ici la même image : elle reste derrière eux. Elle est recopiée dans l\'appli et n\'est envoyée nulle part.</string>
+    <string name="sombre">Fond sombre</string>
+    <string name="sombre_fait">Fond sombre choisi.</string>
+    <string name="image_faite">Image posée derrière eux.</string>
+    <string name="image_ratee">Impossible de lire cette image.</string>
+    <string name="pas_de_fond">Cet appareil n\'a pas de choix de fond d\'écran animé.</string>
+    <string name="astuce">Les changements se voient tout de suite sur l\'écran d\'accueil. Projet de fan non officiel, gratuit et libre : github.com/Minecraft-2048/mascotte-stickman</string>
+</resources>

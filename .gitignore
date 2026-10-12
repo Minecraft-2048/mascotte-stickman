@@ -1,2 +1,6 @@
 # l'exe se telecharge dans les Releases
 *.exe
+# l'apk aussi, et ce que sa fabrication laisse derriere elle
+*.apk
+*.idsig
+android/obj/

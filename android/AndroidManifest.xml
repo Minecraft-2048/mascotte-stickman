@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mascotte Stickman pour Android : un fond d'écran animé (les stickmen sur l'écran d'accueil) et sa page de réglages.
+     Aucune permission : il ne lit que l'image qu'on lui choisit soi-même. Le numéro de version est posé par construire.ps1. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.minecraft2048.stickman">
+    <uses-feature android:name="android.software.live_wallpaper" android:required="true" />
+
+    <application android:label="@string/nom" android:icon="@mipmap/ic_launcher" android:allowBackup="true" android:supportsRtl="true">
+        <activity android:name=".Reglages" android:exported="true" android:theme="@android:style/Theme.DeviceDefault">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service android:name=".FondEcran" android:label="@string/nom" android:permission="android.permission.BIND_WALLPAPER" android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data android:name="android.service.wallpaper" android:resource="@xml/fond" />
+        </service>
+    </application>
+</manifest>

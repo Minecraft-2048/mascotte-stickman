@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nom">Mascotte Stickman</string>
+    <string name="description">Stick figures living on your home screen</string>
+    <string name="explication">Stick figures that live on your home screen, behind your icons: they walk above the bottom bar, dance, do flips, play sports… Tap one for an animation; tap anywhere else and the nearest one goes there.</string>
+    <string name="poser">Set as wallpaper</string>
+    <string name="nombre">Stickmen: %1$d</string>
+    <string name="sol">Height of the ground: %1$d %%</string>
+    <string name="aide_sol">Raise the ground until they stand just above your bottom row of icons.</string>
+    <string name="taille">Size: %1$d %%</string>
+    <string name="image">Choose a background picture</string>
+    <string name="aide_image">A live wallpaper replaces your wallpaper. To keep yours, pick the same picture here: it stays behind them. It is copied inside the app and sent nowhere.</string>
+    <string name="sombre">Dark background</string>
+    <string name="sombre_fait">Dark background set.</string>
+    <string name="image_faite">Picture set as their background.</string>
+    <string name="image_ratee">Could not read that picture.</string>
+    <string name="pas_de_fond">This device has no live wallpaper picker.</string>
+    <string name="astuce">Changes show up at once on the home screen. Unofficial fan project, free and open source: github.com/Minecraft-2048/mascotte-stickman</string>
+</resources>

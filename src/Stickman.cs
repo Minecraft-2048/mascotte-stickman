@@ -29,8 +29,8 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("Mascotte Stickman")]
 [assembly: System.Reflection.AssemblyCompany("Minecraft-2048 (open source)")]
 [assembly: System.Reflection.AssemblyCopyright("MIT licence")]
-[assembly: System.Reflection.AssemblyVersion("1.10.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.10.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.11.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.11.0.0")]
 
 namespace MascotteStickman
 {
@@ -61,6 +61,8 @@ namespace MascotteStickman
             if (args.Length >= 2 && args[0] == "--sons") { Sons.Exporter(args[1]); return 0; }
             // MascotteStickman.exe --web dossier : les animations en poses échantillonnées, pour la version web (docs/)
             if (args.Length >= 2 && args[0] == "--web") { Planches.ExporterWeb(args[1]); return 0; }
+            // MascotteStickman.exe --android fichier : les mêmes, en binaire compact, pour le fond d'écran animé Android (android/)
+            if (args.Length >= 2 && args[0] == "--android") { Planches.ExporterAndroid(args[1]); return 0; }
             // MascotteStickman.exe --noms fichier : tous les noms affichés (familles, animations, duos), pour vérifier les traductions
             if (args.Length >= 2 && args[0] == "--noms") { Planches.EcrireNoms(args[1]); return 0; }
             // MascotteStickman.exe --film dossier : les images d'une courte vidéo de démonstration (à assembler avec ffmpeg)
@@ -1093,18 +1095,60 @@ namespace MascotteStickman
             Func<double[], string> pose = p => "[" + string.Join(",", p.Select(v => Math.Round(v).ToString(inv))) + "]";
             Func<Anim, string> anim = a =>
             {
-                int n = Math.Max(12, Math.Min(90, (int)Math.Round(a.Duree * 30)));
+                int n = Echantillons(a);
                 var poses = new List<string>();
                 for (int i = 0; i <= n; i++) poses.Add(pose(a.Pose(i / (double)n)));
                 return "{\"n\":" + texte(a.Nom) + ",\"e\":" + texte(Langue.EnAnglais(a.Nom)) + ",\"f\":" + texte(a.Famille) + ",\"d\":" + a.Duree.ToString("0.###", inv) + ",\"t\":" + a.Tours
                     + (a.Haut ? ",\"h\":1" : "") + (a.Deplace ? ",\"m\":1,\"v\":" + a.Vitesse.ToString("0.#", inv) : "")
                     + (a.Objet != null ? ",\"o\":" + texte(a.Objet) : "") + ",\"p\":[" + string.Join(",", poses) + "]}";
             };
-            List<Anim> liste = Biblio.Toutes.Where(a => a.Special == null && !a.SurFenetre && a.Famille != "Minecraft").ToList();
+            List<Anim> liste = HorsWindows();
             string json = "{\"repos\":[" + string.Join(",", Biblio.Repos.Select(anim)) + "],\n\"reception\":" + anim(Biblio.Reception) + ",\n\"releve\":" + anim(Biblio.SeReleve)
                 + ",\n\"monte\":" + pose(Biblio.SautMonte) + ",\"descend\":" + pose(Biblio.SautDescend) + ",\"marche\":" + texte(Biblio.Marche.Nom) + ",\"course\":" + texte(Biblio.Course.Nom)
                 + ",\n\"anims\":[\n" + string.Join(",\n", liste.Select(anim)) + "\n]}\n";
             File.WriteAllText(Path.Combine(dossier, "animations.json"), json, new UTF8Encoding(false));
+        }
+
+        // Ce qui se joue ailleurs que sur Windows (page web, téléphone) : ni scènes, ni rebord de fenêtre, ni objets de Minecraft.
+        static List<Anim> HorsWindows() { return Biblio.Toutes.Where(a => a.Special == null && !a.SurFenetre && a.Famille != "Minecraft").ToList(); }
+
+        // Une animation est exportée en poses échantillonnées : une trentaine par seconde, entre 12 et 90.
+        static int Echantillons(Anim a) { return Math.Max(12, Math.Min(90, (int)Math.Round(a.Duree * 30))); }
+
+        // --android fichier : le même contenu que animations.json, en binaire (petit-boutiste) : « STK1 », les attentes,
+        // la réception, le relevé, les deux poses de saut, les noms de la marche et de la course, puis les animations.
+        // Une animation : nom, nom anglais, famille, durée (float), tours (short), drapeaux (1 = haut du corps,
+        // 2 = déplacement), vitesse (float), objet, nombre de poses (short), puis 13 short par pose. Un texte : sa
+        // longueur en octets (ushort) puis de l'UTF-8.
+        public static void ExporterAndroid(string fichier)
+        {
+            using (var flux = new MemoryStream())
+            using (var e = new BinaryWriter(flux))
+            {
+                Action<string> texte = t => { byte[] o = Encoding.UTF8.GetBytes(t ?? ""); e.Write((ushort)o.Length); e.Write(o); };
+                Action<double[]> pose = p => { for (int i = 0; i < I.N; i++) e.Write((short)Math.Max(-32000, Math.Min(32000, Math.Round(p[i])))); };
+                Action<Anim> anim = a =>
+                {
+                    int n = Echantillons(a);
+                    texte(a.Nom); texte(Langue.EnAnglais(a.Nom)); texte(a.Famille);
+                    e.Write((float)a.Duree); e.Write((short)a.Tours); e.Write((byte)((a.Haut ? 1 : 0) | (a.Deplace ? 2 : 0))); e.Write((float)a.Vitesse);
+                    texte(a.Objet); e.Write((short)(n + 1));
+                    for (int i = 0; i <= n; i++) pose(a.Pose(i / (double)n));
+                };
+                e.Write(Encoding.ASCII.GetBytes("STK1"));
+                e.Write(Biblio.Repos.Count);
+                foreach (Anim a in Biblio.Repos) anim(a);
+                anim(Biblio.Reception); anim(Biblio.SeReleve);
+                pose(Biblio.SautMonte); pose(Biblio.SautDescend);
+                texte(Biblio.Marche.Nom); texte(Biblio.Course.Nom);
+                List<Anim> liste = HorsWindows();
+                e.Write(liste.Count);
+                foreach (Anim a in liste) anim(a);
+                e.Flush();
+                string dossier = Path.GetDirectoryName(Path.GetFullPath(fichier));
+                Directory.CreateDirectory(dossier);
+                File.WriteAllBytes(fichier, flux.ToArray());
+            }
         }
 
         // --planches dossier duos : les animations à deux, les deux stickmen face à face à leur distance

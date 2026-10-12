@@ -24,7 +24,7 @@ The app is in English unless Windows is in French; you can force either language
 
 - **Right-click** him for the menu: colour, animations sorted by family, friends, settings, mute, start with Windows, quit.
 - **Colour and head**: 16 colours or any colour you like. The head is a solid disc, except for orange, black and dark red where it is a ring; a setting forces one or the other.
-- **2,140 animations**: moving around, dances (60 arm moves × 18 leg moves, plus waltz, can-can, sirtaki, haka…), gestures, fighting (with two- and three-hit combos), acrobatics (flips and cartwheels chained together, some in slow motion), sport, everyday life, emotions, and a few that only make sense on the edge of a window (sitting with his legs dangling, fishing). About forty props drawn by the program: sword, hammer, guitar, umbrella, broom…
+- **2,294 animations**: moving around, dances (62 arm moves × 19 leg moves, plus waltz, can-can, sirtaki, haka…), gestures, fighting (with two- and three-hit combos), acrobatics (flips and cartwheels chained together, some in slow motion), sport, everyday life, emotions, and a few that only make sense on the edge of a window (sitting with his legs dangling, fishing). About forty props drawn by the program: sword, hammer, guitar, umbrella, broom…
 - **Mouse**: grab him, swing him, throw him. He fights the cursor when it comes close, and a fast cursor knocks him over.
 - **Windows**: he jumps onto the top of your windows (plain jump, somersault or hero landing), travels with them, and falls when they close.
 - **Friends**: up to six stickmen at once (right-click → *Friends* → *Add a stickman*), each with his own colour. They go and see each other on their own, even from one window to another: hello, fist bump, high five, handshake, hug, rock paper scissors, friendly duel, cheers, foot tap, the wave, a push-up contest, the "too slow!" high five, dancing together… They also applaud each other, play patty-cake, have a pushing contest, quarrel and make up, hand over a present, whisper a secret, take a selfie together, copy each other like a mirror, have a thumb war. Twenty-eight two-player animations.
@@ -51,8 +51,24 @@ Blocks and items in the Minecraft scenes are drawn with the real game textures, 
 
 Without Minecraft, or if you untick *Real Minecraft textures* (Settings → Appearance), blocks are drawn by the program and items become simple shapes.
 
-## Phone and tablet version
+## On Android: a live wallpaper
 
+On an Android phone or tablet (Android 7 or later), the stickmen can live **on the real home screen, behind your icons**: they walk above the bottom bar, dance, do flips, play sports. It is a live wallpaper, not an app you have to keep open.
+
+<img src="apercus/android.png" alt="Stickmen standing above the dock of a phone home screen (simulated view)" width="270">
+
+*(Simulated view, drawn on a PC by the same engine as the app.)*
+
+1. On the phone, download **`MascotteStickman.apk`** from the [latest release](https://github.com/Minecraft-2048/mascotte-stickman/releases/latest) and open it. Android asks you to allow your browser to install apps; it may also say that it does not know this developer, because the app does not come from the Play Store.
+2. Open *Mascotte Stickman*, tap **Set as wallpaper**, then confirm in Android's preview.
+3. Back in the app: how many stickmen (one to six), **the height of the ground** (raise it until they stand just above your bottom row of icons), their size, and the picture behind them. A live wallpaper replaces your wallpaper, so to keep yours, pick the same picture with *Choose a background picture*.
+
+- **Touch**: tap a stickman for a random animation (a bubble tells you its name); tap anywhere else and the nearest one walks or runs there. Swiping between pages does not disturb them.
+- **No permission** is asked. The picture you choose is copied inside the app and sent nowhere. They are only drawn while the home screen is showing.
+- 2,141 of the animations of the Windows version (no Minecraft scenes, props, sounds or two-player animations). Not on iPhone: iOS lets no app draw on the home screen.
+- This first version was built and checked on a PC (its engine is run there, see `android/essai`), not yet tried on many phones: if it misbehaves on yours, please open an issue.
+
+## Phone and tablet version, in the browser
 **https://minecraft-2048.github.io/mascotte-stickman/**
 
 It is a web page (the `docs/` folder) where the stickman lives inside the screen. It installs like an app and then **works offline**: tap *Install* (Android, or Chrome/Edge on a computer); on iPhone and iPad tap Share, then *Add to Home Screen*.
@@ -60,7 +76,7 @@ It is a web page (the `docs/` folder) where the stickman lives inside the screen
 - **Gravity follows the device**: he stands on whichever edge of the screen is down. Tilt or flip the device and he slides, loses his footing and falls to the new side. A good shake sends him flying. (On iPhone and iPad, tap *Tilt* first to allow the sensor.)
 - **Touch**: grab him and throw him, tap him for a random animation, tap elsewhere to send him there.
 - **Buttons**: colour, one more or one fewer stickman (up to six), and on a computer a button that turns gravity a quarter turn.
-- **Like a home screen**: *Wallpaper* shows a mock home screen, and they stand at the foot of its dock, in front of the icons. *My screen* lets you pick a screenshot of your own home screen instead (it stays in your browser). A web page cannot draw over the real home screen of a phone, so this is as close as it gets.
+- **Like a home screen**: *Wallpaper* shows a mock home screen, and they stand at the foot of its dock, in front of the icons. *My screen* lets you pick a screenshot of your own home screen instead (it stays in your browser). A web page cannot draw over the real home screen of a phone: for that, see the Android live wallpaper above.
 - It reuses the animations of the Windows version (exported by `MascotteStickman.exe --web docs`), without the Minecraft scenes, the props, the sounds or the two-player animations.
 
 To try it on your own PC: `python -m http.server --directory docs`, then open `http://localhost:8000`.
@@ -87,6 +103,13 @@ powershell -ExecutionPolicy Bypass -File construire.ps1
 
 The script uses the C# compiler that ships with Windows (.NET Framework 4): nothing to install. The code and its comments are written in French.
 
+The Android live wallpaper has its own script, which needs the Android SDK (`platforms;android-34`, `build-tools;34.0.0`) and a JDK, but no Gradle:
+
+```
+powershell -ExecutionPolicy Bypass -File android\construire.ps1
+```
+
+It takes the animations from the Windows version (`MascotteStickman.exe --android android\assets\animations.bin`), compiles `android/src` and signs `android\MascotteStickman.apk` with a key it creates on first run in `%LOCALAPPDATA%\MascotteStickman\android` (keep it: Android only updates an app signed with the same key). `android/essai/Essai.java` runs the same engine on a PC and writes a contact sheet, to check it without a phone.
 - `src/Stickman.cs`: the engine (skeleton, drawing, throw physics, windows, friends, scenes, sounds, settings).
 - `src/StickmanAnimations.cs`: the animation library. A pose is thirteen numbers (torso, head, shoulders, elbows, hips, knees, height, rotation, offset); walks and dances come from generators.
 - `src/StickmanOreille.cs`: listens to the output level and works out the tempo.

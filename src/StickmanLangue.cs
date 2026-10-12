@@ -483,6 +483,21 @@ namespace MascotteStickman
             "Un cadeau", "A present", "Tiens, c'est pour toi !", "Here, it's for you!", "Pour moi ?", "For me?", "Merci !!", "Thank you!!",
             "Un secret", "A secret", "Psst…", "Psst…", "Quoi ?", "What?", "Nooon ?!", "Nooo?!",
 
+            // ---------------------------------------------------------------- dix-septième fournée : en route, à table, au cirque, les métiers
+            "Conduit une voiture", "Drives a car", "Fait de la moto", "Rides a motorbike", "File en trottinette", "Zips along on a scooter", "Rate son train", "Misses his train",
+            "Tire sa valise à roulettes", "Pulls his wheeled suitcase", "Descend en luge", "Sledges downhill", "Poursuit les mouettes", "Chases the seagulls",
+            "Mange une part de pizza", "Eats a slice of pizza", "Croque dans un burger", "Bites into a burger", "Lèche une glace", "Licks an ice cream",
+            "Aspire des spaghettis", "Slurps spaghetti", "Fait une bulle de chewing-gum", "Blows a bubble-gum bubble", "Croque un piment", "Bites a chilli pepper", "Ouvre une canette", "Opens a can",
+            "Dompteur de lions", "Lion tamer", "Tarte à la crème en pleine figure", "Cream pie in the face", "Homme-canon", "Human cannonball", "Trapéziste", "Trapeze artist",
+            "Cracheur de feu", "Fire breather", "Monocycle", "Unicycle", "Fusée : décollage", "Rocket: lift-off", "Saut en parachute", "Parachute jump",
+            "Ballet : arabesque", "Ballet: arabesque", "Ballet : entrechat", "Ballet: entrechat", "Pas de salsa", "Salsa steps", "Tango : trois pas et un renversé", "Tango: three steps and a dip",
+            "Capoeira : ginga", "Capoeira: ginga", "Joue aux échecs", "Plays chess", "Distribue les cartes", "Deals the cards", "Joue au baby-foot", "Plays table football",
+            "Joue au flipper", "Plays pinball", "Chanteur d'opéra", "Opera singer", "Eurêka !", "Eureka!",
+            "Regarde au microscope", "Looks through a microscope", "Observe au télescope", "Looks through a telescope", "Prend son pouls", "Takes his pulse",
+            "Se met de la crème solaire", "Puts on sunscreen", "Docteur au stéthoscope", "Doctor with a stethoscope", "Boulanger : enfourne le pain", "Baker: slides the bread into the oven",
+            "Coiffeur aux ciseaux", "Hairdresser with scissors", "Plombier sous l'évier", "Plumber under the sink", "Mécanicien : serre un boulon", "Mechanic: tightens a bolt",
+            "Caissier : scanne les articles", "Cashier: scans the items", "Ferre un gros poisson", "Hooks a big fish", "Perce un mur à la perceuse", "Drills into a wall",
+            "Visse au tournevis", "Turns a screwdriver", "Facteur en tournée", "Postman on his round", "Trompette", "Trumpet", "grands battements", "high kicks",
             // ---------------------------------------------------------------- seizième fournée : sports d'équipe, orchestre, personnages, petites bêtes
             "Essai de rugby", "Rugby try", "Mêlée de rugby", "Rugby scrum", "Tir de hockey", "Hockey shot", "Sumo : frappe le sol", "Sumo: stomps the ground",
             "Prise de judo", "Judo throw", "Tacle glissé", "Sliding tackle", "Vampire drapé dans sa cape", "Vampire wrapped in his cape", "Chevalier en armure", "Knight in armour",

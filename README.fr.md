@@ -20,7 +20,7 @@ L'exe n'est pas signé (un certificat de signature est payant) : Windows peut af
 
 - **Clic droit** : couleur, animations rangées par famille, amis, paramètres, mode muet, lancement au démarrage de Windows, quitter.
 - **Couleur et tête** : 16 teintes ou n'importe quelle couleur. La tête est un disque plein, sauf pour l'orange, le noir et le rouge sombre où c'est un anneau ; un réglage force l'un ou l'autre.
-- **2 140 animations** : déplacements, danses (60 mouvements de bras × 18 de jambes, et aussi valse, french cancan, sirtaki, haka…), gestes, combat (avec des enchaînements de deux et trois coups), acrobaties (saltos et roues enchaînés, certains au ralenti), sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
+- **2 294 animations** : déplacements, danses (62 mouvements de bras × 19 de jambes, et aussi valse, french cancan, sirtaki, haka…), gestes, combat (avec des enchaînements de deux et trois coups), acrobaties (saltos et roues enchaînés, certains au ralenti), sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
 - **Souris** : on l'attrape, on le balance, on le lance ; il se bat contre le curseur s'il s'approche, et un curseur trop rapide l'envoie valser.
 - **Fenêtres** : il saute sur le haut des fenêtres (saut simple, salto ou atterrissage de héros), voyage avec elles, et retombe si elles se ferment.
 - **Amis** : jusqu'à six stickmen à la fois (clic droit → *Amis* → *Ajouter un stickman*), chacun de sa couleur. Ils vont se voir d'eux-mêmes, même perchés sur des fenêtres différentes : bonjour, check, tope-là, poignée de main, check complet, câlin, pierre-feuille-ciseaux, duel amical, tchin, check du pied, ola, concours de pompes, le tope-là « trop lent ! », danse à deux… Ils s'applaudissent aussi, jouent à tape-mains, font un bras de fer, se disputent et se réconcilient, s'offrent un cadeau, se chuchotent un secret, prennent un selfie à deux, jouent au miroir, font une bataille de pouces. Vingt-huit animations à deux.
@@ -48,7 +48,24 @@ Les blocs et les objets des scènes Minecraft s'affichent avec les vraies textur
 
 Sans Minecraft, ou si la case *Vraies textures de Minecraft* est décochée (Paramètres → Apparence), les blocs sont dessinés par le programme et les objets remplacés par des formes simples.
 
-## Version mobile (téléphone, tablette)
+## Sur Android : un fond d'écran animé
+
+Sur un téléphone ou une tablette Android (Android 7 ou plus récent), les stickmen peuvent vivre **sur le vrai écran d'accueil, derrière tes icônes** : ils marchent au-dessus de la barre du bas, dansent, font des saltos, du sport. C'est un fond d'écran animé, pas une appli à garder ouverte.
+
+<img src="apercus/android.png" alt="Des stickmen debout au-dessus de la barre d'un écran d'accueil de téléphone (vue simulée)" width="270">
+
+*(Vue simulée, dessinée sur PC par le même moteur que l'appli.)*
+
+1. Sur le téléphone, télécharge **`MascotteStickman.apk`** depuis la [dernière version](https://github.com/Minecraft-2048/mascotte-stickman/releases/latest) et ouvre-le. Android demande d'autoriser ton navigateur à installer des applis ; il peut aussi dire qu'il ne connaît pas ce développeur, parce que l'appli ne vient pas du Play Store.
+2. Ouvre *Mascotte Stickman*, touche **Mettre en fond d'écran**, puis confirme dans l'aperçu d'Android.
+3. De retour dans l'appli : le nombre de stickmen (un à six), **la hauteur du sol** (monte-la jusqu'à ce qu'ils se tiennent juste au-dessus de ta rangée d'icônes du bas), leur taille, et l'image derrière eux. Un fond d'écran animé remplace ton fond d'écran : pour garder le tien, choisis la même image avec *Choisir une image de fond*.
+
+- **Au doigt** : touche un stickman pour une animation au hasard (une bulle dit laquelle) ; touche ailleurs et le plus proche y va, en marchant ou en courant. Glisser d'une page à l'autre ne les dérange pas.
+- **Aucune permission** n'est demandée. L'image choisie est recopiée dans l'appli et n'est envoyée nulle part. Ils ne sont dessinés que lorsque l'écran d'accueil se voit.
+- 2 141 des animations de la version Windows (sans les scènes Minecraft, les accessoires, les sons ni les animations à deux). Pas sur iPhone : iOS ne laisse aucune appli dessiner sur l'écran d'accueil.
+- Cette première version a été fabriquée et contrôlée sur PC (son moteur y tourne, voir `android/essai`), pas encore essayée sur beaucoup de téléphones : si elle se comporte mal sur le tien, ouvre un ticket.
+
+## Version mobile dans le navigateur (téléphone, tablette)
 
 **À ouvrir sur son téléphone ou sa tablette : https://minecraft-2048.github.io/mascotte-stickman/**
 
@@ -57,7 +74,7 @@ C'est une version web (le dossier `docs/`) : une page où le stickman vit dans l
 - **La gravité suit l'appareil** : il se tient sur le bord de l'écran qui est en bas. Penche ou retourne l'appareil, il glisse, décroche et retombe du nouveau côté. Une bonne secousse l'envoie valser. (Sur iPhone et iPad, toucher *Inclinaison* pour autoriser le capteur.)
 - **Au doigt** : on l'attrape et on le lance, on le touche pour une animation au hasard, on touche ailleurs pour qu'il y aille.
 - **Boutons** : couleur, un stickman de plus ou de moins (jusqu'à six), et sur ordinateur un bouton pour tourner la gravité d'un quart de tour.
-- **Comme sur un écran d'accueil** : *Fond* affiche un faux écran d'accueil, et ils se tiennent au pied du dock, devant les icônes. *Mon écran* permet de choisir à la place une capture de son propre écran d'accueil (elle reste dans le navigateur). Une page web ne peut pas dessiner par-dessus le vrai écran d'accueil d'un téléphone : c'est ce qui s'en approche le plus.
+- **Comme sur un écran d'accueil** : *Fond* affiche un faux écran d'accueil, et ils se tiennent au pied du dock, devant les icônes. *Mon écran* permet de choisir à la place une capture de son propre écran d'accueil (elle reste dans le navigateur). Une page web ne peut pas dessiner sur le vrai écran d'accueil d'un téléphone : pour cela, voir le fond d'écran animé Android ci-dessus.
 - Elle reprend les animations de la version Windows (exportées par `MascotteStickman.exe --web docs`), sans les scènes Minecraft, les accessoires, les sons ni les animations à deux.
 
 Pour l'essayer sur son PC : `python -m http.server --directory docs`, puis ouvrir `http://localhost:8000`.
@@ -83,6 +100,14 @@ powershell -ExecutionPolicy Bypass -File construire.ps1
 ```
 
 Le script utilise le compilateur C# livré avec Windows (.NET Framework 4) : rien à installer.
+
+Le fond d'écran animé Android a son propre script, qui demande le SDK Android (`platforms;android-34`, `build-tools;34.0.0`) et un JDK, mais pas Gradle :
+
+```
+powershell -ExecutionPolicy Bypass -File android\construire.ps1
+```
+
+Il prend les animations de la version Windows (`MascotteStickman.exe --android android\assets\animations.bin`), compile `android/src` et signe `android\MascotteStickman.apk` avec une clé qu'il crée au premier lancement dans `%LOCALAPPDATA%\MascotteStickman\android` (à garder : Android ne met à jour qu'une appli signée avec la même clé). `android/essai/Essai.java` fait tourner le même moteur sur PC et écrit une planche d'images, pour le contrôler sans téléphone.
 
 - `src/Stickman.cs` : le moteur (squelette, dessin, physique du lancer, fenêtres, amis, scènes, sons, paramètres).
 - `src/StickmanAnimations.cs` : la bibliothèque d'animations. Une pose s'écrit en treize nombres (torse, tête, épaules, coudes, hanches, genoux, hauteur, rotation, décalage) ; les marches et les danses sont fabriquées par des générateurs.
