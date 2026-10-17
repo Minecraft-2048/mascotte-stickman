@@ -483,6 +483,18 @@ namespace MascotteStickman
             "Un cadeau", "A present", "Tiens, c'est pour toi !", "Here, it's for you!", "Pour moi ?", "For me?", "Merci !!", "Thank you!!",
             "Un secret", "A secret", "Psst…", "Psst…", "Quoi ?", "What?", "Nooon ?!", "Nooo?!",
 
+            // ---------------------------------------------------------------- dix-huitième fournée : idées vues dans des dessins animés de stickmen
+            "Glisse sous une barre basse", "Slides under a low bar", "Saut de précision sur un bloc", "Precision jump onto a block", "Sautille de piquet en piquet", "Hops from post to post",
+            "Grimpe des marches quatre à quatre", "Bounds up the stairs", "Saute de rondin en rondin", "Hops from log to log", "Se balance au bout d'une corde", "Swings on a rope",
+            "À califourchon sur une fusée", "Rides a rocket", "Lâche une pomme et la regarde tomber", "Drops an apple and watches it fall", "Esquive un doigt géant", "Dodges a giant finger",
+            "Médite en lévitation", "Meditates in mid-air", "Fait ses achats chez le marchand", "Shops at the trader", "Joue sur une borne d'arcade", "Plays an arcade machine",
+            "Empile des crêpes", "Stacks pancakes", "Mange assis à table", "Eats at the table", "Verse du sirop", "Pours syrup", "Ouvre un coffre et fouille dedans", "Opens a chest and rummages inside",
+            "Porte une pizza géante au-dessus de la tête", "Carries a giant pizza overhead", "Tapote des blocs à deux baguettes", "Taps blocks with two sticks", "Trac sur scène", "Stage fright",
+            "Joue du piano géant avec les pieds", "Plays a giant piano with his feet", "Lance trois shurikens d'affilée", "Throws three shurikens in a row", "Charge, l'épée levée", "Charges, sword raised",
+            "Propose un lingot d'or", "Offers a gold ingot", "Creuse sous ses pieds à la pioche", "Digs down with a pickaxe", "Brandit son épée de diamant vers le ciel", "Raises his diamond sword to the sky",
+            "Lit à plat ventre, les pieds en l'air", "Reads on his belly, feet in the air", "Joystick", "Joystick", "Pizzaiolo", "Pizza spinner", "piétinements", "quick steps",
+            "Courte échelle", "Boost up", "Vas-y, monte !", "Go on, up you go!", "Hop !", "Hup!", "Merci !", "Thanks!",
+            "Duel au ralenti", "Slow-motion duel", "Au ralenti…", "In slow motion…", "Façon film !", "Like in the movies!", "Trop classe.", "So cool.",
             // ---------------------------------------------------------------- dix-septième fournée : en route, à table, au cirque, les métiers
             "Conduit une voiture", "Drives a car", "Fait de la moto", "Rides a motorbike", "File en trottinette", "Zips along on a scooter", "Rate son train", "Misses his train",
             "Tire sa valise à roulettes", "Pulls his wheeled suitcase", "Descend en luge", "Sledges downhill", "Poursuit les mouettes", "Chases the seagulls",

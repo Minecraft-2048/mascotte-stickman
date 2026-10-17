@@ -24,10 +24,10 @@ The app is in English unless Windows is in French; you can force either language
 
 - **Right-click** him for the menu: colour, animations sorted by family, friends, settings, mute, start with Windows, quit.
 - **Colour and head**: 16 colours or any colour you like. The head is a solid disc, except for orange, black and dark red where it is a ring; a setting forces one or the other.
-- **2,294 animations**: moving around, dances (62 arm moves × 19 leg moves, plus waltz, can-can, sirtaki, haka…), gestures, fighting (with two- and three-hit combos), acrobatics (flips and cartwheels chained together, some in slow motion), sport, everyday life, emotions, and a few that only make sense on the edge of a window (sitting with his legs dangling, fishing). About forty props drawn by the program: sword, hammer, guitar, umbrella, broom…
+- **2,431 animations**: moving around, dances (64 arm moves × 20 leg moves, plus waltz, can-can, sirtaki, haka…), gestures, fighting (with two- and three-hit combos), acrobatics (flips and cartwheels chained together, some in slow motion), sport, everyday life, emotions, and a few that only make sense on the edge of a window (sitting with his legs dangling, fishing). About forty props drawn by the program: sword, hammer, guitar, umbrella, broom…
 - **Mouse**: grab him, swing him, throw him. He fights the cursor when it comes close, and a fast cursor knocks him over.
 - **Windows**: he jumps onto the top of your windows (plain jump, somersault or hero landing), travels with them, and falls when they close.
-- **Friends**: up to six stickmen at once (right-click → *Friends* → *Add a stickman*), each with his own colour. They go and see each other on their own, even from one window to another: hello, fist bump, high five, handshake, hug, rock paper scissors, friendly duel, cheers, foot tap, the wave, a push-up contest, the "too slow!" high five, dancing together… They also applaud each other, play patty-cake, have a pushing contest, quarrel and make up, hand over a present, whisper a secret, take a selfie together, copy each other like a mirror, have a thumb war. Twenty-eight two-player animations.
+- **Friends**: up to six stickmen at once (right-click → *Friends* → *Add a stickman*), each with his own colour. They go and see each other on their own, even from one window to another: hello, fist bump, high five, handshake, hug, rock paper scissors, friendly duel, cheers, foot tap, the wave, a push-up contest, the "too slow!" high five, dancing together… They also applaud each other, play patty-cake, have a pushing contest, quarrel and make up, hand over a present, whisper a secret, take a selfie together, copy each other like a mirror, have a thumb war, give each other a boost, fight a slow-motion duel. Thirty two-player animations.
 
 ![The two-player animations](apercus/duos.png)
 
@@ -65,7 +65,7 @@ On an Android phone or tablet (Android 7 or later), the stickmen can live **on t
 
 - **Touch**: tap a stickman for a random animation (a bubble tells you its name); tap anywhere else and the nearest one walks or runs there. Swiping between pages does not disturb them.
 - **No permission** is asked. The picture you choose is copied inside the app and sent nowhere. They are only drawn while the home screen is showing.
-- 2,141 of the animations of the Windows version (no Minecraft scenes, props, sounds or two-player animations). Not on iPhone: iOS lets no app draw on the home screen.
+- 2,275 of the animations of the Windows version (no Minecraft scenes, props, sounds or two-player animations). Not on iPhone: iOS lets no app draw on the home screen.
 - This first version was built and checked on a PC (its engine is run there, see `android/essai`), not yet tried on many phones: if it misbehaves on yours, please open an issue.
 
 ## Phone and tablet version, in the browser

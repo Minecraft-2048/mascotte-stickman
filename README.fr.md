@@ -20,10 +20,10 @@ L'exe n'est pas signé (un certificat de signature est payant) : Windows peut af
 
 - **Clic droit** : couleur, animations rangées par famille, amis, paramètres, mode muet, lancement au démarrage de Windows, quitter.
 - **Couleur et tête** : 16 teintes ou n'importe quelle couleur. La tête est un disque plein, sauf pour l'orange, le noir et le rouge sombre où c'est un anneau ; un réglage force l'un ou l'autre.
-- **2 294 animations** : déplacements, danses (62 mouvements de bras × 19 de jambes, et aussi valse, french cancan, sirtaki, haka…), gestes, combat (avec des enchaînements de deux et trois coups), acrobaties (saltos et roues enchaînés, certains au ralenti), sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
+- **2 431 animations** : déplacements, danses (64 mouvements de bras × 20 de jambes, et aussi valse, french cancan, sirtaki, haka…), gestes, combat (avec des enchaînements de deux et trois coups), acrobaties (saltos et roues enchaînés, certains au ralenti), sport, vie quotidienne, émotions, et quelques-unes réservées au bord des fenêtres (assis, jambes dans le vide, pêche à la ligne). Une quarantaine d'accessoires dessinés par le programme : épée, marteau, guitare, parapluie, balai…
 - **Souris** : on l'attrape, on le balance, on le lance ; il se bat contre le curseur s'il s'approche, et un curseur trop rapide l'envoie valser.
 - **Fenêtres** : il saute sur le haut des fenêtres (saut simple, salto ou atterrissage de héros), voyage avec elles, et retombe si elles se ferment.
-- **Amis** : jusqu'à six stickmen à la fois (clic droit → *Amis* → *Ajouter un stickman*), chacun de sa couleur. Ils vont se voir d'eux-mêmes, même perchés sur des fenêtres différentes : bonjour, check, tope-là, poignée de main, check complet, câlin, pierre-feuille-ciseaux, duel amical, tchin, check du pied, ola, concours de pompes, le tope-là « trop lent ! », danse à deux… Ils s'applaudissent aussi, jouent à tape-mains, font un bras de fer, se disputent et se réconcilient, s'offrent un cadeau, se chuchotent un secret, prennent un selfie à deux, jouent au miroir, font une bataille de pouces. Vingt-huit animations à deux.
+- **Amis** : jusqu'à six stickmen à la fois (clic droit → *Amis* → *Ajouter un stickman*), chacun de sa couleur. Ils vont se voir d'eux-mêmes, même perchés sur des fenêtres différentes : bonjour, check, tope-là, poignée de main, check complet, câlin, pierre-feuille-ciseaux, duel amical, tchin, check du pied, ola, concours de pompes, le tope-là « trop lent ! », danse à deux… Ils s'applaudissent aussi, jouent à tape-mains, font un bras de fer, se disputent et se réconcilient, s'offrent un cadeau, se chuchotent un secret, prennent un selfie à deux, jouent au miroir, font une bataille de pouces, se font la courte échelle, se battent en duel au ralenti. Trente animations à deux.
 
 ![Les animations à deux](apercus/duos.png)
 
@@ -62,7 +62,7 @@ Sur un téléphone ou une tablette Android (Android 7 ou plus récent), les stic
 
 - **Au doigt** : touche un stickman pour une animation au hasard (une bulle dit laquelle) ; touche ailleurs et le plus proche y va, en marchant ou en courant. Glisser d'une page à l'autre ne les dérange pas.
 - **Aucune permission** n'est demandée. L'image choisie est recopiée dans l'appli et n'est envoyée nulle part. Ils ne sont dessinés que lorsque l'écran d'accueil se voit.
-- 2 141 des animations de la version Windows (sans les scènes Minecraft, les accessoires, les sons ni les animations à deux). Pas sur iPhone : iOS ne laisse aucune appli dessiner sur l'écran d'accueil.
+- 2 275 des animations de la version Windows (sans les scènes Minecraft, les accessoires, les sons ni les animations à deux). Pas sur iPhone : iOS ne laisse aucune appli dessiner sur l'écran d'accueil.
 - Cette première version a été fabriquée et contrôlée sur PC (son moteur y tourne, voir `android/essai`), pas encore essayée sur beaucoup de téléphones : si elle se comporte mal sur le tien, ouvre un ticket.
 
 ## Version mobile dans le navigateur (téléphone, tablette)
