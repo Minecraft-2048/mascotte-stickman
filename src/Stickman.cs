@@ -29,8 +29,8 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("Mascotte Stickman")]
 [assembly: System.Reflection.AssemblyCompany("Minecraft-2048 (open source)")]
 [assembly: System.Reflection.AssemblyCopyright("MIT licence")]
-[assembly: System.Reflection.AssemblyVersion("1.12.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.12.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.13.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.13.0.0")]
 
 namespace MascotteStickman
 {
@@ -189,6 +189,13 @@ namespace MascotteStickman
             B(Sp, "special.apesanteur", "Apesanteur : il flotte en l'air", true);
             B(Sp, "special.feu", "Il prend feu et court partout (pour rire)", true);
             B(Sp, "special.parole", "L'orange écrit des messages à l'écran, du bout du doigt", true);
+            B(Sp, "special.surprise", "Bloc surprise : il frappe un bloc « ? » et une surprise en sort", true);
+            B(Sp, "special.neon", "Mode néon : il brille comme une enseigne", true);
+            B(Sp, "special.rembobine", "Il rembobine le temps et rejoue ses dernières secondes à l'envers", true);
+            B(Sp, "special.eclair", "Électrique : des éclairs crépitent autour de lui", true);
+            B(Sp, "special.code", "Il programme ses mouvements dans une console, puis les exécute", true);
+            B(Sp, "special.tenebres", "Dans le noir : tout s'assombrit autour de lui", true);
+            B(Sp, "special.dominos", "Il aligne des dominos et les fait tomber", true);
             Ch(Sp, "parleur", "Ses messages viennent de", 0, "phrases du programme (aucun réseau)", "Claude (clé d'API Anthropic)", "Ollama (modèle sur ce PC)");
 
             const string Am = "Amis";
@@ -1615,6 +1622,11 @@ namespace MascotteStickman
                 case Etat.Plane: Planer(dt); break;
             }
             Scene(dt);
+            if (etat == Etat.Anime && temps >= finRembobine)       // ses dernières poses, pour pouvoir rembobiner
+            {
+                passe.Add((double[])pose.Clone());
+                if (passe.Count > 5 * Math.Max(10, R.D("fluidite"))) passe.RemoveAt(0);
+            }
             if (echelleVisee != 1 && temps > finEchelle) echelleVisee = 1;      // géant ou minuscule : jamais pour toujours
             if (finInvisible > 0 && temps > finInvisible) { finInvisible = 0; if (voileVise > 0 && voileVise < 1) voileVise = 1; }      // invisible : pareil
             if (!bonjourFait && temps > lancement + 6 && EstOrange && Libre && scene == null)      // au lancement, l'orange écrit bonjour
@@ -2184,7 +2196,46 @@ namespace MascotteStickman
                     Pen reflet = Dessin.Plume(Color.FromArgb(105, couleur.R, couleur.G, couleur.B), epaisseur);
                     Dessin.Tracer(dc, o, p => { Point q = e(p); return new Point(q.X + d, q.Y); }, s, null, reflet, TeteCreuse(couleur) ? null : reflet.Brush);
                 }
+            if (temps < finNeon && (int)(temps * 13) % 17 != 0)      // néon : un halo de sa couleur, qui grésille de temps en temps
+            {
+                foreach (double k in new[] { 5.0, 2.8 })
+                    Dessin.Tracer(dc, o, e, s, null, Dessin.Plume(Color.FromArgb((byte)(k > 3 ? 45 : 90), couleur.R, couleur.G, couleur.B), epaisseur * k), null);
+                trait = Dessin.Plume(Color.FromRgb((byte)((couleur.R + 510) / 3), (byte)((couleur.G + 510) / 3), (byte)((couleur.B + 510) / 3)), epaisseur);      // le tube lui-même, presque blanc
+            }
+            if (temps < finRembobine)                            // rembobinage : une image fantôme décalée, comme sur une vieille cassette
+            {
+                double decale = 5 * s * Math.Sin(temps * 40);
+                Dessin.Tracer(dc, o, p => { Point q = e(p); return new Point(q.X + decale, q.Y); }, s, null, Dessin.Plume(Color.FromArgb(80, 0x80, 0xD8, 0xFF), epaisseur), null);
+            }
             Dessin.Tracer(dc, o, e, s, contour, trait, TeteCreuse(couleur) ? null : trait.Brush);
+            if (temps < finRembobine)                            // et ses rayures qui défilent
+                for (double y = y0 + (temps * 140 * s) % (6 * s); y < y1; y += 6 * s)
+                    dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(34, 255, 255, 255)), null, new Rect(x0, y, x1 - x0, 1.5 * s));
+            if (temps < finEclair)                               // électrique : des éclairs crépitent autour de lui
+            {
+                Point[] depart = { e(o.Cou), e(o.Hanche), e(o.M1), e(o.M2), e(o.Tete) };
+                Pen lueur = Dessin.Plume(Color.FromArgb(110, 0x7F, 0xE8, 0xFF), 5 * s), coeur = Dessin.Plume(Color.FromRgb(0xF4, 0xFD, 0xFF), 1.6 * s);
+                for (int k = 0; k < 5; k++)
+                {
+                    if (hasard.Next(3) == 0) continue;           // ils clignotent
+                    Point p = depart[hasard.Next(depart.Length)];
+                    double angle = hasard.NextDouble() * 2 * Math.PI;
+                    var eclair = new StreamGeometry();
+                    using (StreamGeometryContext g = eclair.Open())
+                    {
+                        g.BeginFigure(p, false, false);
+                        for (int i = 0; i < 4; i++)
+                        {
+                            angle += (hasard.NextDouble() - 0.5) * 1.4;
+                            double pas = (9 + hasard.Next(8)) * s;
+                            p = new Point(p.X + Math.Cos(angle) * pas, p.Y + Math.Sin(angle) * pas);
+                            g.LineTo(p, true, false);
+                        }
+                    }
+                    dc.DrawGeometry(null, lueur, eclair);
+                    dc.DrawGeometry(null, coeur, eclair);
+                }
+            }
             if (temps < finFeu)                                  // en feu (pour rire) : trois flammes dansent sur sa tête
             {
                 Point sommet = e(o.Tete);
@@ -2811,6 +2862,13 @@ namespace MascotteStickman
                 case "x:apesanteur": Apesanteur(); break;
                 case "x:feu": PrendreFeu(); break;
                 case "x:parole": DemanderDEcrire(); break;
+                case "x:surprise": BlocSurprise(); break;
+                case "x:neon": Neon(); break;
+                case "x:rembobine": Rembobiner(); break;
+                case "x:eclair": Electrique(); break;
+                case "x:code": Programmer(); break;
+                case "x:tenebres": DansLeNoir(); break;
+                case "x:dominos": Dominos(); break;
                 default:
                     if (a.Special.StartsWith("cmd:")) Commande(a.Special.Substring(4));
                     break;
@@ -3907,6 +3965,219 @@ namespace MascotteStickman
                 Dire("Ouf… éteint.", 2.5);
                 Jouer(Biblio.Trouver("Reprend son souffle") ?? Biblio.Repos[0], 2);
             }));
+        }
+
+        // ------------------------------------------------------------ d'autres tours spéciaux, nés en regardant des dessins animés de stickmen
+
+        double finNeon, finEclair, finRembobine;
+        readonly List<double[]> passe = new List<double[]>();      // ses dernières poses (5 s), pour rembobiner
+
+        Anim UneDanse()
+        {
+            List<Anim> danses = Biblio.Toutes.Where(a => a.Famille == "Danses" && !a.Deplace && !a.Haut && !R.Coupees.Contains(a.Nom)).ToList();
+            return danses.Count > 0 ? danses[hasard.Next(danses.Count)] : Biblio.Danse;
+        }
+
+        // Bloc surprise : un bloc doré marqué « ? » tombe au-dessus de sa tête ; il saute et le frappe du poing. Il en sort
+        // une pluie de pièces, ou un tour spécial tiré au hasard parmi ceux qui sont permis.
+        void BlocSurprise()
+        {
+            RangerScene();
+            if (ancre.Y - SystemParameters.VirtualScreenTop < 300 * s && DescendreDAbord(BlocSurprise)) return;
+            var tours = new List<Action>();
+            if (R.O("special.clones")) tours.Add(SeDedoubler);
+            if (R.O("special.arc")) tours.Add(ArcEnCiel);
+            if (R.O("special.feu")) tours.Add(PrendreFeu);
+            if (R.O("special.neon")) tours.Add(Neon);
+            if (R.O("special.eclair")) tours.Add(Electrique);
+            bool pieces = tours.Count == 0 || hasard.Next(2) == 0;
+            double c = 44 * s, l = 220 * s, h = 270 * s, frappe = double.MaxValue;
+            Planter(ancre.X - l / 2, ancre.Y - h, l, h, pieces ? 6.5 : 3.4, true, (dc, largeur, hauteur) =>
+            {
+                double posee = hauteur - 224 * s;                      // le bas du bloc à portée de poing, saut compris
+                double y = Math.Min(posee, -c + (posee + c) * Math.Min(1, tScene / 0.5)), apres = tScene - frappe;      // il tombe du ciel en une demi-seconde
+                if (apres > 0 && apres < 0.18) y -= 10 * s * Math.Sin(Math.PI * apres / 0.18);       // il tressaute sous le coup
+                bool vide = apres > 0;
+                var r = new Rect(largeur / 2 - c / 2, y, c, c);
+                dc.DrawRectangle(Blocs.Pinceau(vide ? Color.FromRgb(0x8A, 0x5A, 0x2B) : Color.FromRgb(0xF2, 0xB8, 0x1C)),
+                    new Pen(Blocs.Pinceau(vide ? Color.FromRgb(0x4A, 0x2E, 0x14) : Color.FromRgb(0xA8, 0x70, 0x08)), 3 * s), r);
+                foreach (Point coin in new[] { new Point(r.Left + 6 * s, r.Top + 6 * s), new Point(r.Right - 6 * s, r.Top + 6 * s), new Point(r.Left + 6 * s, r.Bottom - 6 * s), new Point(r.Right - 6 * s, r.Bottom - 6 * s) })
+                    dc.DrawEllipse(Blocs.Pinceau(Color.FromArgb(150, 0, 0, 0)), null, coin, 2 * s, 2 * s);
+                if (!vide)
+                {
+                    FormattedText point = Dessin.Texte("?", 28 * s, Brushes.White, true);
+                    dc.DrawText(point, new Point(r.Left + (c - point.Width) / 2, r.Top + (c - point.Height) / 2));
+                }
+                if (pieces && apres > 0)                                // la pluie de pièces, qui tournent en tombant
+                    for (int i = 0; i < 14; i++)
+                    {
+                        double t = Math.Min(apres, 3), vx = (i - 6.5) * 16 * s, vy = -(260 + (i * 37) % 120) * s;
+                        double px = largeur / 2 + vx * t, py = Math.Min(hauteur - 7 * s, y + c / 2 + vy * t + 450 * s * t * t);
+                        double reste = Math.Max(0, Math.Min(1, 5.5 - apres));
+                        if (reste <= 0) continue;
+                        dc.PushOpacity(reste);
+                        dc.DrawEllipse(Blocs.Pinceau(Color.FromRgb(0xFF, 0xD5, 0x4F)), new Pen(Blocs.Pinceau(Color.FromRgb(0xC7, 0x8B, 0x0C)), 1.5 * s),
+                            new Point(px, py), 7 * s * Math.Max(0.2, Math.Abs(Math.Cos(apres * 9 + i))), 7 * s);
+                        dc.Pop();
+                    }
+            });
+            Sons.Jouer("pop", "sonsPouvoirs");
+            Dire("Un bloc surprise !", 2);
+            Jouer(Biblio.LeveLesYeux, 1, () =>      // un geste du haut du corps n'enchaînerait pas : il faut le corps entier
+            {
+                frappe = tScene + 0.42;                                  // le poing touche le bloc au sommet du saut
+                Jouer(Biblio.SautPoing, 1, () =>
+                {
+                    if (pieces) { Sons.Jouer("tada", "sonsPouvoirs"); Dire("Jackpot !", 2.5); Jouer(Biblio.Trouver("Danse de la joie") ?? Biblio.Danse, 2); }
+                    else tours[hasard.Next(tours.Count)]();
+                });
+            });
+        }
+
+        // Mode néon : il brille comme une enseigne lumineuse, qui grésille un peu, le temps d'une danse.
+        void Neon()
+        {
+            RangerScene();
+            finNeon = temps + 12;
+            Sons.Jouer("energie", "sonsPouvoirs");
+            Dire("Mode néon !", 2.5);
+            Anim danse = UneDanse();
+            Jouer(danse, Math.Max(2, Math.Ceiling(11 / danse.Duree)), () => { finNeon = 0; Repos(); });
+        }
+
+        // Rembobine le temps : il rejoue à l'envers ses dernières secondes, deux fois plus vite, comme une cassette.
+        void Rembobiner()
+        {
+            RangerScene();
+            if (passe.Count < 20) { Dire("Rien à rembobiner…", 2); Repos(); return; }
+            double[][] images = passe.ToArray();
+            var recul = new Anim { Nom = "Rembobine", Duree = Math.Max(0.8, images.Length / Math.Max(10, R.D("fluidite")) / 2), Tours = 1 };
+            recul.Pose = t => (double[])images[(int)Math.Round((1 - Math.Max(0, Math.Min(1, t))) * (images.Length - 1))].Clone();
+            finRembobine = temps + recul.Duree;
+            Sons.Jouer("glisse", "sonsPouvoirs");
+            Dire("◀◀ Rembobinage…", recul.Duree);
+            Jouer(recul, 1, () => { finRembobine = 0; passe.Clear(); Dire("…et on reprend !", 2); Repos(); });
+        }
+
+        // Électrique : des éclairs crépitent autour de lui et il tremble de partout… puis ça retombe.
+        void Electrique()
+        {
+            RangerScene();
+            finEclair = temps + 5;
+            Sons.Jouer("energie", "sonsPouvoirs");
+            Dire("Bzzzt !", 2);
+            Anim tremble = Biblio.Trouver("Tremble de peur") ?? Biblio.Sursaut;
+            Jouer(tremble, Math.Max(1, Math.Ceiling(5 / tremble.Duree)), () =>
+            {
+                finEclair = 0;
+                Dire("Ça décoiffe !", 2.5);
+                Jouer(Biblio.Trouver("Saute de joie, bras en V") ?? Biblio.Danse, 1);
+            });
+        }
+
+        // Programme ses mouvements : il tape une ligne de code dans une console qui flotte au-dessus de lui, puis l'exécute.
+        void Programmer()
+        {
+            RangerScene();
+            if (ancre.Y - SystemParameters.VirtualScreenTop < 260 * s && DescendreDAbord(Programmer)) return;
+            List<Anim> choix = Biblio.Toutes.Where(a => a.Special == null && !a.Deplace && !a.SurFenetre && !a.Haut && !R.Coupees.Contains(a.Nom)
+                && (a.Famille == "Acrobaties" || a.Famille == "Danses" || a.Famille == "Combat" || a.Famille == "Sport")).ToList();
+            if (choix.Count == 0) { Repos(); return; }
+            Anim voulue = choix[hasard.Next(choix.Count)];
+            string ligne = Langue.Anglais ? "stickman.play(\"" + Langue.EnAnglais(voulue.Nom) + "\")" : "stickman.jouer(\"" + voulue.Nom + "\")";
+            string fait = Langue.Anglais ? "OK, running…" : "OK, exécution…";
+            double l = Math.Min(560 * s, (ligne.Length * 7.6 + 44) * s), h = 58 * s, frappe = 0.3 + ligne.Length / 22.0;
+            double gauche = Math.Max(SystemParameters.VirtualScreenLeft + 8, Math.Min(SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 8 - l, ancre.X - l / 2));
+            var police = new Typeface("Consolas");
+            Brush vert = new SolidColorBrush(Color.FromRgb(0x7C, 0xF0, 0xA0)), fond = new SolidColorBrush(Color.FromArgb(225, 12, 16, 14));
+            Pen bord = new Pen(new SolidColorBrush(Color.FromRgb(0x2E, 0xCC, 0x71)), 1.5 * s);
+            Planter(gauche, ancre.Y - 150 * s - h, l, h, frappe + 4, true, (dc, largeur, hauteur) =>
+            {
+                dc.DrawRoundedRectangle(fond, bord, new Rect(0, 0, largeur, hauteur), 6 * s, 6 * s);
+                int lettres = (int)Math.Min(ligne.Length, Math.Max(0, tScene - 0.3) * 22);
+                var texte = new FormattedText("> " + ligne.Substring(0, lettres) + ((int)(tScene * 3) % 2 == 0 ? "_" : " "), CultureInfo.InvariantCulture, FlowDirection.LeftToRight, police, 12.5 * s, vert);
+                texte.MaxTextWidth = Math.Max(20, largeur - 16 * s);
+                dc.DrawText(texte, new Point(8 * s, 7 * s));
+                if (tScene > frappe + 0.3)
+                {
+                    var ok = new FormattedText(fait, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, police, 11 * s, Brushes.White);
+                    dc.DrawText(ok, new Point(8 * s, hauteur - ok.Height - 6 * s));
+                }
+            });
+            Sons.Jouer("pop", "sonsPouvoirs");
+            Anim tape = Biblio.Trouver("Tape sur un clavier debout") ?? Biblio.Ecrit;
+            Jouer(tape, Math.Max(1, Math.Ceiling((frappe + 0.3) / tape.Duree)), () => Jouer(voulue, Math.Max(1, voulue.Tours)));
+        }
+
+        // Dans le noir : tout s'assombrit autour de lui, sauf un rond de lumière qui bat comme un cœur. Il tremble, se
+        // fige, tend l'oreille… et sursaute quand la lumière revient.
+        void DansLeNoir()
+        {
+            RangerScene();
+            double l = 960 * s, h = 640 * s, duree = 7.5;
+            Planter(ancre.X - l / 2, ancre.Y + 80 * s - h, l, h, duree, true, (dc, largeur, hauteur) =>
+            {
+                double force = Math.Min(Math.Min(1, tScene / 0.8), Math.Max(0, Math.Min(1, (duree - tScene) / 0.6)));
+                double lumiere = 85 * s * (1 + 0.1 * Math.Pow(Math.Max(0, Math.Sin(tScene * 7.5)), 8));      // le rond de lumière bat comme un cœur
+                Point centre = new Point(largeur / 2, hauteur - 80 * s - 55 * s);
+                double rx = largeur / 2, k = Math.Min(0.5, lumiere / rx);
+                // tout est noir autour de lui, sauf ce rond ; seul le bord de la zone s'estompe, pour ne pas faire de cadre
+                var noir = new RadialGradientBrush { MappingMode = BrushMappingMode.Absolute, Center = centre, GradientOrigin = centre, RadiusX = rx, RadiusY = centre.Y };
+                Color sombre = Color.FromArgb((byte)(230 * force), 4, 4, 10);
+                noir.GradientStops.Add(new GradientStop(Color.FromArgb(0, 4, 4, 10), 0));
+                noir.GradientStops.Add(new GradientStop(Color.FromArgb(0, 4, 4, 10), k));
+                noir.GradientStops.Add(new GradientStop(sombre, k + 0.16));
+                noir.GradientStops.Add(new GradientStop(sombre, 0.9));
+                noir.GradientStops.Add(new GradientStop(Color.FromArgb(0, 4, 4, 10), 1));
+                dc.DrawRectangle(noir, null, new Rect(0, 0, largeur, hauteur));
+            });
+            Sons.Jouer("aie", "sonsPouvoirs");
+            Dire("Il fait tout noir…", 2.5);
+            Anim tremble = Biblio.Trouver("Tremble de peur") ?? Biblio.Sursaut, fige = Biblio.Trouver("Se fige pour ne pas faire de bruit") ?? Biblio.Admire;
+            Jouer(tremble, Math.Max(1, Math.Ceiling(2.4 / tremble.Duree)), () => Jouer(fige, 1, () =>
+            {
+                Sons.Jouer("coup", "sonsPouvoirs");
+                Dire("Bouh ! … Ah, c'est fini.", 2.5);
+                Jouer(Biblio.Sursaut, 1);
+            }));
+        }
+
+        // Rangée de dominos : il en aligne neuf sur le sol à côté de lui, pousse le premier, et ils tombent l'un après l'autre.
+        void Dominos()
+        {
+            RangerScene();
+            const int n = 9;
+            int sens = face;
+            double ecart = 26 * s, haut = 40 * s, epais = 9 * s, l = n * ecart + 40 * s, h = haut + 12 * s, pousse = double.MaxValue;
+            double gauche = sens > 0 ? ancre.X + 34 * s : ancre.X - 34 * s - l;
+            Brush noir = Blocs.Pinceau(Color.FromRgb(0x24, 0x24, 0x2A));
+            Pen bord = new Pen(Blocs.Pinceau(Color.FromRgb(0xE8, 0xE8, 0xEE)), 1.2 * s);
+            Planter(gauche, ancre.Y - h, l, h, 9, true, (dc, largeur, hauteur) =>
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    if (tScene < 0.25 * i) break;                           // posés un par un
+                    int place = sens > 0 ? i : n - 1 - i;                   // le premier est celui qui est le plus près de lui
+                    double x = 16 * s + place * ecart, debut = pousse + i * 0.17;
+                    double angle = tScene < debut ? 0 : Math.Min(1, (tScene - debut) / 0.22) * (i == n - 1 ? 90 : 72);
+                    dc.PushTransform(new RotateTransform(sens * angle, sens > 0 ? x + epais : x, hauteur));
+                    dc.DrawRoundedRectangle(noir, bord, new Rect(x, hauteur - haut, epais, haut), 2 * s, 2 * s);
+                    dc.DrawEllipse(Brushes.White, null, new Point(x + epais / 2, hauteur - haut * 0.72), 1.6 * s, 1.6 * s);
+                    dc.DrawEllipse(Brushes.White, null, new Point(x + epais / 2, hauteur - haut * 0.3), 1.6 * s, 1.6 * s);
+                    dc.Pop();
+                }
+            });
+            Jouer(Biblio.PoseDevant, Math.Ceiling(0.25 * n / Biblio.PoseDevant.Duree), () =>
+            {
+                pousse = tScene + 0.35;
+                Sons.Jouer("pop", "sonsPouvoirs");
+                Jouer(Biblio.Presse, 1, () => Jouer(Biblio.Admire, 1, () =>
+                {
+                    Sons.Jouer("tada", "sonsPouvoirs");
+                    Dire("Parfait !", 2.5);
+                    Jouer(Biblio.Trouver("Saute de joie, bras en V") ?? Biblio.Danse, 1);
+                }));
+            });
         }
 
         // Feu de camp : il l'allume, s'assoit devant, se chauffe les mains.
