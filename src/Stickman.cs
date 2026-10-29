@@ -29,8 +29,8 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("Mascotte Stickman")]
 [assembly: System.Reflection.AssemblyCompany("Minecraft-2048 (open source)")]
 [assembly: System.Reflection.AssemblyCopyright("MIT licence")]
-[assembly: System.Reflection.AssemblyVersion("1.13.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.13.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.13.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.13.1.0")]
 
 namespace MascotteStickman
 {
@@ -159,7 +159,7 @@ namespace MascotteStickman
             N(C, "enchaine", "Gestes pendant la marche (%)", 25, 0, 100);
             N(C, "sommeil", "S'endort après (minutes sans toucher au PC, 0 = jamais)", 10, 0, 120);
             N(C, "teleporte", "Envie de se téléporter : commande, perle de l'Ender ou portail (%)", 6, 0, 100);
-            B(C, "baton", "Le premier stickman a le bâton de commande", true);
+            B(C, "baton", "Le stickman jaune a le bâton de commande", true);
             B(C, "maison", "Ils ont une maison (elle apparaît près de chez eux)", true);
             B(C, "maisonToujours", "Leur maison reste toujours visible", false);
             B(C, "paysages", "Des paysages de blocs apparaissent (colline, mine, ferme, mare…)", true);
@@ -2870,7 +2870,7 @@ namespace MascotteStickman
                 case "x:tenebres": DansLeNoir(); break;
                 case "x:dominos": Dominos(); break;
                 default:
-                    if (a.Special.StartsWith("cmd:")) Commande(a.Special.Substring(4));
+                    if (a.Special.StartsWith("cmd:")) DemanderCommande(a.Special.Substring(4));
                     break;
             }
         }
@@ -3502,13 +3502,15 @@ namespace MascotteStickman
         }
 
         // ------------------------------------------------------------ le bâton de commande
-        // Le premier stickman porte un bâton surmonté d'un bloc de commande. Il le lève, la commande s'écrit
-        // en l'air, puis son effet se produit. C'est aussi la seule façon de se téléporter sans perle ni portail.
+        // Comme dans la série, le stickman jaune porte un bâton surmonté d'un bloc de commande. Il le lève, la
+        // commande s'écrit en l'air, puis son effet se produit. C'est aussi la seule façon de se téléporter sans
+        // perle ni portail.
 
         double dureeScene; bool animeDecor;           // décor de la scène « decor » : combien de temps il reste, s'il bouge
         IntPtr decorSur; double decorDx, decorDy;     // la fenêtre qui le porte, et sa place par rapport à son coin
 
-        bool ABaton { get { return place == 0 && R.O("baton"); } }
+        // Le jaune (le premier, s'il y en a plusieurs) : la teinte de sa couleur, pas sa place.
+        bool ABaton { get { return R.O("baton") && EstJaune && Tous.FirstOrDefault(b => b.EstJaune) == this; } }
 
         void Ordonner(string texte, Action effet)
         {
@@ -4493,16 +4495,30 @@ namespace MascotteStickman
         string dernierFait;                           // le nom de sa dernière animation
         int demandeParole;                            // pour reconnaître la réponse du modèle qu'il attend encore
 
-        bool EstOrange
+        // La teinte de sa couleur (0 = rouge, 60 = jaune), ou -1 si elle est sombre, terne ou hors des rouges-jaunes.
+        double TeinteChaude
         {
             get
             {
                 Color c = R.Couleur(CleCouleur);
                 double fort = Math.Max(c.R, Math.Max(c.G, c.B)), faible = Math.Min(c.R, Math.Min(c.G, c.B));
-                if (c.R < fort || fort < 140 || fort - faible < 0.45 * fort) return false;      // ni sombre, ni terne, et dans les rouges
-                double teinte = 60.0 * (c.G - c.B) / (fort - faible);
-                return teinte >= 10 && teinte <= 40;                                              // entre le rouge et le jaune d'or
+                if (c.R < fort || fort < 140 || fort - faible < 0.45 * fort) return -1;
+                return 60.0 * (c.G - c.B) / (fort - faible);
             }
+        }
+
+        bool EstOrange { get { double t = TeinteChaude; return t >= 10 && t <= 40; } }      // entre le rouge et le jaune d'or
+        bool EstJaune { get { double t = TeinteChaude; return t > 40 && t <= 65; } }        // du jaune d'or au jaune franc
+
+        // Demandé à un autre que lui, c'est le jaune qui tape la commande avec son bâton (s'il y en a un). Une visite
+        // chez un ami ou dans la maison s'arrête pour ça ; endormi, attrapé ou en pleine scène, il est occupé.
+        void DemanderCommande(string nom)
+        {
+            if (ABaton) { Commande(nom); return; }
+            Bonhomme jaune = Tous.FirstOrDefault(b => b.ABaton);
+            if (jaune == null) { Dire(R.O("baton") ? "Seul le jaune a le bâton de commande." : "Il me faut le bâton de commande !", 3.5); Repos(); }
+            else if (jaune.etat != Etat.Anime || jaune.dort || jaune.scene != null) { Dire("Le jaune est occupé…", 2.5); Repos(); }
+            else { Dire("C'est le jaune qui a le bâton !", 2.5); Repos(); jaune.Rompre(); jaune.Sortir(); jaune.Commande(nom); }
         }
 
         // Demandé à un autre que lui, c'est quand même l'orange qui écrit (s'il y en a un, et s'il est libre).

@@ -364,7 +364,7 @@ namespace MascotteStickman
 
         static void Decors()
         {
-            // --- le bâton de commande : réservé au premier stickman (le moteur vérifie)
+            // --- le bâton de commande : réservé au stickman jaune, comme dans la série (le moteur vérifie)
             const string K = "Commandes";
             foreach (string[] c in new[]
             {
